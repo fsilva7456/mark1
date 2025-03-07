@@ -184,4 +184,26 @@
   .saveButton, .cancelButton {
     width: 100%;
   }
+}
+
+.postMeta {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metaItem {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.metaLabel {
+  font-weight: 600;
+  color: #3454D1;
+  margin-right: 0.5rem;
+}
+
+.metaValue {
+  color: #4A5568;
 } 

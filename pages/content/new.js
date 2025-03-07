@@ -37,27 +37,81 @@ export default function NewContent() {
           week: 1,
           theme: "Introduction to your approach",
           posts: [
-            { type: "Carousel", topic: "5 myths about fitness debunked" },
-            { type: "Video", topic: "Quick demo of your training style" },
-            { type: "Story", topic: "Behind the scenes of your business" }
+            { 
+              type: "Carousel", 
+              topic: "5 myths about fitness debunked", 
+              audience: "Beginners & skeptics",
+              cta: "Save this post for future reference",
+              principle: "Authority & Social Proof"
+            },
+            { 
+              type: "Video", 
+              topic: "Quick demo of your training style", 
+              audience: "Potential clients considering personal training",
+              cta: "DM me for a free consultation",
+              principle: "Reciprocity"
+            },
+            { 
+              type: "Story", 
+              topic: "Behind the scenes of your business", 
+              audience: "All followers",
+              cta: "Follow for more insights",
+              principle: "Liking & Familiarity"
+            }
           ]
         },
         {
           week: 2,
           theme: "Client success stories",
           posts: [
-            { type: "Transformation", topic: "Before & after of a client" },
-            { type: "Testimonial", topic: "Client interview about their journey" },
-            { type: "Carousel", topic: "3 key habits that lead to success" }
+            { 
+              type: "Transformation", 
+              topic: "Before & after of a client", 
+              audience: "Results-focused individuals",
+              cta: "Book a consultation (link in bio)",
+              principle: "Social Proof"
+            },
+            { 
+              type: "Testimonial", 
+              topic: "Client interview about their journey", 
+              audience: "People on the fence about committing",
+              cta: "Comment if you relate to their story",
+              principle: "Liking & Social Proof"
+            },
+            { 
+              type: "Carousel", 
+              topic: "3 key habits that lead to success", 
+              audience: "Committed fitness enthusiasts",
+              cta: "Share this with someone who needs it",
+              principle: "Commitment & Consistency"
+            }
           ]
         },
         {
           week: 3,
           theme: "Education series",
           posts: [
-            { type: "Carousel", topic: "The science behind your methods" },
-            { type: "Video", topic: "Common form mistakes to avoid" },
-            { type: "Reel", topic: "Quick tips for better results" }
+            { 
+              type: "Carousel", 
+              topic: "The science behind your methods", 
+              audience: "Data-driven, analytical followers",
+              cta: "Save this to reference during workouts",
+              principle: "Authority"
+            },
+            { 
+              type: "Video", 
+              topic: "Common form mistakes to avoid", 
+              audience: "Intermediate fitness enthusiasts",
+              cta: "Tag a friend who needs to see this",
+              principle: "Loss Aversion"
+            },
+            { 
+              type: "Reel", 
+              topic: "Quick tips for better results", 
+              audience: "Busy professionals with limited time",
+              cta: "Try this in your next workout",
+              principle: "Simplicity & Scarcity"
+            }
           ]
         },
       ];
@@ -122,6 +176,20 @@ export default function NewContent() {
                       <div key={postIndex} className={styles.postCard}>
                         <div className={styles.postType}>{post.type}</div>
                         <p className={styles.postTopic}>{post.topic}</p>
+                        <div className={styles.postMeta}>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Audience:</span>
+                            <span className={styles.metaValue}>{post.audience}</span>
+                          </div>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>CTA:</span>
+                            <span className={styles.metaValue}>{post.cta}</span>
+                          </div>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Principle:</span>
+                            <span className={styles.metaValue}>{post.principle}</span>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
