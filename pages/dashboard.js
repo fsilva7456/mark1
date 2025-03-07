@@ -94,7 +94,11 @@ export default function Dashboard() {
 
               <div className={styles.cardsContainer}>
                 {strategies.map(strategy => (
-                  <div key={strategy.id} className={styles.strategyCard}>
+                  <div 
+                    key={strategy.id} 
+                    className={styles.strategyCard}
+                    onClick={() => router.push(`/strategy/${strategy.id}`)}
+                  >
                     <div className={styles.cardHeader}>
                       <h3>{strategy.name}</h3>
                       <span className={`${styles.statusBadge} ${styles[strategy.status]}`}>

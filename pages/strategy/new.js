@@ -238,25 +238,28 @@ export default function NewStrategy() {
   
   const handleSaveStrategy = async () => {
     try {
+      // Save the strategy to Supabase
       const { data, error } = await supabase
         .from('strategies')
         .insert([
           { 
             user_id: user.id,
             name: `${userData.name}'s Marketing Strategy`,
-            business_description: userData.business,
             target_audience: matrix.targetAudience,
             objectives: matrix.objectives,
-            key_messages: matrix.keyMessages
+            key_messages: matrix.keyMessages,
+            // Store original answers for context
+            user_data: userData
           }
         ]);
       
       if (error) throw error;
       
+      // Redirect to dashboard with success message
       router.push('/dashboard?success=strategy-created');
     } catch (error) {
       console.error('Error saving strategy:', error);
-      // Handle error - maybe show an error message to the user
+      // You could add error handling UI here
     }
   };
   
