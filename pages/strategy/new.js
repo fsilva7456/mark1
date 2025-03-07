@@ -473,7 +473,7 @@ export default function NewStrategy() {
                     Save Strategy
                   </button>
                   <button 
-                    onClick={() => router.push('/content/new?strategy=' + encodeURIComponent(`${userData.name}'s Marketing Strategy`))} 
+                    onClick={() => router.push('/calendar/new?strategy=' + encodeURIComponent(`${userData.name}'s Marketing Strategy`))} 
                     className={styles.outlineButton}
                   >
                     Create Content Outline
