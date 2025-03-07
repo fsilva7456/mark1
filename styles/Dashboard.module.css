@@ -1,0 +1,367 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #F7F9FC;
+}
+
+.main {
+  margin-top: 70px; /* To account for the fixed navbar */
+  padding-bottom: 3rem;
+  flex: 1;
+}
+
+.header {
+  background-color: white;
+  padding: 2rem 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  color: #1A2B3C;
+  margin: 0;
+}
+
+.logoutButton {
+  background-color: transparent;
+  color: #3454D1;
+  border: 1px solid #3454D1;
+  padding: 0.5rem 1.25rem;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logoutButton:hover {
+  background-color: rgba(52, 84, 209, 0.05);
+}
+
+.dashboardContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.section {
+  margin-bottom: 3rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.sectionHeader h2 {
+  font-size: 1.5rem;
+  color: #1A2B3C;
+  margin: 0;
+}
+
+.createButton {
+  background-color: #3454D1;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.createButton:hover {
+  background-color: #2a43a7;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 84, 209, 0.3);
+}
+
+.cardsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.strategyCard, .calendarCard, .emptyCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.strategyCard:hover, .calendarCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.cardHeader h3 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #1A2B3C;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.active {
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.draft {
+  background-color: #F1F5F9;
+  color: #64748B;
+}
+
+.lastUpdated {
+  color: #718096;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  min-width: 120px;
+}
+
+.strategyCard .actionButton:first-child {
+  background-color: #3454D1;
+  color: white;
+}
+
+.strategyCard .actionButton:first-child:hover {
+  background-color: #2a43a7;
+}
+
+.strategyCard .actionButton:last-child,
+.calendarCard .actionButton {
+  background-color: white;
+  color: #3454D1;
+  border: 1px solid #3454D1;
+}
+
+.strategyCard .actionButton:last-child:hover,
+.calendarCard .actionButton:hover {
+  background-color: rgba(52, 84, 209, 0.05);
+}
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  border: 2px dashed #E2E8F0;
+  background-color: #F8FAFC;
+}
+
+.emptyCardIcon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #EFF6FF;
+  color: #3454D1;
+  margin-bottom: 1rem;
+}
+
+.emptyCard p {
+  color: #64748B;
+  margin-bottom: 1.5rem;
+}
+
+.emptyCardButton {
+  background-color: #3454D1;
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.emptyCardButton:hover {
+  background-color: #2a43a7;
+}
+
+.calendarCard h3 {
+  font-size: 1.25rem;
+  margin: 0 0 1rem 0;
+  color: #1A2B3C;
+}
+
+.calendarCard p {
+  color: #718096;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1.5rem 0;
+}
+
+.progressContainer {
+  margin-bottom: 0.5rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  color: #4A5568;
+}
+
+.progressBar {
+  height: 8px;
+  background-color: #E2E8F0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background-color: #3454D1;
+  border-radius: 4px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.emptyStateIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1A2B3C;
+}
+
+.emptyState p {
+  color: #718096;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.quickTips {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 2rem;
+}
+
+.quickTips h3 {
+  color: #1A2B3C;
+  margin: 0 0 1rem 0;
+}
+
+.quickTips ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.quickTips li {
+  margin-bottom: 0.75rem;
+  color: #4A5568;
+}
+
+.quickTips li:last-child {
+  margin-bottom: 0;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(52, 84, 209, 0.1);
+  border-left-color: #3454D1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  color: #718096;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .cardsContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    flex-direction: column;
+  }
+
+  .actionButton {
+    width: 100%;
+  }
+} 

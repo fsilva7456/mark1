@@ -1,0 +1,14 @@
+<svg width="150" height="50" viewBox="0 0 150 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Shape -->
+  <rect x="2" y="5" width="45" height="40" rx="8" fill="#3454D1" opacity="0.1"/>
+  
+  <!-- M letter stylized -->
+  <path d="M10 35V15H15L25 28L35 15H40V35H35V22L25 35L15 22V35H10Z" fill="#3454D1"/>
+  
+  <!-- Number 1 -->
+  <path d="M45 35V15H50L50 35H45Z" fill="#3454D1"/>
+  
+  <!-- Text part -->
+  <text x="58" y="25" font-family="Arial" font-size="14" font-weight="700" fill="#1A2B3C">MARK1</text>
+  <text x="58" y="40" font-family="Arial" font-size="10" fill="#4A5568">AI Native Marketing Services</text>
+</svg> 

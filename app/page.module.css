@@ -1,0 +1,1734 @@
+.container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #111827;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  position: relative;
+}
+
+.title:after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #4285f4, #34a853);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.formStep {
+  margin-top: 2rem;
+}
+
+.stepIndicator {
+  text-align: center;
+  color: #4285f4;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  background: #f0f5ff;
+  padding: 10px;
+  border-radius: 20px;
+  width: fit-content;
+  margin: 0 auto 2rem auto;
+}
+
+.inputLabel {
+  display: block;
+  margin-bottom: 1.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  resize: vertical;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1.2rem;
+  transition: all 0.2s ease;
+  background-color: #f9fafb;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: block;
+  min-height: 80px;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+  background-color: #ffffff;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.button {
+  background: linear-gradient(90deg, #4285f4, #5094fc);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(66, 133, 244, 0.3);
+}
+
+.button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #3b78e7, #4285f4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(66, 133, 244, 0.4);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(66, 133, 244, 0.4);
+}
+
+.buttonSecondary {
+  background: white;
+  color: #4285f4;
+  border: 1px solid #4285f4;
+  box-shadow: none;
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.resultSection {
+  background-color: #f9fafb;
+  padding: 1.8rem;
+  border-radius: 10px;
+  min-height: 220px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.subtitle {
+  margin-bottom: 1.2rem;
+  color: #374151;
+  font-size: 1.4rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.subtitle:before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: #4285f4;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.resultDisplay {
+  line-height: 1.7;
+  white-space: pre-wrap;
+  padding: 1rem;
+  border-radius: 6px;
+  min-height: 100px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+.loading {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading:before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.matrixContainer {
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  width: 100% !important;
+}
+
+.strategyTable {
+  width: 100% !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed !important;
+}
+
+.audienceColumn {
+  width: 33.33% !important; /* Equal columns */
+}
+
+.objectiveColumn {
+  width: 33.33% !important; /* Equal columns */
+}
+
+.messageColumn {
+  width: 33.33% !important; /* Equal columns */
+}
+
+.strategyTable th {
+  background-color: #4285f4 !important;
+  color: white !important;
+  padding: 12px 15px !important;
+  text-align: left !important;
+  font-weight: 600 !important;
+  width: 33.33% !important; /* Equal width columns */
+}
+
+.strategyTable td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  background-color: #ffffff;
+}
+
+.matrixCell {
+  padding: 15px !important;
+  border: 1px solid #e5e7eb !important;
+  background-color: #ffffff !important;
+  vertical-align: top !important;
+  height: 100% !important;
+}
+
+.cellContent {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.matrixCell:focus {
+  outline: none;
+  border-color: #4285f4;
+  background-color: #ffffff;
+}
+
+.feedbackSection {
+  background-color: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.outlinesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.contentOutline {
+  background-color: #f9fafb;
+  padding: 1.2rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.contentOutline h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #4285f4;
+  font-size: 1.1rem;
+}
+
+.outlineField {
+  margin-bottom: 1rem;
+}
+
+.outlineField label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+}
+
+.outlineTextarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.outlineTextarea:focus {
+  outline: none;
+  border-color: #4285f4;
+}
+
+.calendarContainer {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+  margin-bottom: 30px !important;
+}
+
+.calendarHeader {
+  margin-bottom: 20px !important;
+  text-align: center !important;
+}
+
+.calendarHeader h3 {
+  color: #111827 !important;
+  font-size: 1.5rem !important;
+  margin-bottom: 8px !important;
+}
+
+.calendarHeader p {
+  color: #6b7280 !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+}
+
+.calendar {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+
+.calendarLegend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+  margin-top: 20px !important;
+  justify-content: center !important;
+}
+
+.legendItem {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.legendColor {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 3px !important;
+}
+
+.legendText {
+  font-size: 0.8rem !important;
+  color: #4b5563 !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .buttonContainer {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .button {
+    width: 100%;
+  }
+  
+  .outlinesContainer {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Strategy page specific styles */
+.strategyIntro {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.strategyTitle {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin-bottom: 0.8rem;
+  font-weight: 700;
+}
+
+.strategyDescription {
+  color: #4a5568;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.matrixContainer {
+  margin-bottom: 3rem;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: white;
+}
+
+.strategyTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.matrixHeader {
+  background: linear-gradient(90deg, #4285f4, #5094fc);
+  color: white;
+  padding: 15px 20px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.matrixHeader:first-child {
+  border-top-left-radius: 8px;
+}
+
+.matrixHeader:last-child {
+  border-top-right-radius: 8px;
+}
+
+.matrixCell {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  vertical-align: top;
+}
+
+.matrixRow:nth-child(even) .matrixCell {
+  background-color: #f9fafb;
+}
+
+.matrixTextarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  resize: vertical;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: transparent;
+  line-height: 1.5;
+}
+
+.matrixTextarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+.feedbackSection {
+  background: linear-gradient(to right, #f7faff, #f0f5ff);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.12);
+  border: 1px solid #e1eaff;
+}
+
+.feedbackTitle {
+  font-size: 1.4rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.feedbackIcon {
+  margin-right: 10px;
+  font-size: 1.6rem;
+}
+
+.feedbackDescription {
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.feedbackTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #c9d8ff;
+  border-radius: 8px;
+  resize: vertical;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  margin-bottom: 1.5rem;
+}
+
+.feedbackTextarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.15);
+}
+
+.buttonIcon {
+  margin-right: 8px;
+}
+
+/* Update existing button styles for consistency */
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.9rem 1.8rem;
+  font-size: 1.05rem;
+  border-radius: 10px;
+  transition: all 0.25s ease;
+}
+
+.buttonContainer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Chat interface styles */
+.chatSection {
+  background: linear-gradient(to right, #f7faff, #f0f5ff);
+  padding: 2rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.12);
+  border: 1px solid #e1eaff;
+}
+
+.chatContainer {
+  background-color: white;
+  border-radius: 10px;
+  padding: 1rem;
+  height: 350px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+.chatMessage {
+  margin-bottom: 1rem;
+  max-width: 80%;
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
+  position: relative;
+}
+
+.userMessage {
+  background-color: #e9f0ff;
+  margin-left: auto;
+  border-bottom-right-radius: 2px;
+  color: #1a56db;
+}
+
+.assistantMessage {
+  background-color: #f0f2f5;
+  margin-right: auto;
+  border-bottom-left-radius: 2px;
+  color: #4b5563;
+}
+
+.messageContent {
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.chatForm {
+  display: flex;
+  margin-bottom: 1.5rem;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px 0 0 8px;
+  font-size: 1rem;
+}
+
+.chatInput:focus {
+  outline: none;
+  border-color: #4285f4;
+}
+
+.chatSendButton {
+  background: #4285f4;
+  color: white;
+  border: none;
+  padding: 0 1.2rem;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.chatSendButton:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+.thinkingIndicator {
+  display: flex;
+  gap: 4px;
+  padding: 10px;
+}
+
+.thinkingIndicator span {
+  width: 8px;
+  height: 8px;
+  background-color: #a0aec0;
+  border-radius: 50%;
+  animation: thinking 1.4s infinite ease-in-out both;
+}
+
+.thinkingIndicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.thinkingIndicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes thinking {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  } 
+  40% { 
+    transform: scale(1.0);
+  }
+}
+
+.updateSummary {
+  margin-top: 12px;
+  background-color: #edf2ff;
+  border-radius: 8px;
+  padding: 10px;
+  border-left: 3px solid #4285f4;
+}
+
+.updateSummaryTitle {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.updateIcon {
+  margin-right: 5px;
+}
+
+.updateSummaryContent {
+  font-size: 0.85rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* Add a visual highlight for matrix cells that have changed */
+.highlightedCell {
+  animation: highlightCell 2s ease-in-out;
+}
+
+@keyframes highlightCell {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(66, 133, 244, 0.15);
+  }
+}
+
+/* Super strong highlight styling */
+.recentlyUpdatedCell {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  animation: strongPulseHighlight 8s ease-in-out;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 0 2px #ef4444, 0 0 10px rgba(239, 68, 68, 0.3) !important;
+  z-index: 1;
+}
+
+.recentlyUpdatedCell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #ef4444;
+  border-radius: 2px 2px 0 0;
+  z-index: 2;
+}
+
+@keyframes strongPulseHighlight {
+  0%, 10% {
+    background-color: rgba(239, 68, 68, 0.3) !important;
+    box-shadow: inset 0 0 0 2px #ef4444, 0 0 15px rgba(239, 68, 68, 0.4) !important;
+  }
+  50% {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    box-shadow: inset 0 0 0 2px #ef4444, 0 0 10px rgba(239, 68, 68, 0.3) !important;
+  }
+  100% {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    box-shadow: inset 0 0 0 2px #ef4444, 0 0 5px rgba(239, 68, 68, 0.2) !important;
+  }
+}
+
+/* Single screen layout styles */
+.singleScreenLayout {
+  display: flex;
+  gap: 2rem;
+  height: calc(100vh - 220px);
+  min-height: 550px;
+  max-height: 700px;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.matrixSide {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+}
+
+.actionSide {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+}
+
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #f9fafc, #f1f5fd);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  height: 100%;
+}
+
+/* Modern matrix styling */
+.compactMatrixContainer {
+  flex: 1;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1rem;
+  border: 1px solid #f0f0f0;
+}
+
+.strategyTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.matrixHeader {
+  background: #2563eb;
+  color: white;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.matrixHeader:first-child {
+  border-top-left-radius: 8px;
+}
+
+.matrixHeader:last-child {
+  border-top-right-radius: 8px;
+}
+
+.matrixCell {
+  padding: 12px 16px;
+  border: 1px solid #f0f0f0;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.matrixRow:hover .matrixCell {
+  background-color: #f9faff;
+}
+
+.cellContent {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+/* Modern buttons */
+.modernButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.2rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.modernButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.25);
+}
+
+.modernButtonSecondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1.2rem;
+  background: white;
+  color: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modernButtonSecondary:hover {
+  background: #f5f9ff;
+  transform: translateY(-2px);
+}
+
+.outlineButton {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.outlineButton:hover {
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.25);
+}
+
+/* Improved chat styling */
+.compactChatContainer {
+  flex: 1;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  max-height: calc(100% - 120px);
+  position: relative;
+}
+
+.chatSide {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.chatForm {
+  display: flex;
+  margin-bottom: 1rem;
+  position: sticky;
+  bottom: 0;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 8px 0 0 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.chatInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.chatSendButton {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0 1.2rem;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.chatSendButton:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 1100px) {
+  .singleScreenLayout {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+  }
+  
+  .matrixSide {
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+  }
+  
+  .actionSide {
+    max-width: 100%;
+  }
+  
+  .compactChatContainer {
+    height: 300px;
+    max-height: 300px;
+  }
+}
+
+/* Make the message area scrollable with proper sizing */
+.chatMessage {
+  margin-bottom: 0.8rem;
+  max-width: 90%;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  word-break: break-word;
+}
+
+.compactButtonContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.compactButtonContainer button {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.modernButton, .modernButtonSecondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Styles for objective options */
+.objectiveOptionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.objectiveOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.objectiveOption:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.selectedObjective {
+  background-color: #ecf5ff;
+  border-color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+.objectiveRadio {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.selectedObjective .objectiveRadio {
+  border-color: #3b82f6;
+}
+
+.radioInner {
+  width: 0;
+  height: 0;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.selectedObjective .radioInner {
+  width: 8px;
+  height: 8px;
+}
+
+.objectiveText {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+/* Styles for all selection options */
+.optionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.selectionOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.selectionOption:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.selectedOption {
+  background-color: #ecf5ff;
+  border-color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+.optionRadio {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.selectedOption .optionRadio {
+  border-color: #3b82f6;
+}
+
+.radioInner {
+  width: 0;
+  height: 0;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.selectedOption .radioInner {
+  width: 8px;
+  height: 8px;
+}
+
+.optionText {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.requestOptionsButton {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #f0f5ff;
+  border: 1px dashed #3b82f6;
+  color: #2563eb;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.requestOptionsButton:hover {
+  background-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.cellContentWithOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Update content row layout */
+.contentRow {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 40px !important;
+  width: 100% !important;
+}
+
+/* Convert summary card to a top bar */
+.summaryCard {
+  width: 100% !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 12px 15px !important;
+  border: 1px solid #e5e7eb !important;
+  background: linear-gradient(to right, #f5f9ff, #f0f7ff) !important;
+  margin-bottom: 15px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Adjust summary content layout */
+.outlineHeader {
+  margin-bottom: 5px !important;
+}
+
+.outlineHeader h3 {
+  font-size: 1rem !important;
+  color: #2563eb !important;
+  margin-bottom: 5px !important;
+}
+
+/* Make summary content more compact */
+.postStrategySummary {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.postStrategySummary h4 {
+  font-size: 0.85rem !important;
+  margin-bottom: 5px !important;
+  color: #4b5563 !important;
+}
+
+.strategySummaryContent {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+}
+
+.strategySummaryContent p {
+  margin: 0 !important;
+  font-size: 0.75rem !important;
+  flex: 1 1 250px !important;
+}
+
+/* Update posts row to appear below summary */
+.postsRow {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 15px !important;
+  width: 100% !important;
+  margin-top: 0 !important;
+  justify-content: space-between !important;
+}
+
+/* Variant for video posts */
+.videoPostType {
+  background-color: #f59e0b;
+}
+
+/* Style the scrollbar for post details */
+.postDetails::-webkit-scrollbar {
+  width: 5px;
+}
+
+.postDetails::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.postDetails::-webkit-scrollbar-thumb {
+  background: #c5d1e8;
+  border-radius: 4px;
+}
+
+/* Add these at the end of the file to override duplicates */
+.postColumn p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Specific fix for space between behavioral economics and draft caption */
+.postColumn:first-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Add slight margin to section headings except the first one */
+.postColumn:not(:first-child) h5 {
+  margin-top: 4px !important;
+}
+
+/* Fix spacing issues in post cards - most specific selectors with !important */
+.postDetails {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 10px !important;
+}
+
+/* Target each column directly */
+.postColumn {
+  margin: 0 !important;
+  padding: 0 0 8px 0 !important;
+}
+
+/* Target the behavioral economics section specifically */
+.postColumn h5 + p {
+  margin-bottom: 8px !important;
+  min-height: 40px; /* Ensure minimum space */
+}
+
+/* Make section headings tighter */
+.postColumn h5 {
+  margin: 5px 0 3px 0 !important;
+}
+
+/* Make the textarea fill available space */
+.postTextarea {
+  height: 120px !important; /* Increased from 100px */
+  min-height: 100px !important;
+  max-height: 150px !important;
+  margin-bottom: 5px !important;
+  resize: vertical !important;
+}
+
+/* Target the last column (visual suggestions) to ensure proper spacing */
+.postColumn:last-child {
+  margin-top: 8px !important;
+  min-height: 60px; /* Ensure minimum space */
+}
+
+/* Fix textarea width to prevent overflow - add at end of file */
+.postTextarea {
+  width: 95% !important; /* Slightly less than 100% */
+  box-sizing: border-box !important;
+  margin: 0 auto !important; /* Center it */
+  display: block !important;
+  max-width: 340px !important; /* Increased from 280px to 340px */
+}
+
+/* Ensure the column containing the textarea is properly sized */
+.postColumn {
+  box-sizing: border-box !important;
+  padding: 0 5px !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Add at the end of your CSS file */
+.enhanceButtonContainer {
+  padding: 8px;
+  text-align: center;
+  margin-top: auto;
+}
+
+.enhanceButton {
+  background-color: #f0f5ff;
+  color: #3b82f6;
+  border: 1px dashed #3b82f6;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 90%;
+}
+
+.enhanceButton:hover:not(:disabled) {
+  background-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.enhanceButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.enhancingSpinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #3b82f6;
+  border-top: 1px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Fix spacing and font sizes in post cards */
+.postCard {
+  flex: 0 0 360px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+  background-color: white !important;
+  height: 600px !important;
+  border: 1px solid #f1f5f9 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+}
+
+/* Fix the header section */
+.postHeader {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 10px 14px !important;
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  gap: 4px !important;
+}
+
+.postHeaderTop {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.postNumber {
+  font-weight: 600 !important;
+  color: #3b82f6 !important;
+  font-size: 0.75rem !important;
+}
+
+.postTitle {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  width: 100% !important;
+}
+
+/* Post type indicators with proper styling */
+.postType {
+  color: #ffffff !important;
+  font-size: 0.65rem !important;
+  padding: 4px 10px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  display: inline-block !important;
+  background-color: #5295f7 !important; /* Default blue for image posts */
+}
+
+.videoPostType {
+  background-color: #f59e0b !important; /* Orange for video posts */
+}
+
+/* Adjust post details content area */
+.postDetails {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  padding: 12px !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  max-height: unset !important;
+}
+
+/* Fix section headings and content */
+.postColumn h5 {
+  margin-top: 0 !important;
+  color: #334155 !important;
+  font-size: 0.68rem !important;
+  margin-bottom: 6px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  font-weight: 600 !important;
+}
+
+.postColumn p {
+  margin: 0 0 12px 0 !important;
+  font-size: 0.8rem !important;
+  line-height: 1.5 !important;
+  color: #475569 !important;
+  max-height: unset !important; 
+  overflow-y: visible !important;
+}
+
+/* Section specific styling */
+.keyMessageSection,
+.behavioralSection,
+.visualSection {
+  margin-bottom: 12px !important;
+  max-height: unset !important;
+  min-height: unset !important;
+  padding-bottom: 8px !important;
+}
+
+/* Caption textarea */
+.captionContainer {
+  padding: 6px 10px !important;
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  margin-top: auto !important;
+}
+
+.postTextarea {
+  height: 80px !important;
+  min-height: 80px !important; 
+  font-size: 0.65rem !important;
+  line-height: 1.3 !important;
+  padding: 6px !important;
+  width: 100% !important;
+  resize: none !important;
+}
+
+.captionContainer h5 {
+  font-size: 0.65rem !important;
+  margin-bottom: 4px !important;
+}
+
+/* Ensure text content fits within post card sections */
+.postColumn p {
+  margin: 0 0 10px 0 !important;
+  font-size: 0.75rem !important; /* Slightly reduced from 0.8rem */
+  line-height: 1.4 !important; /* Slightly reduced from 1.5 */
+  color: #475569 !important;
+  overflow-y: auto !important;
+  max-height: 100px !important; /* Limit height with scrolling */
+  padding-right: 3px !important; /* Space for scrollbar */
+  word-wrap: break-word !important; /* Ensure long words wrap */
+  white-space: normal !important; /* Allow normal wrapping */
+}
+
+/* Set fixed heights for content sections to prevent expansion */
+.keyMessageSection {
+  margin-bottom: 8px !important;
+  max-height: 90px !important; /* Fixed height */
+  overflow-y: auto !important;
+}
+
+.behavioralSection {
+  margin-bottom: 8px !important; 
+  max-height: 90px !important; /* Fixed height */
+  overflow-y: auto !important;
+}
+
+.visualSection {
+  margin-bottom: 0 !important;
+  max-height: 90px !important; /* Fixed height */
+  overflow-y: auto !important;
+}
+
+/* Add a subtle scrollbar for overflow content */
+.postColumn p::-webkit-scrollbar {
+  width: 3px;
+}
+
+.postColumn p::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.postColumn p::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+/* Add loading spinner for transition button */
+.loadingSpinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Styling for the button in loading state */
+.modernButton:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  background: linear-gradient(90deg, #7a98c7, #5c7fc7);
+}
+
+/* Add styling for unenhanced posts */
+.unenhancedPost {
+  position: relative;
+}
+
+.unenhancedPost::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(241, 245, 249, 0.7); /* Light grey with 70% opacity */
+  z-index: 10;
+  pointer-events: none; /* Allow clicking through the overlay */
+}
+
+/* Keep enhance button clickable by placing it above the overlay */
+.unenhancedPost .enhanceButtonContainer {
+  position: relative;
+  z-index: 20;
+}
+
+/* Add a subtle pulsing animation to the enhance button for unenhanced posts */
+.unenhancedPost .enhanceButton {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Enhanced summary bar styling */
+.strategySummarySection {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-bottom: 8px !important;
+  flex-wrap: wrap !important;
+}
+
+.briefSummary {
+  flex: 1 1 65% !important;
+  font-size: 0.8rem !important;
+  margin: 0 !important;
+  font-style: italic !important;
+}
+
+.strategicRationale {
+  font-size: 0.75rem !important;
+  margin: 0 !important;
+  color: #4b5563 !important;
+  line-height: 1.4 !important;
+}
+
+.strategicRationale p {
+  margin: 0 !important;
+}
+
+.summaryLoading {
+  font-size: 0.75rem !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.summaryLoading:before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid #e5e7eb !important;
+  border-top: 2px solid #3b82f6 !important;
+  border-radius: 50% !important;
+  animation: spin 1s linear infinite !important;
+}
+
+/* Date picker styles */
+.datePickerContainer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.datePicker {
+  padding: 8px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  font-size: 0.9rem !important;
+  color: #374151 !important;
+}
+
+.datePicker:focus {
+  outline: none !important;
+  border-color: #4285f4 !important;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2) !important;
+}
+
+/* Instagram post analysis styles */
+.instagramSection {
+  margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 2rem;
+}
+
+.instagramSection h3 {
+  font-size: 1.4rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.instagramSection p {
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.postInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.postUrlInput {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.postUrlInput:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.postDescriptionTextarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  min-height: 100px;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.postDescriptionTextarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+}
+
+.analyzeButton {
+  background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 200px;
+}
+
+.analyzeButton:hover:not(:disabled) {
+  background: linear-gradient(90deg, #6d28d9, #7c3aed);
+  transform: translateY(-1px);
+}
+
+.analyzeButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.analysisResult {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.analysisResult h4 {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #8b5cf6;
+  display: inline-block;
+} 
