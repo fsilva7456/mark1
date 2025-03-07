@@ -1,0 +1,76 @@
+:root {
+  --primary-color: #3454D1;
+  --primary-hover: #2a43a7;
+  --secondary-color: #E9ECEF;
+  --text-primary: #1A2B3C;
+  --text-secondary: #4A5568;
+  --text-light: #718096;
+  --background-main: #F7F9FC;
+  --background-card: #FFFFFF;
+  --border-color: #E2E8F0;
+  --success-color: #38A169;
+  --warning-color: #ED8936;
+  --error-color: #E53E3E;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  letter-spacing: -0.011em;
+  color: var(--text-primary);
+  background-color: var(--background-main);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* This ensures FOUC doesn't occur with Inter font loading */
+@supports (font-variation-settings: normal) {
+  html {
+    font-family: 'Inter var', sans-serif;
+  }
+}
+
+/* Error and success messages */
+.error {
+  color: var(--error-color);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  background-color: rgba(229, 62, 62, 0.1);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--error-color);
+}
+
+.message {
+  color: var(--success-color);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  background-color: rgba(56, 161, 105, 0.1);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--success-color);
+} 
