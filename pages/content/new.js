@@ -6,6 +6,108 @@ import styles from '../../styles/Content.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
+const mockContent = [
+  {
+    week: 1,
+    theme: "Introduction to your approach",
+    posts: [
+      { 
+        type: "Carousel", 
+        topic: "5 myths about fitness debunked", 
+        audience: "Beginners & skeptics",
+        cta: "Save this post for future reference",
+        principle: "Authority & Social Proof",
+        principleExplanation: "Using expert knowledge to debunk myths establishes authority, while referencing what others commonly believe leverages social proof.",
+        visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text"
+      },
+      { 
+        type: "Video", 
+        topic: "Quick demo of your training style", 
+        audience: "Potential clients considering personal training",
+        cta: "DM me for a free consultation",
+        principle: "Reciprocity",
+        principleExplanation: "Offering valuable content for free creates a sense of reciprocity, making viewers more likely to respond to your CTA.",
+        visual: "Fast-paced training montage showing your energy and training style in your actual workspace"
+      },
+      { 
+        type: "Story", 
+        topic: "Behind the scenes of your business", 
+        audience: "All followers",
+        cta: "Follow for more insights",
+        principle: "Liking & Familiarity",
+        principleExplanation: "Sharing personal aspects of your business creates likability and builds familiarity, which increases trust over time.",
+        visual: "Candid photos or video clips of your workspace, training equipment, or planning process"
+      }
+    ]
+  },
+  {
+    week: 2,
+    theme: "Client success stories",
+    posts: [
+      { 
+        type: "Transformation", 
+        topic: "Before & after of a client", 
+        audience: "Results-focused individuals",
+        cta: "Book a consultation (link in bio)",
+        principle: "Social Proof",
+        principleExplanation: "Showing real results creates social proof, demonstrating that your methods work for others and can work for the viewer too.",
+        visual: "Side-by-side comparison photos with consistent lighting and angles to highlight genuine progress"
+      },
+      { 
+        type: "Testimonial", 
+        topic: "Client interview about their journey", 
+        audience: "People on the fence about committing",
+        cta: "Comment if you relate to their story",
+        principle: "Liking & Social Proof",
+        principleExplanation: "Personal stories create emotional connections and relatability, while positive outcomes reinforce social proof.",
+        visual: "Video interview with client in a comfortable setting with good lighting and clear audio"
+      },
+      { 
+        type: "Carousel", 
+        topic: "3 key habits that lead to success", 
+        audience: "Committed fitness enthusiasts",
+        cta: "Share this with someone who needs it",
+        principle: "Commitment & Consistency",
+        principleExplanation: "Highlighting successful habits encourages viewers to commit to small actions, which builds momentum through consistency.",
+        visual: "Clean, minimalist graphics with icons representing each habit and short explanatory text"
+      }
+    ]
+  },
+  {
+    week: 3,
+    theme: "Education series",
+    posts: [
+      { 
+        type: "Carousel", 
+        topic: "The science behind your methods", 
+        audience: "Data-driven, analytical followers",
+        cta: "Save this to reference during workouts",
+        principle: "Authority",
+        principleExplanation: "Sharing research-backed information positions you as an expert and authority in your field, building credibility and trust.",
+        visual: "Simple diagrams with scientific concepts visualized in an accessible way with your branding"
+      },
+      { 
+        type: "Video", 
+        topic: "Common form mistakes to avoid", 
+        audience: "Intermediate fitness enthusiasts",
+        cta: "Tag a friend who needs to see this",
+        principle: "Loss Aversion",
+        principleExplanation: "Highlighting mistakes taps into loss aversion - people's desire to avoid negative outcomes like injury or wasted effort.",
+        visual: "Split-screen demonstrations showing incorrect form (with caution indicator) vs. correct form (with checkmark)"
+      },
+      { 
+        type: "Reel", 
+        topic: "Quick tips for better results", 
+        audience: "Busy professionals with limited time",
+        cta: "Try this in your next workout",
+        principle: "Simplicity & Scarcity",
+        principleExplanation: "Quick, actionable tips are perceived as valuable because they save time (scarcity) and are easy to implement (simplicity).",
+        visual: "Fast-paced video with on-screen text highlighting key points and demonstrating quick techniques"
+      }
+    ]
+  }
+];
+
 const WeekLoadingPlaceholder = ({ weekNumber, theme }) => (
   <div className={styles.weekSection}>
     <h2>Week {weekNumber}: {theme}</h2>
