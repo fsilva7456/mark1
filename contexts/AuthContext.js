@@ -35,7 +35,10 @@ export function AuthProvider({ children }) {
     signIn: (email, password) => supabase.auth.signIn({ email, password }),
     signOut: () => {
       supabase.auth.signOut()
-      router.push('/')
+      // Only run router.push on the client side
+      if (typeof window !== 'undefined') {
+        router.push('/')
+      }
     },
     user,
     loading
