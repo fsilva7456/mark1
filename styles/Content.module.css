@@ -206,4 +206,16 @@
 
 .metaValue {
   color: #4A5568;
+  display: inline-block;
+}
+
+/* For longer text items like explanations */
+.metaItem:nth-child(4) .metaValue,
+.metaItem:nth-child(5) .metaValue {
+  display: block;
+  margin-top: 0.25rem;
+  font-style: italic;
+  color: #718096;
+  padding-left: 0.5rem;
+  border-left: 2px solid #E2E8F0;
 } 

@@ -42,21 +42,27 @@ export default function NewContent() {
               topic: "5 myths about fitness debunked", 
               audience: "Beginners & skeptics",
               cta: "Save this post for future reference",
-              principle: "Authority & Social Proof"
+              principle: "Authority & Social Proof",
+              principleExplanation: "Using expert knowledge to debunk myths establishes authority, while referencing what others commonly believe leverages social proof.",
+              visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text"
             },
             { 
               type: "Video", 
               topic: "Quick demo of your training style", 
               audience: "Potential clients considering personal training",
               cta: "DM me for a free consultation",
-              principle: "Reciprocity"
+              principle: "Reciprocity",
+              principleExplanation: "Offering valuable content for free creates a sense of reciprocity, making viewers more likely to respond to your CTA.",
+              visual: "Fast-paced training montage showing your energy and training style in your actual workspace"
             },
             { 
               type: "Story", 
               topic: "Behind the scenes of your business", 
               audience: "All followers",
               cta: "Follow for more insights",
-              principle: "Liking & Familiarity"
+              principle: "Liking & Familiarity",
+              principleExplanation: "Sharing personal aspects of your business creates likability and builds familiarity, which increases trust over time.",
+              visual: "Candid photos or video clips of your workspace, training equipment, or planning process"
             }
           ]
         },
@@ -176,6 +182,7 @@ export default function NewContent() {
                       <div key={postIndex} className={styles.postCard}>
                         <div className={styles.postType}>{post.type}</div>
                         <p className={styles.postTopic}>{post.topic}</p>
+                        
                         <div className={styles.postMeta}>
                           <div className={styles.metaItem}>
                             <span className={styles.metaLabel}>Audience:</span>
@@ -188,6 +195,14 @@ export default function NewContent() {
                           <div className={styles.metaItem}>
                             <span className={styles.metaLabel}>Principle:</span>
                             <span className={styles.metaValue}>{post.principle}</span>
+                          </div>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Why it works:</span>
+                            <span className={styles.metaValue}>{post.principleExplanation}</span>
+                          </div>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Proposed visual:</span>
+                            <span className={styles.metaValue}>{post.visual}</span>
                           </div>
                         </div>
                       </div>
