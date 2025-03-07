@@ -12,6 +12,7 @@ export default function NewContent() {
   const { user, loading } = useAuth();
   const [contentOutline, setContentOutline] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [startDate, setStartDate] = useState(new Date());
   
   useEffect(() => {
     // Redirect if not logged in
@@ -29,102 +30,30 @@ export default function NewContent() {
   const generateContentIdeas = async () => {
     setIsLoading(true);
     
-    // In a real app, this would call an AI API
-    // For now, we'll generate mock content ideas
-    setTimeout(() => {
-      const mockContent = [
-        {
-          week: 1,
-          theme: "Introduction to your approach",
-          posts: [
-            { 
-              type: "Carousel", 
-              topic: "5 myths about fitness debunked", 
-              audience: "Beginners & skeptics",
-              cta: "Save this post for future reference",
-              principle: "Authority & Social Proof",
-              principleExplanation: "Using expert knowledge to debunk myths establishes authority, while referencing what others commonly believe leverages social proof.",
-              visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text"
-            },
-            { 
-              type: "Video", 
-              topic: "Quick demo of your training style", 
-              audience: "Potential clients considering personal training",
-              cta: "DM me for a free consultation",
-              principle: "Reciprocity",
-              principleExplanation: "Offering valuable content for free creates a sense of reciprocity, making viewers more likely to respond to your CTA.",
-              visual: "Fast-paced training montage showing your energy and training style in your actual workspace"
-            },
-            { 
-              type: "Story", 
-              topic: "Behind the scenes of your business", 
-              audience: "All followers",
-              cta: "Follow for more insights",
-              principle: "Liking & Familiarity",
-              principleExplanation: "Sharing personal aspects of your business creates likability and builds familiarity, which increases trust over time.",
-              visual: "Candid photos or video clips of your workspace, training equipment, or planning process"
-            }
-          ]
-        },
-        {
-          week: 2,
-          theme: "Client success stories",
-          posts: [
-            { 
-              type: "Transformation", 
-              topic: "Before & after of a client", 
-              audience: "Results-focused individuals",
-              cta: "Book a consultation (link in bio)",
-              principle: "Social Proof"
-            },
-            { 
-              type: "Testimonial", 
-              topic: "Client interview about their journey", 
-              audience: "People on the fence about committing",
-              cta: "Comment if you relate to their story",
-              principle: "Liking & Social Proof"
-            },
-            { 
-              type: "Carousel", 
-              topic: "3 key habits that lead to success", 
-              audience: "Committed fitness enthusiasts",
-              cta: "Share this with someone who needs it",
-              principle: "Commitment & Consistency"
-            }
-          ]
-        },
-        {
-          week: 3,
-          theme: "Education series",
-          posts: [
-            { 
-              type: "Carousel", 
-              topic: "The science behind your methods", 
-              audience: "Data-driven, analytical followers",
-              cta: "Save this to reference during workouts",
-              principle: "Authority"
-            },
-            { 
-              type: "Video", 
-              topic: "Common form mistakes to avoid", 
-              audience: "Intermediate fitness enthusiasts",
-              cta: "Tag a friend who needs to see this",
-              principle: "Loss Aversion"
-            },
-            { 
-              type: "Reel", 
-              topic: "Quick tips for better results", 
-              audience: "Busy professionals with limited time",
-              cta: "Try this in your next workout",
-              principle: "Simplicity & Scarcity"
-            }
-          ]
-        },
-      ];
+    // In a real implementation, we would make API calls to Gemini
+    // For demo purposes, we'll still use the mock data but simulate separate calls per week
+    try {
+      const week1Content = await generateWeekContent(1, "Introduction to your approach");
+      const week2Content = await generateWeekContent(2, "Client success stories");
+      const week3Content = await generateWeekContent(3, "Education series");
       
-      setContentOutline(mockContent);
+      setContentOutline([week1Content, week2Content, week3Content]);
       setIsLoading(false);
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating content:", error);
+      setIsLoading(false);
+    }
+  };
+
+  // Function to simulate generating content for each week
+  // In a real app, this would call Gemini API
+  const generateWeekContent = async (weekNumber, theme) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const weekContent = mockContent.find(week => week.week === weekNumber);
+        resolve(weekContent);
+      }, 700); // Simulate API call with delay
+    });
   };
   
   const handleSaveCalendar = async () => {
@@ -211,9 +140,31 @@ export default function NewContent() {
                 </div>
               ))}
               
+              <div className={styles.datePickerContainer}>
+                <h3>When would you like to start publishing?</h3>
+                <div className={styles.datePicker}>
+                  <label htmlFor="start-date">Start Date:</label>
+                  <input
+                    type="date"
+                    id="start-date"
+                    value={startDate instanceof Date ? startDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => setStartDate(new Date(e.target.value))}
+                    className={styles.dateInput}
+                  />
+                </div>
+              </div>
+              
               <div className={styles.actions}>
                 <button onClick={handleSaveCalendar} className={styles.saveButton}>
                   Save Content Calendar
+                </button>
+                <button 
+                  onClick={() => router.push(
+                    `/calendar/view?strategy=${encodeURIComponent(strategy)}&startDate=${startDate.toISOString()}`
+                  )} 
+                  className={styles.calendarButton}
+                >
+                  Create Calendar View
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard')} 
