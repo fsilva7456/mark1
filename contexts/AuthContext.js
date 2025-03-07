@@ -10,31 +10,36 @@ export function AuthProvider({ children }) {
   const router = useRouter()
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    const session = supabase.auth.session()
-
-    setUser(session?.user ?? null)
-    setLoading(false)
-
-    // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        setLoading(false)
+    // Get current session using v2 API
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      setUser(data.session?.user ?? null)
+      setLoading(false)
+      
+      // Set up auth state change listener using v2 API
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      )
+      
+      return () => {
+        authListener?.subscription.unsubscribe()
       }
-    )
-
-    return () => {
-      listener?.unsubscribe()
     }
+    
+    getSession()
   }, [])
 
-  // Will be passed down to components
+  // Use v2 API methods for auth operations
   const value = {
-    signUp: (email, password) => supabase.auth.signUp({ email, password }),
-    signIn: (email, password) => supabase.auth.signIn({ email, password }),
-    signOut: () => {
-      supabase.auth.signOut()
+    signUp: (email, password) => 
+      supabase.auth.signUp({ email, password }),
+    signIn: (email, password) => 
+      supabase.auth.signInWithPassword({ email, password }),
+    signOut: async () => {
+      await supabase.auth.signOut()
       // Only run router.push on the client side
       if (typeof window !== 'undefined') {
         router.push('/')
