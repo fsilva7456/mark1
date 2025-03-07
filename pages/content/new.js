@@ -6,6 +6,16 @@ import styles from '../../styles/Content.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
+const WeekLoadingPlaceholder = ({ weekNumber, theme }) => (
+  <div className={styles.weekSection}>
+    <h2>Week {weekNumber}: {theme}</h2>
+    <div className={styles.loadingSection}>
+      <div className={styles.spinnerSmall}></div>
+      <p>Generating content...</p>
+    </div>
+  </div>
+);
+
 export default function NewContent() {
   const router = useRouter();
   const { strategy } = router.query;
@@ -13,11 +23,6 @@ export default function NewContent() {
   const [contentOutline, setContentOutline] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [startDate, setStartDate] = useState(new Date());
-  const [loadingWeeks, setLoadingWeeks] = useState({
-    1: true,
-    2: true,
-    3: true
-  });
   
   useEffect(() => {
     // Redirect if not logged in
@@ -35,49 +40,12 @@ export default function NewContent() {
   const generateContentIdeas = async () => {
     setIsLoading(true);
     
-    try {
-      // Generate week 1 first for faster perceived performance
-      const week1 = await generateWeekContent(1, "Introduction to your approach");
-      setContentOutline(prev => [...prev, week1]);
-      setLoadingWeeks(prev => ({...prev, 1: false}));
-      
-      // Generate weeks 2 and 3 in parallel
-      const [week2, week3] = await Promise.all([
-        generateWeekContent(2, "Client success stories"),
-        generateWeekContent(3, "Education series")
-      ]);
-      
-      setContentOutline(prev => [...prev, week2, week3]);
-      setLoadingWeeks({1: false, 2: false, 3: false});
+    // Simulate API call with delay
+    setTimeout(() => {
+      // Use mock data directly
+      setContentOutline(mockContent);
       setIsLoading(false);
-    } catch (error) {
-      console.error("Error generating content:", error);
-      setIsLoading(false);
-    }
-  };
-
-  // Function to generate content for a single week (one Gemini API call per week)
-  const generateWeekContent = async (weekNumber, theme) => {
-    // In production, you would make a single API call to Gemini for this week
-    // For example:
-    // const response = await fetch('your-gemini-api-endpoint', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ 
-    //     weekNumber, 
-    //     theme, 
-    //     strategy,
-    //     prompt: `Generate a week of content for a ${theme} theme for a fitness business.` 
-    //   })
-    // });
-    // return await response.json();
-    
-    // For simulation purposes, we'll return mock data immediately with minimal delay
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const weekContent = mockContent.find(week => week.week === weekNumber);
-        resolve(weekContent);
-      }, 300); // Reduced timeout to 300ms for simulation
-    });
+    }, 1500);
   };
   
   const handleSaveCalendar = async () => {
@@ -163,11 +131,6 @@ export default function NewContent() {
                   </div>
                 </div>
               ))}
-              
-              {/* Show loading placeholders for weeks not yet loaded */}
-              {loadingWeeks[1] && <WeekLoadingPlaceholder weekNumber={1} theme="Introduction to your approach" />}
-              {loadingWeeks[2] && <WeekLoadingPlaceholder weekNumber={2} theme="Client success stories" />}
-              {loadingWeeks[3] && <WeekLoadingPlaceholder weekNumber={3} theme="Education series" />}
               
               <div className={styles.datePickerContainer}>
                 <h3>When would you like to start publishing?</h3>
