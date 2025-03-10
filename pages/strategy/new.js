@@ -138,12 +138,22 @@ export default function NewStrategy() {
         url = 'https://' + url;
       }
       
-      // In a real implementation, we would call an API to scrape and analyze the website
-      // For now, we'll simulate the analysis with a timeout
-      
-      setTimeout(async () => {
-        // Simulated analysis result
-        const businessDescription = await analyzeWebsite(url);
+      try {
+        // Call our API endpoint for website analysis
+        const response = await fetch('/api/analyze-website', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to analyze website');
+        }
+        
+        const data = await response.json();
+        const businessDescription = data.analysis;
         
         setUserData({
           ...userData,
@@ -157,7 +167,7 @@ export default function NewStrategy() {
           { sender: 'user', text: input },
           { 
             sender: 'assistant', 
-            text: `Thanks for sharing your website! Based on my analysis, I understand that: ${businessDescription}\n\nIs there anything else you'd like to add about your business?` 
+            text: `Thanks for sharing your website! Based on my analysis:\n\n${businessDescription}\n\nIs there anything else you'd like to add about your business?` 
           },
           { sender: 'assistant', text: questions[step + 1] },
         ]);
@@ -167,7 +177,23 @@ export default function NewStrategy() {
         setCurrentInput('');
         setChatSuggestions(suggestedAnswers[step + 1]);
         setIsProcessing(false);
-      }, 3000); // Simulate API delay
+      } catch (error) {
+        console.error('Error analyzing website:', error);
+        
+        // Fallback to a generic response if analysis fails
+        setMessages([
+          ...messages,
+          { sender: 'user', text: input },
+          { 
+            sender: 'assistant', 
+            text: `I tried to analyze your website but encountered an issue. Could you briefly describe your fitness business instead?` 
+          },
+        ]);
+        
+        // Don't advance to next step, let them respond with a description
+        setCurrentInput('');
+        setIsProcessing(false);
+      }
       
       return; // Exit early since we're handling this case specially
     } else {
@@ -376,25 +402,6 @@ export default function NewStrategy() {
       text: '',
       currentValue: ''
     });
-  };
-
-  // Function to simulate website analysis with Gemini
-  const analyzeWebsite = async (url) => {
-    // In a real implementation, this would:
-    // 1. Call an API that scrapes the website
-    // 2. Send the content to Gemini for analysis
-    // 3. Return Gemini's summary of the business
-    
-    // For demonstration, we'll return simulated results based on the domain
-    if (url.includes('yoga')) {
-      return "You run a yoga studio offering classes for all levels, with specializations in vinyasa and restorative practices. You also offer teacher training programs and wellness retreats.";
-    } else if (url.includes('strong') || url.includes('strength')) {
-      return "Your business focuses on strength training with both personal training and small group sessions. You emphasize proper form and progressive overload principles.";
-    } else if (url.includes('coach') || url.includes('personal')) {
-      return "You provide personalized fitness coaching with custom workout plans and nutritional guidance. You work with clients both in-person and online.";
-    } else {
-      return "You run a fitness business offering training services to help clients achieve their health and wellness goals. You provide personalized approaches tailored to individual needs.";
-    }
   };
 
   return (
