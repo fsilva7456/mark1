@@ -30,6 +30,22 @@ export default async function handler(req, res) {
       
       // Store in Supabase with better error handling
       console.log("Storing data in Supabase...");
+
+      // Get the user's session for authentication
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw new Error(`Auth error: ${authError.message}`);
+      }
+
+      // Verify the user exists and matches
+      if (!authData.user || authData.user.id !== userId) {
+        console.error("User authentication mismatch");
+        throw new Error("User authentication failed");
+      }
+
+      // Now perform the upsert with authenticated client
       const { data, error } = await supabase
         .from('website_data')
         .upsert({
