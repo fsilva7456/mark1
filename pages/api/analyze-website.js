@@ -29,8 +29,19 @@ export default async function handler(req, res) {
 
     try {
       // Step 1: Scrape the website through the proxy
+      console.log("Starting website scrape...");
       const scrapedContent = await scrapeWebsite(proxyUrl);
-      console.log("Scraping successful");
+      console.log("Scrape results:", {
+        title: scrapedContent.title,
+        descriptionLength: scrapedContent.description.length,
+        textLength: scrapedContent.mainText.length,
+        servicesFound: scrapedContent.services ? scrapedContent.services.length : 0
+      });
+      
+      if (!scrapedContent.mainText || scrapedContent.mainText.length < 100) {
+        console.log("Insufficient content scraped, falling back");
+        throw new Error("Insufficient content scraped");
+      }
       
       // Step 2: Analyze with Gemini
       const analysis = await analyzeWithGemini(scrapedContent, url);
@@ -39,7 +50,10 @@ export default async function handler(req, res) {
       // Return the analysis
       return res.status(200).json({ analysis });
     } catch (scrapeError) {
-      console.error("Scraping/analysis error:", scrapeError);
+      console.error("Scraping/analysis error details:", {
+        message: scrapeError.message,
+        stack: scrapeError.stack
+      });
       
       // Fallback to a simpler analysis based just on the URL
       const fallbackAnalysis = await generateFallbackAnalysis(url);
@@ -60,16 +74,25 @@ export default async function handler(req, res) {
 // Add a fallback function for when scraping fails
 async function generateFallbackAnalysis(url) {
   try {
+    // Extract domain name and potential keywords from the URL
+    const domain = new URL(url).hostname.replace('www.', '');
+    const domainParts = domain.split('.');
+    const keywords = domainParts[0].split(/[^a-zA-Z0-9]/).filter(word => word.length > 2);
+    
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     const prompt = `
-      I couldn't scrape this fitness business website: ${url}
+      I need to analyze a fitness business based only on its URL: ${url}
       
-      Based just on the URL and domain name, please make educated guesses about:
-      1. What type of fitness business this might be
-      2. Possible services they might offer
-      3. The likely focus of their approach
+      The domain name is: ${domain}
+      Potential keywords from the domain: ${keywords.join(', ')}
       
-      Format as a paragraph that acknowledges these are educated guesses.
+      Please provide:
+      1. A detailed analysis of what type of fitness business this likely is
+      2. What services they probably offer based on common industry patterns
+      3. Their potential target demographic and business approach
+      4. Suggestions for content they might want to create
+      
+      Make your response detailed and specific to the fitness industry, while acknowledging these are educated guesses based only on the URL.
     `;
     
     const result = await model.generateContent(prompt);
@@ -77,7 +100,7 @@ async function generateFallbackAnalysis(url) {
     return response.text();
   } catch (error) {
     console.error("Fallback analysis failed:", error);
-    return "This appears to be a fitness business website. Without being able to access the content, I can't provide specific details about their services or approach.";
+    return `Based on your domain, you appear to operate a fitness business. Without being able to access your website content directly, I can provide general recommendations for fitness businesses:\n\n- Most successful fitness businesses focus on a specific niche rather than trying to appeal to everyone\n- Your content strategy should include transformation stories, educational content about your approach, and regular engagement with your community\n- Consider creating content that addresses common pain points like lack of time, motivation struggles, and confusion about fitness techniques`;
   }
 }
 

@@ -131,16 +131,26 @@ export default function NewStrategy() {
     } else if (step === 1) {
       // Check if the user wants to skip
       if (input.toLowerCase() === 'skip') {
+        // Show business type selection to help guide users
         setMessages([
           ...messages,
           { sender: 'user', text: "I'd like to skip this step" },
           { 
             sender: 'assistant', 
-            text: "No problem! Please describe your fitness business - what do you specialize in?"
+            text: "No problem! What type of fitness business do you operate? Select one or describe your business:"
           },
         ]);
         
-        // Don't advance the step yet - wait for their business description
+        // Add new suggestions specific to business types
+        setChatSuggestions([
+          "Personal Training",
+          "Group Fitness Studio",
+          "CrossFit Gym",
+          "Yoga Studio",
+          "Online Fitness Coaching"
+        ]);
+        
+        // Don't advance the step yet
         setCurrentInput('');
         return;
       }
