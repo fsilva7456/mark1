@@ -55,6 +55,8 @@ export default function Setup() {
     setMessage({ type: '', content: '' });
     
     try {
+      console.log("Submitting website for analysis:", websiteUrl);
+      
       const response = await fetch('/api/setup/analyze-website', {
         method: 'POST',
         headers: {
@@ -68,8 +70,15 @@ export default function Setup() {
       
       const data = await response.json();
       
+      // Log the full response for debugging
+      console.log("API response:", data);
+      
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze website');
+        // Show more specific error based on response
+        const errorDetails = data.details || 'Unknown error';
+        const errorType = data.errorType || '';
+        
+        throw new Error(`${errorType}: ${errorDetails}`);
       }
       
       setMessage({ 
@@ -79,9 +88,23 @@ export default function Setup() {
       setSetupComplete(true);
     } catch (error) {
       console.error("Error analyzing website:", error);
+      
+      // Provide more specific guidance based on the error
+      let errorMessage = `Error analyzing website: ${error.message}.`;
+      
+      if (error.message.includes('CORS') || error.message.includes('Network Error')) {
+        errorMessage += " We're having trouble accessing your website. Please check that the URL is accessible and not blocking our requests.";
+      } else if (error.message.includes('Database')) {
+        errorMessage += " There was an issue storing your website data.";
+      } else if (error.message.includes('content')) {
+        errorMessage += " We couldn't extract enough useful content from your website.";
+      } else {
+        errorMessage += " Please try again or contact support.";
+      }
+      
       setMessage({ 
         type: 'error', 
-        content: `Error analyzing website: ${error.message}. Please try again or contact support.` 
+        content: errorMessage
       });
     } finally {
       setIsProcessing(false);
