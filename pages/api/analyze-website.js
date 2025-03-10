@@ -18,17 +18,66 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    // Step 1: Scrape the website
-    const scrapedContent = await scrapeWebsite(url);
+    console.log("Received URL:", url);
     
-    // Step 2: Analyze with Gemini
-    const analysis = await analyzeWithGemini(scrapedContent, url);
+    // Set headers to prevent timeout
+    res.setHeader('Connection', 'keep-alive');
     
-    // Return the analysis
-    return res.status(200).json({ analysis });
+    // Use a CORS proxy to avoid CORS issues
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    console.log("Using proxy URL:", proxyUrl);
+
+    try {
+      // Step 1: Scrape the website through the proxy
+      const scrapedContent = await scrapeWebsite(proxyUrl);
+      console.log("Scraping successful");
+      
+      // Step 2: Analyze with Gemini
+      const analysis = await analyzeWithGemini(scrapedContent, url);
+      console.log("Analysis successful");
+      
+      // Return the analysis
+      return res.status(200).json({ analysis });
+    } catch (scrapeError) {
+      console.error("Scraping/analysis error:", scrapeError);
+      
+      // Fallback to a simpler analysis based just on the URL
+      const fallbackAnalysis = await generateFallbackAnalysis(url);
+      return res.status(200).json({ 
+        analysis: fallbackAnalysis,
+        warning: "Used fallback analysis due to scraping issues" 
+      });
+    }
   } catch (error) {
-    console.error('Error analyzing website:', error);
-    return res.status(500).json({ error: 'Failed to analyze website' });
+    console.error("Unhandled error in API route:", error);
+    return res.status(500).json({ 
+      error: 'Failed to analyze website', 
+      details: error.message 
+    });
+  }
+}
+
+// Add a fallback function for when scraping fails
+async function generateFallbackAnalysis(url) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const prompt = `
+      I couldn't scrape this fitness business website: ${url}
+      
+      Based just on the URL and domain name, please make educated guesses about:
+      1. What type of fitness business this might be
+      2. Possible services they might offer
+      3. The likely focus of their approach
+      
+      Format as a paragraph that acknowledges these are educated guesses.
+    `;
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Fallback analysis failed:", error);
+    return "This appears to be a fitness business website. Without being able to access the content, I can't provide specific details about their services or approach.";
   }
 }
 

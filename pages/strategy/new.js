@@ -45,7 +45,7 @@ export default function NewStrategy() {
   // Questions the AI will ask
   const questions = [
     "What's your name?",
-    "Great to meet you! What's the URL of your fitness business website?",
+    "Great to meet you! What's the URL of your fitness business website? (Or type 'skip' to enter details manually)",
     "What are your main business goals for the next 3 months?",
     "Who is your ideal client? Describe their demographics, interests, and pain points.",
     "What makes your fitness approach unique compared to competitors?",
@@ -129,6 +129,22 @@ export default function NewStrategy() {
         answers: updatedAnswers,
       });
     } else if (step === 1) {
+      // Check if the user wants to skip
+      if (input.toLowerCase() === 'skip') {
+        setMessages([
+          ...messages,
+          { sender: 'user', text: "I'd like to skip this step" },
+          { 
+            sender: 'assistant', 
+            text: "No problem! Please describe your fitness business - what do you specialize in?"
+          },
+        ]);
+        
+        // Don't advance the step yet - wait for their business description
+        setCurrentInput('');
+        return;
+      }
+      
       // This is where we handle the website URL
       setIsProcessing(true);
       
