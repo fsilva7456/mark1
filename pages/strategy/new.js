@@ -45,7 +45,7 @@ export default function NewStrategy() {
   // Questions the AI will ask
   const questions = [
     "What's your name?",
-    "Great to meet you! Tell me about your fitness business - what do you specialize in?",
+    "Great to meet you! What's the URL of your fitness business website?",
     "What are your main business goals for the next 3 months?",
     "Who is your ideal client? Describe their demographics, interests, and pain points.",
     "What makes your fitness approach unique compared to competitors?",
@@ -55,7 +55,7 @@ export default function NewStrategy() {
   // Suggested answers for each question - empty array for name question
   const suggestedAnswers = [
     [], // No name suggestions 
-    ["I run a personal training business focusing on strength training", "I teach yoga classes for all levels", "I have a CrossFit gym with group and individual coaching"], // Business suggestions
+    ["www.myfitnesscoaching.com", "fitnesswithsarah.com", "strongerbytomorrow.com"], // Website URL suggestions
     ["Increase client retention by 20%", "Launch a new online program", "Grow my Instagram following to 10K followers"], // Goals suggestions
     ["Women 30-45 who want to get fit but lack time", "Men 25-40 looking to build muscle", "Seniors interested in improving mobility and strength"], // Target audience suggestions
     ["I focus on sustainable lifestyle changes, not quick fixes", "I use a science-based approach with measurable results", "I provide more personalized attention than larger gyms"], // Unique approach suggestions
@@ -118,17 +118,64 @@ export default function NewStrategy() {
   
   const processUserInput = async (input, step) => {
     // Store user's answer
-    const newUserData = { ...userData };
+    const updatedAnswers = [...userData.answers];
+    updatedAnswers[step] = input;
     
+    // Update user data
     if (step === 0) {
-      newUserData.name = input;
+      setUserData({
+        ...userData,
+        name: input,
+        answers: updatedAnswers,
+      });
     } else if (step === 1) {
-      newUserData.business = input;
+      // This is where we handle the website URL
+      setIsProcessing(true);
+      
+      // Validate URL format
+      let url = input;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      
+      // In a real implementation, we would call an API to scrape and analyze the website
+      // For now, we'll simulate the analysis with a timeout
+      
+      setTimeout(async () => {
+        // Simulated analysis result
+        const businessDescription = await analyzeWebsite(url);
+        
+        setUserData({
+          ...userData,
+          business: businessDescription,
+          answers: updatedAnswers,
+        });
+        
+        // Add the analysis result as a message
+        setMessages([
+          ...messages,
+          { sender: 'user', text: input },
+          { 
+            sender: 'assistant', 
+            text: `Thanks for sharing your website! Based on my analysis, I understand that: ${businessDescription}\n\nIs there anything else you'd like to add about your business?` 
+          },
+          { sender: 'assistant', text: questions[step + 1] },
+        ]);
+        
+        // Move to the next step
+        setCurrentStep(step + 1);
+        setCurrentInput('');
+        setChatSuggestions(suggestedAnswers[step + 1]);
+        setIsProcessing(false);
+      }, 3000); // Simulate API delay
+      
+      return; // Exit early since we're handling this case specially
     } else {
-      newUserData.answers.push(input);
+      setUserData({
+        ...userData,
+        answers: updatedAnswers,
+      });
     }
-    
-    setUserData(newUserData);
     
     // If we've completed all questions, generate the matrix
     if (step === questions.length - 1) {
@@ -137,7 +184,7 @@ export default function NewStrategy() {
       // In a real app, we would call an AI API here
       // For now, we'll simulate a delay and generate mock data
       setTimeout(() => {
-        generateMatrix(newUserData);
+        generateMatrix(userData);
         setIsProcessing(false);
         setShowMatrix(true);
       }, 3000);
@@ -329,6 +376,25 @@ export default function NewStrategy() {
       text: '',
       currentValue: ''
     });
+  };
+
+  // Function to simulate website analysis with Gemini
+  const analyzeWebsite = async (url) => {
+    // In a real implementation, this would:
+    // 1. Call an API that scrapes the website
+    // 2. Send the content to Gemini for analysis
+    // 3. Return Gemini's summary of the business
+    
+    // For demonstration, we'll return simulated results based on the domain
+    if (url.includes('yoga')) {
+      return "You run a yoga studio offering classes for all levels, with specializations in vinyasa and restorative practices. You also offer teacher training programs and wellness retreats.";
+    } else if (url.includes('strong') || url.includes('strength')) {
+      return "Your business focuses on strength training with both personal training and small group sessions. You emphasize proper form and progressive overload principles.";
+    } else if (url.includes('coach') || url.includes('personal')) {
+      return "You provide personalized fitness coaching with custom workout plans and nutritional guidance. You work with clients both in-person and online.";
+    } else {
+      return "You run a fitness business offering training services to help clients achieve their health and wellness goals. You provide personalized approaches tailored to individual needs.";
+    }
   };
 
   return (
