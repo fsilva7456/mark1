@@ -420,14 +420,13 @@
   pointer-events: none;
 }
 
-/* Enhanced form container with deeper shadow and more pronounced border radius */
+/* Fixed size form container */
 .formContainer {
-  width: 100%;
-  max-width: 450px;
+  width: 450px; /* Fixed width instead of max-width */
   background-color: white;
   padding: 2.5rem;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Deeper shadow */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 2;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -576,7 +575,7 @@
   margin-left: 0.5rem;
 }
 
-/* Responsive adjustments */
+/* Update responsive adjustments to maintain form size */
 @media (max-width: 1024px) {
   .main {
     flex-direction: column;
@@ -595,22 +594,21 @@
     max-width: 100%;
   }
   
-  .formContainer {
+  /* Remove this line to keep formContainer width fixed */
+  /* .formContainer {
     max-width: 100%;
-  }
+  } */
 }
 
-@media (max-width: 640px) {
-  .title {
-    font-size: 2rem;
-  }
-  
-  .subtitle {
-    font-size: 1.1rem;
-  }
-  
+/* Only for very small screens, adjust the form to be usable */
+@media (max-width: 480px) {
   .formContainer {
+    width: 90%; /* Allow some flexibility on very small screens */
     padding: 2rem 1.5rem;
+  }
+  
+  .formSection {
+    padding: 1rem;
   }
 }
 
