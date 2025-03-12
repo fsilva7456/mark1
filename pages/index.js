@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import styles from '../styles/Home.module.css';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { motion } from 'framer-motion';
 
 export default function Home() {
   const router = useRouter();
@@ -22,20 +23,19 @@ export default function Home() {
     }
   }, [user, loading, router]);
 
-  const handleEmailLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await supabase.auth.signIn({ email, password });
       
-      if (error) {
-        setError(error.message);
-      }
-    } catch (err) {
-      setError('Failed to sign in. Please try again.');
-      console.error(err);
+      if (error) throw error;
+      
+      router.push('/dashboard');
+    } catch (error) {
+      setError(error.message || 'An error occurred during login.');
     } finally {
       setIsLoading(false);
     }
@@ -54,110 +54,119 @@ export default function Home() {
   };
 
   return (
-    <div className={styles.pageContainer}>
+    <div className={styles.container}>
       <Head>
-        <title>Mark1 - AI Native Marketing for Fitness</title>
-        <meta name="description" content="AI-powered marketing tools for the fitness industry" />
+        <title>MARK1 | AI Marketing for Fitness Professionals</title>
+        <meta name="description" content="AI-powered marketing strategy and content creation for fitness professionals" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Navbar />
-
       <main className={styles.main}>
-        <div className={styles.loginContainer}>
-          <div className={styles.loginLeftPanel}>
-            <div className={styles.loginContent}>
-              <h1 className={styles.heroTitle}>
-                AI-Powered Marketing <br/>
-                <span className={styles.highlight}>For the Fitness Industry</span>
-              </h1>
-              <p className={styles.heroDescription}>
-                Mark1 helps fitness professionals define their marketing strategy, plan compelling content, and grow their business through AI-powered marketing tools.
-              </p>
-              <div className={styles.features}>
-                <div className={styles.featureItem}>
-                  <div className={styles.featureIcon}>✓</div>
-                  <span>Generate engaging social media content</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <div className={styles.featureIcon}>✓</div>
-                  <span>Attract and convert more clients</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <div className={styles.featureIcon}>✓</div>
-                  <span>Track performance with AI insights</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.loginRightPanel}>
-            <div className={styles.loginBox}>
-              <h2>Log in to your account</h2>
-              
-              {error && <p className={styles.error}>{error}</p>}
-              
-              <form onSubmit={handleEmailLogin} className={styles.form}>
-                <div className={styles.inputGroup}>
-                  <label htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-                
-                <div className={styles.inputGroup}>
-                  <label htmlFor="password">Password</label>
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-                
-                <div className={styles.forgotPassword}>
-                  <Link href="/forgot-password">Forgot password?</Link>
-                </div>
-                
-                <button 
-                  type="submit" 
-                  className={styles.loginButton}
-                  disabled={isLoading}
+        <motion.div 
+          className={styles.backgroundSection}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+        >
+          <div className={styles.backgroundOverlay} />
+          
+          <div className={styles.content}>
+            <motion.h1
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              className={styles.title}
+            >
+              AI-POWERED MARKETING FOR THE FITNESS INDUSTRY
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className={styles.subtitle}
+            >
+              MARK1 helps fitness professionals define their marketing strategy, create engaging content, and grow their business.
+            </motion.p>
+            
+            <motion.ul
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+              className={styles.featureList}
+            >
+              {[
+                'Generate engaging social media content',
+                'Attract and convert more clients',
+                'Track performance with AI insights',
+                'Build a consistent marketing strategy'
+              ].map((feature, index) => (
+                <motion.li 
+                  key={index}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 + (index * 0.1), duration: 0.5 }}
                 >
-                  {isLoading ? 'Logging in...' : 'Log In'}
-                </button>
-              </form>
-              
-              <div className={styles.divider}>
-                <span>OR</span>
+                  {feature}
+                </motion.li>
+              ))}
+            </motion.ul>
+          </div>
+        </motion.div>
+        
+        <motion.div 
+          className={styles.formSection}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className={styles.formContainer}>
+            <h2 className={styles.formTitle}>Welcome Back</h2>
+            <p className={styles.formSubtitle}>Login to your account</p>
+            
+            {error && <div className={styles.error}>{error}</div>}
+            
+            <form onSubmit={handleLogin} className={styles.form}>
+              <div className={styles.formGroup}>
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
               </div>
               
-              <button 
-                onClick={handleGoogleLogin} 
-                className={styles.googleButton}
-                disabled={isLoading}
-              >
-                <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                  <g transform="matrix(1, 0, 0, 1, 0, 0)">
-                    <path d="M21.35,11.1H12.18V13.83H18.69C18.36,17.64 15.19,19.27 12.19,19.27C8.36,19.27 5,16.25 5,12C5,7.9 8.2,4.73 12.2,4.73C15.29,4.73 17.1,6.7 17.1,6.7L19,4.72C19,4.72 16.56,2 12.1,2C6.42,2 2.03,6.8 2.03,12C2.03,17.05 6.16,22 12.25,22C17.6,22 21.5,18.33 21.5,12.91C21.5,11.76 21.35,11.1 21.35,11.1Z" fill="#4285F4" />
-                  </g>
-                </svg>
-                Sign in with Google
-              </button>
+              <div className={styles.formGroup}>
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
               
-              <p className={styles.signupText}>
-                Don't have an account? <Link href="/signup">Sign up</Link>
-              </p>
+              <motion.button 
+                type="submit" 
+                className={styles.loginButton}
+                disabled={isLoading}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isLoading ? 'Logging in...' : 'Login'}
+              </motion.button>
+            </form>
+            
+            <div className={styles.formFooter}>
+              <p>Don't have an account? <Link href="/signup">Sign up</Link></p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       <footer className={styles.footer}>
