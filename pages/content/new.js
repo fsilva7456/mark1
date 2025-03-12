@@ -141,47 +141,88 @@ export default function NewContent() {
     
     // Fetch strategy details when strategy ID is available
     if (strategy && user) {
-      fetchStrategyDetails(strategy);
+      try {
+        console.log("Strategy ID available:", strategy);
+        fetchStrategyDetails(strategy);
+      } catch (err) {
+        console.error("Error in useEffect:", err);
+        setIsLoading(false);
+        setError('Failed to start content generation process.');
+      }
+    } else if (!loading && !strategy) {
+      console.error("No strategy ID found in URL");
+      setIsLoading(false);
+      setError('No strategy ID provided in URL. Please select a strategy first.');
     }
   }, [user, loading, strategy, router]);
   
   const fetchStrategyDetails = async (strategyId) => {
     try {
+      console.log("Fetching strategy details for ID:", strategyId);
+      
+      // Check if ID is valid
+      if (!strategyId) {
+        console.error("No strategy ID provided");
+        setError('No strategy ID provided.');
+        setIsLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('strategies')
         .select('*')
         .eq('id', strategyId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase query error:", error.message, error.details, error.hint);
+        throw error;
+      }
       
       if (data) {
+        console.log("Strategy data loaded successfully:", data.id);
         setSelectedStrategy(data);
         // Generate content after strategy is loaded
         generateContent(data);
       } else {
+        console.error("No strategy found with ID:", strategyId);
         setError('Strategy not found.');
+        setIsLoading(false);
       }
     } catch (err) {
-      console.error('Error fetching strategy:', err);
-      setError('Failed to load strategy details.');
+      console.error('Error fetching strategy details:', err.message);
+      setError('Failed to load strategy details: ' + (err.message || 'Unknown error'));
+      setIsLoading(false);
     }
   };
   
   const generateContent = async (strategyData) => {
     try {
-      setIsLoading(true);
+      console.log("Generating content with strategy data...");
       
-      // Simulate API call with delay
-      setTimeout(() => {
-        // Use mock data directly
-        setContentOutline(mockContent);
+      // Validate that we have the required strategy data
+      if (!strategyData || !strategyData.target_audience || !strategyData.objectives || !strategyData.key_messages) {
+        console.error("Invalid strategy data format:", strategyData);
+        setError('Invalid strategy data format. Missing required fields.');
         setIsLoading(false);
-      }, 1500);
+        return;
+      }
       
-      // After campaigns are generated, generate daily engagement content
+      // Use the mock content directly instead of an API call for now
+      console.log("Setting mock content...");
+      setContentOutline(mockContent);
+      
+      // After setting mock content, generate daily engagement content
       try {
+        console.log("Generating daily engagement content...");
         setIsDailyEngagementLoading(true);
+        
+        // Create a properly formatted strategy matrix from the Supabase data
+        const formattedStrategy = {
+          targetAudience: strategyData.target_audience || [],
+          objectives: strategyData.objectives || [],
+          keyMessages: strategyData.key_messages || []
+        };
         
         // Call the API to generate daily engagement content
         const dailyEngagementResponse = await fetch('/api/content/generate-daily-engagement', {
@@ -190,21 +231,31 @@ export default function NewContent() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            strategyMatrix: strategyData, // Use the passed strategy data
-            campaigns: mockContent, // Use the mock content directly
-            businessType: strategyData?.user_data?.answers?.[1] || 'fitness business'
+            strategyMatrix: formattedStrategy, // Pass the correctly formatted strategy
+            campaigns: mockContent,
+            businessType: strategyData.user_data?.answers?.[1] || 'fitness business'
           }),
         });
         
         if (!dailyEngagementResponse.ok) {
-          throw new Error('Failed to generate daily engagement content');
+          const errorText = await dailyEngagementResponse.text();
+          console.error("Daily engagement API error:", dailyEngagementResponse.status, errorText);
+          throw new Error(`API error: ${dailyEngagementResponse.status} - ${errorText}`);
         }
         
         const dailyEngagementData = await dailyEngagementResponse.json();
+        
+        if (!dailyEngagementData || !dailyEngagementData.dailyEngagement) {
+          console.error("Invalid daily engagement response:", dailyEngagementData);
+          throw new Error('Invalid response format from API');
+        }
+        
+        console.log("Daily engagement content generated successfully");
         setDailyEngagement(dailyEngagementData.dailyEngagement);
       } catch (dailyError) {
-        console.error('Error generating daily engagement:', dailyError);
+        console.error('Error generating daily engagement:', dailyError.message, dailyError.stack);
         // Don't block the overall flow if daily engagement fails
+        // Just show a message in the UI
       } finally {
         setIsDailyEngagementLoading(false);
       }
@@ -212,9 +263,9 @@ export default function NewContent() {
       setIsLoading(false);
       setShowContent(true);
     } catch (error) {
-      console.error('Error generating content:', error);
+      console.error('Error generating content:', error.message, error.stack);
       setIsLoading(false);
-      setError('Failed to generate content. Please try again.');
+      setError('Failed to generate content: ' + (error.message || 'Unknown error'));
     }
   };
   
@@ -293,6 +344,18 @@ export default function NewContent() {
             <div className={styles.loading}>
               <div className={styles.spinner}></div>
               <p>Generating your content outline...</p>
+            </div>
+          ) : error ? (
+            <div className={styles.errorContainer}>
+              <div className={styles.errorIcon}>⚠️</div>
+              <h3>Error</h3>
+              <p>{error}</p>
+              <button 
+                onClick={() => router.push('/dashboard')} 
+                className={styles.returnButton}
+              >
+                Return to Dashboard
+              </button>
             </div>
           ) : (
             <div className={styles.outlineContainer}>

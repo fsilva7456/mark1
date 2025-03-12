@@ -405,4 +405,35 @@
   .tabs button {
     flex-shrink: 0;
   }
+}
+
+.errorContainer {
+  padding: 2rem;
+  background-color: #FFF5F5;
+  border: 1px solid #FED7D7;
+  border-radius: 12px;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.returnButton {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #3454D1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.returnButton:hover {
+  background-color: #2a43a7;
+  transform: translateY(-2px);
 } 
