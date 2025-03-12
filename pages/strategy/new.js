@@ -430,6 +430,28 @@ export default function NewStrategy() {
     });
   };
 
+  const fetchCompetitiveInsights = async (userLocation) => {
+    try {
+      // Get gyms near the user's location
+      const response = await fetch(`/api/gyms/get-competitive-data?location=${userLocation}`);
+      const { data } = await response.json();
+      
+      // Use the gym data for Gemini prompting
+      const competitiveInsights = data.map(gym => ({
+        name: gym.Name,
+        offerings: gym.Offerings, 
+        positives: gym["What People Are Saying (Positive)"],
+        negatives: gym["What People Are Saying (Negative)"],
+        opportunities: gym["Insights/Opportunities/Suggestions for a Self-Employed Personal Trainer (In-Person & Online)"]
+      }));
+      
+      return competitiveInsights;
+    } catch (error) {
+      console.error("Error fetching competitive insights:", error);
+      return [];
+    }
+  };
+
   return (
     <div className={styles.container}>
       <Head>
