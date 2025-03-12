@@ -76,6 +76,8 @@ export default function NewStrategy() {
   // Function to send message to Gemini API
   const sendToGemini = async (userInput, isInitial = false) => {
     try {
+      console.log("Sending to Gemini:", isInitial ? "Initial prompt" : userInput);
+      
       // Prepare conversation history for context
       const conversationHistory = messages.map(msg => ({
         role: msg.sender === 'assistant' ? 'assistant' : 'user',
@@ -104,6 +106,8 @@ After gathering sufficient information, let the user know you're ready to create
 
 ${isInitial ? "Start by introducing yourself and asking for the user's name." : ""}`;
 
+      console.log("System prompt:", systemPrompt);
+      
       // Call API endpoint that will interact with Gemini
       const response = await fetch('/api/strategy/generate-question', {
         method: 'POST',
@@ -114,15 +118,19 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
           systemPrompt,
           messages: conversationHistory,
           matrixStage: showMatrix,
-          userData
+          userData,
+          isDebugMode: true  // Add this for debugging
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to generate response');
+        const errorData = await response.json();
+        console.error("API error:", errorData);
+        throw new Error(`API request failed: ${errorData.error || response.statusText}`);
       }
       
       const data = await response.json();
+      console.log("API response:", data);
       
       // Check if Gemini indicates we should show the matrix
       if (data.showMatrix) {
@@ -139,9 +147,13 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
         return await sendGymDataToGemini(gymData, conversationHistory);
       }
       
-      return data.response;
+      return data.response || "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
     } catch (error) {
       console.error('Error generating response:', error);
+      // Provide a fallback first message if this is the initial call
+      if (isInitial) {
+        return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
+      }
       return "I'm having trouble processing that. Could you please try again?";
     }
   };
