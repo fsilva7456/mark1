@@ -162,7 +162,7 @@
 }
 
 .saveButton {
-  background-color: #3454D1;
+  background-color: var(--primary);
   color: white;
   padding: 0.875rem 1.75rem;
   border-radius: 10px;
@@ -175,9 +175,9 @@
 }
 
 .saveButton:hover {
-  background-color: #2a43a7;
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(52, 84, 209, 0.3);
+  box-shadow: 0 4px 8px rgba(42, 82, 152, 0.2);
 }
 
 .cancelButton {
@@ -590,7 +590,7 @@
 }
 
 .outlineButton {
-  background-color: #38A169;
+  background-color: var(--secondary);
   color: white;
   border: none;
   border-radius: 10px;
@@ -603,9 +603,9 @@
 }
 
 .outlineButton:hover {
-  background-color: #2F855A;
+  background-color: var(--secondary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(56, 161, 105, 0.2);
+  box-shadow: 0 4px 8px rgba(245, 166, 35, 0.2);
 }
 
 .diagnosticTools {
@@ -629,4 +629,18 @@
 
 .diagnosticButton:hover {
   background-color: #e0e0e0;
+}
+
+/* Update matrix styling */
+.matrixSection h3 {
+  color: var(--primary);
+  border-bottom: 3px solid var(--secondary);
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.interactiveCell:hover {
+  border-left: 3px solid var(--secondary);
+  padding-left: 0.75rem;
+  background-color: rgba(245, 166, 35, 0.05);
 } 

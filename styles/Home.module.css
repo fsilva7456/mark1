@@ -327,7 +327,7 @@
   justify-content: center;
   padding: 3rem;
   position: relative;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
   color: white;
   overflow: hidden;
 }
@@ -379,7 +379,7 @@
 .featureList li:before {
   content: '✓';
   margin-right: 0.75rem;
-  color: #4ade80;
+  color: var(--secondary);
   font-weight: bold;
 }
 
@@ -420,12 +420,12 @@
 .formTitle {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e3c72;
+  color: var(--primary);
   margin-bottom: 0.5rem;
 }
 
 .formSubtitle {
-  color: #64748b;
+  color: var(--text-light);
   margin-bottom: 2rem;
 }
 
@@ -442,7 +442,7 @@
   display: block;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #334155;
+  color: var(--text-medium);
   margin-bottom: 0.5rem;
 }
 
@@ -462,7 +462,7 @@
 }
 
 .loginButton {
-  background-color: #1e3c72;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -475,7 +475,7 @@
 }
 
 .loginButton:hover {
-  background-color: #15325f;
+  background-color: var(--primary-dark);
 }
 
 .loginButton:disabled {
@@ -484,8 +484,8 @@
 }
 
 .error {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  background-color: #feebc8;
+  color: var(--error);
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -500,7 +500,7 @@
 }
 
 .formFooter a {
-  color: #1e3c72;
+  color: var(--primary);
   font-weight: 600;
   text-decoration: none;
 }
@@ -545,4 +545,32 @@
   .formContainer {
     padding: 2rem 1.5rem;
   }
+}
+
+/* Add new accent elements with secondary color */
+.accentBar {
+  height: 4px;
+  width: 60px;
+  background-color: var(--secondary);
+  margin-bottom: 1rem;
+}
+
+/* Update the call-to-action buttons with secondary color */
+.ctaButton {
+  background-color: var(--secondary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 2rem;
+  display: inline-block;
+}
+
+.ctaButton:hover {
+  background-color: var(--secondary-dark);
+  transform: translateY(-2px);
 } 
