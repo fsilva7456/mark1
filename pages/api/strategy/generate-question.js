@@ -43,20 +43,31 @@ export default async function handler(req, res) {
       
       // Generate a response from Gemini
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-      const chat = model.startChat({
-        history: geminiMessages.slice(0, -1), // Exclude the last message for the chat history
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
-        }
-      });
       
-      // Send the last message to get a response
-      const lastMessage = geminiMessages[geminiMessages.length - 1];
-      const result = await chat.sendMessage(
-        `Based on the conversation so far, provide the next question or response to help create a marketing strategy. If you need competitor data, include [REQUEST_COMPETITOR_DATA] and the location in your response. If you have enough information to create the strategy matrix, include [READY_FOR_MATRIX] in your response.`
-      );
+      // Change how we're handling the chat history and message
+      let result;
+      
+      if (messages.length <= 1) {
+        // For the first real interaction (after user enters name)
+        // Use a direct content generation instead of chat
+        const prompt = `${systemPrompt}\n\nThe user's name is: ${messages[0].content}\n\nProvide a friendly response that welcomes them by name and asks about their fitness business.`;
+        
+        result = await model.generateContent(prompt);
+      } else {
+        // For subsequent messages, use the chat interface
+        const chat = model.startChat({
+          history: geminiMessages.slice(0, -1),
+          generationConfig: {
+            temperature: 0.7,
+            topP: 0.8,
+            topK: 40,
+          }
+        });
+        
+        result = await chat.sendMessage(
+          `Based on the conversation so far, provide the next question or response to help create a marketing strategy. If you need competitor data, include [REQUEST_COMPETITOR_DATA] and the location in your response. If you have enough information to create the strategy matrix, include [READY_FOR_MATRIX] in your response.`
+        );
+      }
       
       const responseText = result.response.text();
       
