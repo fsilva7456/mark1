@@ -348,7 +348,7 @@ export default function NewContent() {
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerContent}>
-            <h1>Content Outline for {strategy}</h1>
+            <h1>Content Outline for {selectedStrategy?.name || 'Strategy'}</h1>
             <p>Here's a 3-week content plan based on your marketing strategy.</p>
           </div>
         </div>
@@ -430,7 +430,7 @@ export default function NewContent() {
                 </button>
                 <button 
                   onClick={() => router.push(
-                    `/calendar/view?strategy=${encodeURIComponent(strategy)}&startDate=${startDate.toISOString()}`
+                    `/calendar/view?strategy=${selectedStrategy?.id || ''}&startDate=${startDate.toISOString()}`
                   )} 
                   className={styles.calendarButton}
                 >
