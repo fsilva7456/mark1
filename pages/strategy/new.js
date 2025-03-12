@@ -11,11 +11,9 @@ export default function NewStrategy() {
   const [messages, setMessages] = useState([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
   const [userData, setUserData] = useState({
     name: '',
-    business: '',
-    answers: [],
+    answers: []
   });
   const [showMatrix, setShowMatrix] = useState(false);
   const [matrix, setMatrix] = useState({
@@ -23,10 +21,6 @@ export default function NewStrategy() {
     objectives: [],
     keyMessages: []
   });
-  
-  // New state for chat suggestions
-  const [chatSuggestions, setChatSuggestions] = useState([]);
-  const [typingTimeout, setTypingTimeout] = useState(null);
   
   // Feedback popup state
   const [feedbackPopup, setFeedbackPopup] = useState({
@@ -42,43 +36,27 @@ export default function NewStrategy() {
   const feedbackInputRef = useRef(null);
   const chatInputRef = useRef(null);
   
-  // Questions the AI will ask
-  const questions = [
-    "What's your name?",
-    "Great to meet you! What's the URL of your fitness business website? (Or type 'skip' to enter details manually)",
-    "What are your main business goals for the next 3 months?",
-    "Who is your ideal client? Describe their demographics, interests, and pain points.",
-    "What makes your fitness approach unique compared to competitors?",
-    "What type of content do you feel most comfortable creating? (videos, photos, written posts, etc.)"
-  ];
-  
-  // Suggested answers for each question - empty array for name question
-  const suggestedAnswers = [
-    [], // No name suggestions 
-    ["www.myfitnesscoaching.com", "fitnesswithsarah.com", "strongerbytomorrow.com"], // Website URL suggestions
-    ["Increase client retention by 20%", "Launch a new online program", "Grow my Instagram following to 10K followers"], // Goals suggestions
-    ["Women 30-45 who want to get fit but lack time", "Men 25-40 looking to build muscle", "Seniors interested in improving mobility and strength"], // Target audience suggestions
-    ["I focus on sustainable lifestyle changes, not quick fixes", "I use a science-based approach with measurable results", "I provide more personalized attention than larger gyms"], // Unique approach suggestions
-    ["Short workout videos", "Before and after transformations", "Educational content about fitness myths"], // Content type suggestions
-  ];
-  
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   
-  // Initial setup - show first question and suggestions
+  // Initial setup - show first AI message
   useEffect(() => {
     if (messages.length === 0) {
-      setMessages([{
-        sender: 'assistant',
-        text: questions[0],
-      }]);
-      setChatSuggestions(suggestedAnswers[0]);
+      // Initial message from the AI assistant
+      setIsProcessing(true);
+      sendToGemini("", true).then(response => {
+        setMessages([{
+          sender: 'assistant',
+          text: response,
+        }]);
+        setIsProcessing(false);
+      });
     }
     
     scrollToBottom();
-  }, [messages]);
+  }, []);
   
   // Keep input focused after submission
   useEffect(() => {
@@ -95,244 +73,237 @@ export default function NewStrategy() {
     }
   }, [feedbackPopup.visible]);
   
-  // Debounced suggestion generation for feedback
-  const handleFeedbackChange = (e) => {
-    const newText = e.target.value;
-    setFeedbackPopup({
-      ...feedbackPopup,
-      text: newText
-    });
-    
-    // Clear any existing timeout
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
-    }
-    
-    // Set new timeout to update suggestions after typing stops
-    const timeout = setTimeout(() => {
-      generateSuggestions(newText, feedbackPopup.section);
-    }, 500); // 500ms debounce
-    
-    setTypingTimeout(timeout);
-  };
-  
-  const processUserInput = async (input, step) => {
-    // Store user's answer
-    const updatedAnswers = [...userData.answers];
-    updatedAnswers[step] = input;
-    
-    // Update user data
-    if (step === 0) {
-      setUserData({
-        ...userData,
-        name: input,
-        answers: updatedAnswers,
-      });
-    } else if (step === 1) {
-      // Check if the user wants to skip
-      if (input.toLowerCase() === 'skip') {
-        // Show business type selection to help guide users
-        setMessages([
-          ...messages,
-          { sender: 'user', text: "I'd like to skip this step" },
-          { 
-            sender: 'assistant', 
-            text: "No problem! What type of fitness business do you operate? Select one or describe your business:"
-          },
-        ]);
-        
-        // Add new suggestions specific to business types
-        setChatSuggestions([
-          "Personal Training",
-          "Group Fitness Studio",
-          "CrossFit Gym",
-          "Yoga Studio",
-          "Online Fitness Coaching"
-        ]);
-        
-        // Don't advance the step yet
-        setCurrentInput('');
-        return;
-      }
+  // Function to send message to Gemini API
+  const sendToGemini = async (userInput, isInitial = false) => {
+    try {
+      // Prepare conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.sender === 'assistant' ? 'assistant' : 'user',
+        content: msg.text
+      }));
       
-      // This is where we handle the website URL
-      setIsProcessing(true);
-      
-      // Validate URL format
-      let url = input;
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://' + url;
-      }
-      
-      try {
-        // Call our API endpoint for website analysis
-        const response = await fetch('/api/analyze-website', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url }),
+      // Add the new user input if present
+      if (userInput) {
+        conversationHistory.push({
+          role: 'user',
+          content: userInput
         });
-        
-        if (!response.ok) {
-          throw new Error('Failed to analyze website');
-        }
-        
-        const data = await response.json();
-        const businessDescription = data.analysis;
-        
-        setUserData({
-          ...userData,
-          business: businessDescription,
-          answers: updatedAnswers,
-        });
-        
-        // Add the analysis result as a message
-        setMessages([
-          ...messages,
-          { sender: 'user', text: input },
-          { 
-            sender: 'assistant', 
-            text: `Thanks for sharing your website! Based on my analysis:\n\n${businessDescription}\n\nIs there anything else you'd like to add about your business?` 
-          },
-          { sender: 'assistant', text: questions[step + 1] },
-        ]);
-        
-        // Move to the next step
-        setCurrentStep(step + 1);
-        setCurrentInput('');
-        setChatSuggestions(suggestedAnswers[step + 1]);
-        setIsProcessing(false);
-      } catch (error) {
-        console.error('Error analyzing website:', error);
-        
-        // Fallback to a generic response if analysis fails
-        setMessages([
-          ...messages,
-          { sender: 'user', text: input },
-          { 
-            sender: 'assistant', 
-            text: `I tried to analyze your website but encountered an issue. Could you briefly describe your fitness business instead?` 
-          },
-        ]);
-        
-        // Don't advance to next step, let them respond with a description
-        setCurrentInput('');
-        setIsProcessing(false);
       }
       
-      return; // Exit early since we're handling this case specially
-    } else {
-      setUserData({
-        ...userData,
-        answers: updatedAnswers,
+      // Initial system prompt that explains what Gemini should do
+      const systemPrompt = `You are an AI marketing assistant for fitness professionals. 
+Your goal is to help the user create a 3x3 marketing strategy matrix with these components:
+1. Target Audience (who they should market to)
+2. Objectives (what they want to achieve)
+3. Key Messages (what they should communicate)
+
+Ask questions to understand the user's fitness business, their goals, and their unique approach.
+You can request competitor data from Supabase when relevant to provide insights.
+Use your judgment to determine what information you need to build the strategy matrix.
+After gathering sufficient information, let the user know you're ready to create their strategy matrix.
+
+${isInitial ? "Start by introducing yourself and asking for the user's name." : ""}`;
+
+      // Call API endpoint that will interact with Gemini
+      const response = await fetch('/api/strategy/generate-question', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemPrompt,
+          messages: conversationHistory,
+          matrixStage: showMatrix,
+          userData
+        }),
       });
-    }
-    
-    // If we've completed all questions, generate the matrix
-    if (step === questions.length - 1) {
-      setIsProcessing(true);
       
-      // In a real app, we would call an AI API here
-      // For now, we'll simulate a delay and generate mock data
-      setTimeout(() => {
+      if (!response.ok) {
+        throw new Error('Failed to generate response');
+      }
+      
+      const data = await response.json();
+      
+      // Check if Gemini indicates we should show the matrix
+      if (data.showMatrix) {
         generateMatrix(userData);
-        setIsProcessing(false);
         setShowMatrix(true);
-      }, 3000);
+      }
       
-      return;
+      // If Gemini requested competitor data, we'll fetch it
+      if (data.requestCompetitorData) {
+        const location = data.location || userData.location || 'Downtown Toronto';
+        const gymData = await fetchCompetitiveInsights(location);
+        
+        // Send the gym data back to Gemini for analysis
+        return await sendGymDataToGemini(gymData, conversationHistory);
+      }
+      
+      return data.response;
+    } catch (error) {
+      console.error('Error generating response:', error);
+      return "I'm having trouble processing that. Could you please try again?";
     }
-    
-    // Otherwise, show the next question and update suggestions
-    setIsProcessing(true);
-    
-    // Simulate AI thinking delay
-    setTimeout(() => {
-      const nextStep = step + 1;
-      
-      setMessages(prev => [
-        ...prev,
-        {
-          sender: 'assistant',
-          text: questions[nextStep],
-        }
-      ]);
-      
-      // Update suggestions for the next question
-      setChatSuggestions(suggestedAnswers[nextStep]);
-      
-      setIsProcessing(false);
-      setCurrentStep(nextStep);
-    }, 1000);
   };
   
-  const handleSubmit = (e) => {
+  // Function to send gym data to Gemini and get insights
+  const sendGymDataToGemini = async (gymData, conversationHistory) => {
+    try {
+      const response = await fetch('/api/strategy/analyze-competitors', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gymData,
+          messages: conversationHistory,
+          userData
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze competitors');
+      }
+      
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error('Error analyzing competitors:', error);
+      return "I found some competitor information, but I'm having trouble analyzing it right now. Let's continue with your strategy.";
+    }
+  };
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!currentInput.trim() || isProcessing) return;
     
     // Add user message to chat
-    setMessages(prev => [
-      ...prev,
+    const updatedMessages = [
+      ...messages,
       {
         sender: 'user',
         text: currentInput,
       }
-    ]);
-    
-    processUserInput(currentInput, currentStep);
+    ];
+    setMessages(updatedMessages);
     setCurrentInput('');
-  };
-  
-  const handleSuggestionSelect = (suggestion) => {
-    if (isProcessing) return;
     
-    // Add user message to chat
-    setMessages(prev => [
-      ...prev,
-      {
-        sender: 'user',
-        text: suggestion,
-      }
-    ]);
+    // Store user's answer if it's the name question (first question)
+    if (messages.length === 1) {
+      setUserData({
+        ...userData,
+        name: currentInput,
+        answers: [...userData.answers, currentInput]
+      });
+    } else {
+      setUserData({
+        ...userData,
+        answers: [...userData.answers, currentInput]
+      });
+    }
     
-    processUserInput(suggestion, currentStep);
-  };
-  
-  const generateMatrix = (data) => {
-    // In a real app, this would call an AI endpoint
-    // For now, we'll generate mock data based on user input
+    // Process the user input with Gemini
+    setIsProcessing(true);
+    const response = await sendToGemini(currentInput);
     
-    // Add final message from assistant
-    setMessages(prev => [
-      ...prev,
+    // Add AI response to chat
+    setMessages([
+      ...updatedMessages,
       {
         sender: 'assistant',
-        text: `Thanks for sharing all that information, ${data.name}! I've analyzed your responses and created a strategic marketing matrix for your fitness business. This will help guide your Instagram content strategy. Click on any cell to refine it with your feedback.`,
+        text: response,
       }
     ]);
     
-    // Generate mock matrix based on user data
-    const mockMatrix = {
-      targetAudience: [
-        `${data.answers[1]?.includes('women') ? 'Women' : 'Adults'} aged 25-45 who want to improve their fitness`,
-        `Busy professionals looking for efficient ${data.business?.toLowerCase().includes('class') ? 'group workouts' : 'training sessions'}`,
-        `${data.answers[1]?.includes('beginners') ? 'Beginners' : 'Individuals'} interested in ${data.business?.toLowerCase().includes('nutrition') ? 'nutrition and wellness' : 'fitness and health'}`
-      ],
-      objectives: [
-        `Increase Instagram engagement by 30% in the next 3 months`,
-        `Build a reputation as a ${data.answers[2]?.includes('unique') ? 'unique' : 'trusted'} voice in fitness`,
-        `Convert followers to ${data.business?.toLowerCase().includes('online') ? 'online clients' : 'in-person clients'}`
-      ],
-      keyMessages: [
-        `${data.business} helps you achieve results with a personalized approach`,
-        `Transform your fitness journey with expert guidance from ${data.name}`,
-        `Join a supportive community that helps you reach your goals`
-      ]
-    };
-    
-    setMatrix(mockMatrix);
+    setIsProcessing(false);
+  };
+  
+  const fetchCompetitiveInsights = async (userLocation) => {
+    try {
+      // Get gyms near the user's location
+      const response = await fetch(`/api/gyms/get-competitive-data?location=${userLocation}`);
+      const { data } = await response.json();
+      
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      // Use the gym data for Gemini prompting
+      const competitiveInsights = data.map(gym => ({
+        name: gym.Name,
+        offerings: gym.Offerings, 
+        positives: gym["What People Are Saying (Positive)"],
+        negatives: gym["What People Are Saying (Negative)"],
+        opportunities: gym["Insights/Opportunities/Suggestions for a Self-Employed Personal Trainer (In-Person & Online)"],
+        targetAudience: gym["Primary Target Audience for Gym"],
+        location: gym["Localized Location in Downtown Toronto"]
+      }));
+      
+      return competitiveInsights;
+    } catch (error) {
+      console.error("Error fetching competitive insights:", error);
+      return [];
+    }
+  };
+  
+  const generateMatrix = async (data) => {
+    try {
+      // Call Gemini to generate the matrix based on conversation
+      const response = await fetch('/api/strategy/generate-matrix', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messages.map(msg => ({
+            role: msg.sender === 'assistant' ? 'assistant' : 'user',
+            content: msg.text
+          })),
+          userData: data
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate matrix');
+      }
+      
+      const matrixData = await response.json();
+      
+      // Add final message from assistant
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'assistant',
+          text: `Thanks for sharing all that information, ${data.name}! I've analyzed your responses and created a strategic marketing matrix for your fitness business. This will help guide your content strategy. Click on any cell to refine it with your feedback.`,
+        }
+      ]);
+      
+      setMatrix(matrixData.matrix);
+      
+    } catch (error) {
+      console.error('Error generating matrix:', error);
+      // Fallback to basic matrix if API fails
+      const fallbackMatrix = {
+        targetAudience: [
+          `Fitness enthusiasts looking for personalized training`,
+          `Busy professionals seeking efficient workouts`,
+          `Beginners interested in starting their fitness journey`
+        ],
+        objectives: [
+          `Increase social media engagement by 30%`,
+          `Build a reputation as a trusted voice in fitness`,
+          `Convert followers to paying clients`
+        ],
+        keyMessages: [
+          `Achieve real results with personalized guidance`,
+          `Transform your fitness journey with expert support`,
+          `Join a supportive community that helps you reach your goals`
+        ]
+      };
+      
+      setMatrix(fallbackMatrix);
+    }
   };
   
   const handleSaveStrategy = async () => {
@@ -430,28 +401,6 @@ export default function NewStrategy() {
     });
   };
 
-  const fetchCompetitiveInsights = async (userLocation) => {
-    try {
-      // Get gyms near the user's location
-      const response = await fetch(`/api/gyms/get-competitive-data?location=${userLocation}`);
-      const { data } = await response.json();
-      
-      // Use the gym data for Gemini prompting
-      const competitiveInsights = data.map(gym => ({
-        name: gym.Name,
-        offerings: gym.Offerings, 
-        positives: gym["What People Are Saying (Positive)"],
-        negatives: gym["What People Are Saying (Negative)"],
-        opportunities: gym["Insights/Opportunities/Suggestions for a Self-Employed Personal Trainer (In-Person & Online)"]
-      }));
-      
-      return competitiveInsights;
-    } catch (error) {
-      console.error("Error fetching competitive insights:", error);
-      return [];
-    }
-  };
-
   return (
     <div className={styles.container}>
       <Head>
@@ -505,10 +454,10 @@ export default function NewStrategy() {
                 </div>
                 
                 <div className={styles.suggestedAnswers}>
-                  {chatSuggestions.length > 0 && (
+                  {suggestions.length > 0 && (
                     <h4 className={styles.suggestionsTitle}>Example Answers</h4>
                   )}
-                  {chatSuggestions.map((suggestion, index) => (
+                  {suggestions.map((suggestion, index) => (
                     <button 
                       key={index}
                       onClick={() => handleSuggestionSelect(suggestion)}
