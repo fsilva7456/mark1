@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [strategies, setStrategies] = useState([]);
   const [calendars, setCalendars] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [savedStrategies, setSavedStrategies] = useState([]);
+  const [isLoadingStrategies, setIsLoadingStrategies] = useState(true);
 
   useEffect(() => {
     // Redirect if not logged in
@@ -23,6 +25,7 @@ export default function Dashboard() {
 
     if (user) {
       fetchUserData();
+      fetchSavedStrategies();
     }
   }, [user, loading, router]);
 
@@ -52,6 +55,26 @@ export default function Dashboard() {
       console.error('Error fetching user data:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSavedStrategies = async () => {
+    try {
+      setIsLoadingStrategies(true);
+      
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setSavedStrategies(data || []);
+    } catch (error) {
+      console.error('Error fetching saved strategies:', error);
+    } finally {
+      setIsLoadingStrategies(false);
     }
   };
 
@@ -173,6 +196,52 @@ export default function Dashboard() {
                   <div className={styles.emptyStateIcon}>📋</div>
                   <h3>No content calendars yet</h3>
                   <p>Create a marketing strategy first, then you can build content calendars.</p>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.section}>
+              <h2>Your Saved Strategies</h2>
+              
+              {isLoadingStrategies ? (
+                <div className={styles.loading}>Loading your strategies...</div>
+              ) : savedStrategies.length > 0 ? (
+                <div className={styles.cardGrid}>
+                  {savedStrategies.map((strategy) => (
+                    <div key={strategy.id} className={styles.card}>
+                      <h3>{strategy.name}</h3>
+                      <p>Created: {new Date(strategy.created_at).toLocaleDateString()}</p>
+                      
+                      <div className={styles.cardPreview}>
+                        <div className={styles.previewItem}>
+                          <strong>Target Audience:</strong> 
+                          <span>{strategy.target_audience?.[0]?.substring(0, 40)}...</span>
+                        </div>
+                      </div>
+                      
+                      <div className={styles.cardActions}>
+                        <Link 
+                          href={`/strategy/view/${strategy.id}`} 
+                          className={styles.viewButton}
+                        >
+                          View Strategy
+                        </Link>
+                        <Link 
+                          href={`/content/new?strategy=${strategy.id}`}
+                          className={styles.contentButton}
+                        >
+                          Create Content
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <p>You haven't created any strategies yet.</p>
+                  <Link href="/strategy/new" className={styles.createButton}>
+                    Create Your First Strategy
+                  </Link>
                 </div>
               )}
             </div>

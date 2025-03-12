@@ -36,6 +36,9 @@ export default function NewStrategy() {
   const feedbackInputRef = useRef(null);
   const chatInputRef = useRef(null);
   
+  // Add state for storing the strategy ID
+  const [strategyId, setStrategyId] = useState(null);
+  
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
     // Add a small delay to ensure DOM has updated
@@ -511,28 +514,43 @@ export default function NewStrategy() {
   
   const handleSaveStrategy = async () => {
     try {
-      // Save the strategy to Supabase
+      setIsProcessing(true);
+      
+      // Prepare the strategy data for saving
+      const strategyData = {
+        user_id: user.id,
+        name: `${userData.name}'s Marketing Strategy`,
+        target_audience: matrix.targetAudience,
+        objectives: matrix.objectives,
+        key_messages: matrix.keyMessages,
+        // Store original answers for context
+        user_data: userData,
+        created_at: new Date()
+      };
+      
+      // Save to Supabase
       const { data, error } = await supabase
         .from('strategies')
-        .insert([
-          { 
-            user_id: user.id,
-            name: `${userData.name}'s Marketing Strategy`,
-            target_audience: matrix.targetAudience,
-            objectives: matrix.objectives,
-            key_messages: matrix.keyMessages,
-            // Store original answers for context
-            user_data: userData
-          }
-        ]);
+        .insert([strategyData])
+        .select();
       
       if (error) throw error;
       
-      // Redirect to dashboard with success message
-      router.push('/dashboard?success=strategy-created');
+      // Store the strategy ID
+      if (data && data.length > 0) {
+        setStrategyId(data[0].id);
+      }
+      
+      // Show success message
+      alert('Strategy saved successfully!');
+      
+      // Redirect to dashboard
+      router.push('/dashboard?success=strategy-saved');
     } catch (error) {
       console.error('Error saving strategy:', error);
-      // You could add error handling UI here
+      alert('Failed to save strategy. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -745,20 +763,20 @@ export default function NewStrategy() {
                   </div>
                 </div>
                 <div className={styles.matrixActions}>
-                  <button onClick={handleSaveStrategy} className={styles.saveButton}>
-                    Save Strategy
+                  <button
+                    onClick={handleSaveStrategy}
+                    className={styles.saveButton}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? 'Saving...' : 'Save Strategy'}
                   </button>
-                  <button 
-                    onClick={() => router.push('/content/new?strategy=' + encodeURIComponent(`${userData.name}'s Marketing Strategy`))} 
+                  
+                  <button
+                    onClick={() => router.push(`/content/new?strategy=${encodeURIComponent(strategyId)}`)}
                     className={styles.outlineButton}
+                    disabled={isProcessing}
                   >
-                    Create Content Outline
-                  </button>
-                  <button 
-                    onClick={() => router.push('/dashboard')} 
-                    className={styles.cancelButton}
-                  >
-                    Cancel
+                    Generate Content Outline
                   </button>
                 </div>
               </div>
