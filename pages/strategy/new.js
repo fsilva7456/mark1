@@ -73,191 +73,135 @@ export default function NewStrategy() {
     }
   }, [feedbackPopup.visible]);
   
-  // Completely revised sendToGemini function - fully dynamic
+  // Replace the dynamic sendToGemini with a hardcoded version
   const sendToGemini = async (userInput, isInitial = false) => {
     try {
-      console.log("Sending to Gemini:", isInitial ? "Initial prompt" : userInput);
+      console.log("Using hardcoded response flow, message count:", messages.length);
       
-      // Prepare the full conversation context as a single prompt
-      let prompt = `You are an AI marketing assistant for fitness professionals.
-Your goal is to help the user create a 3x3 marketing strategy matrix with these components:
-1. Target Audience (who they should market to)
-2. Objectives (what they want to achieve)
-3. Key Messages (what they should communicate)
-
-You need to gather sufficient information to create this matrix by asking thoughtful, relevant questions.
-Your questions should build on previous answers and help you understand the user's fitness business deeply.
-
-To create an effective matrix, you'll need to understand:
-- The nature of their fitness business (what services they offer)
-- Their target audience and ideal clients
-- Their business goals and marketing objectives
-- What makes their approach unique compared to competitors
-- Their content creation capabilities and preferences
-
-${isInitial ? "START BY INTRODUCING YOURSELF AND ASKING FOR THE USER'S NAME." : ""}`;
-
-      // Add conversation history in a clear format - only if we have messages
-      if (messages.length > 0) {
-        prompt += "\n\nCONVERSATION HISTORY:";
-        messages.forEach(msg => {
-          prompt += `\n\n${msg.sender === 'assistant' ? 'AI' : 'User'}: ${msg.text}`;
-        });
-      }
-      
-      // Add the current user input - only if not initial
-      if (!isInitial && userInput) {
-        prompt += `\n\nUser: ${userInput}`;
-      }
-      
-      // Add instructions for the response
-      prompt += `\n\nBased on this conversation:
-1. Determine what information you still need to create the strategy matrix
-2. Ask ONE targeted question to gather that information
-3. Your response should be conversational and helpful
-4. When you have enough information to create the strategy matrix, include [READY_FOR_MATRIX] at the end of your response
-5. If you need competitor data, include [REQUEST_COMPETITOR_DATA:LOCATION] where LOCATION is the user's location
-
-Your response:`;
-
-      // Log full prompt for debugging in non-production environments
-      console.log("DIAGNOSTIC - Full prompt:", prompt);
-      
-      // Make direct call to Gemini API with error logging
-      try {
-        const response = await fetch('/api/strategy/generate-direct', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt,
-            isDebugMode: true
-          }),
-        });
-        
-        // Log the raw response for debugging
-        console.log("DIAGNOSTIC - API response status:", response.status);
-        
-        // Get response body text for debugging
-        const responseText = await response.text();
-        let data;
-        
-        try {
-          // Try to parse as JSON
-          data = JSON.parse(responseText);
-          console.log("DIAGNOSTIC - API response data:", data);
-        } catch (parseError) {
-          // If can't parse as JSON, log the raw text
-          console.error("DIAGNOSTIC - Failed to parse response as JSON:", responseText);
-          throw new Error("Invalid response format from API");
-        }
-        
-        if (!response.ok) {
-          console.error("DIAGNOSTIC - API error response:", data);
-          throw new Error(`API request failed: ${data.error || response.statusText}`);
-        }
-        
-        // Handle special commands
-        if (data.showMatrix) {
-          generateMatrix(userData);
-          setShowMatrix(true);
-        }
-        
-        if (data.requestCompetitorData && data.location) {
-          const gymData = await fetchCompetitiveInsights(data.location);
-          
-          if (gymData && gymData.length > 0) {
-            return await sendGymDataToGemini(gymData);
-          }
-        }
-        
-        return data.response || "No valid response received from API";
-      } catch (apiError) {
-        console.error("DIAGNOSTIC - API call error:", apiError);
-        
-        // Special handling for second message
-        if (messages.length === 1) {
-          console.log("DIAGNOSTIC - Falling back to hardcoded second message due to API error");
-          return `Hi ${userInput}! Now I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized fitness classes?`;
-        }
-        
-        throw apiError; // Re-throw to be caught by outer try/catch
-      }
-    } catch (error) {
-      console.error('DIAGNOSTIC - Overall error in sendToGemini:', error);
-      console.error('DIAGNOSTIC - Error stack:', error.stack);
-      console.error('DIAGNOSTIC - Messages length:', messages.length);
-      
-      // Provide a simple fallback that asks a generic question
+      // Initial greeting - first message
       if (isInitial) {
         return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
       }
       
-      // Special handling for second message to ensure continuity
+      // Second message - after user provides name
       if (messages.length === 1) {
         const name = userInput.trim();
-        return `Hi ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized fitness classes?`;
+        return `Great to meet you, ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized classes?`;
       }
       
-      // Generic fallback questions
-      return "I apologize for the technical difficulty. Let's continue with your strategy. Could you tell me more about your fitness business goals or what makes your approach unique?";
+      // Third message - after user describes business
+      if (messages.length === 3) {
+        return `Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Consider factors like age range, fitness goals, and any specific demographics you currently serve or would like to attract.`;
+      }
+      
+      // Fourth message - after user describes target audience
+      if (messages.length === 5) {
+        return `Great! Now let's focus on your marketing goals. What are your top marketing objectives for the next few months? For example, are you looking to increase client retention, attract new clients, launch a new service, or increase your social media presence?`;
+      }
+      
+      // Fifth message - after user describes marketing goals
+      if (messages.length === 7) {
+        return `Thanks for sharing your goals. Now, what makes your fitness approach unique compared to others in your area? What's your unique selling proposition or competitive advantage?`;
+      }
+      
+      // Sixth message - after user describes unique approach
+      if (messages.length === 9) {
+        return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? For example, videos, photos, written posts, social media stories, etc.`;
+      }
+      
+      // Seventh message - after user describes content preferences
+      if (messages.length === 11) {
+        return `Perfect! I now have enough information to create a marketing strategy matrix for your fitness business. This will serve as the foundation for your marketing efforts. [READY_FOR_MATRIX]`;
+      }
+      
+      // Fallback for any other message count
+      return `Thanks for that information! I'm building your marketing strategy. Could you tell me more about your ideal client journey - from how they first hear about you to becoming a loyal customer?`;
+      
+    } catch (error) {
+      console.error('Error in hardcoded response flow:', error);
+      
+      // Provide appropriate fallback based on message count
+      if (isInitial || messages.length === 0) {
+        return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
+      }
+      
+      return "I apologize for the technical difficulty. Let's continue with your strategy. Could you tell me more about your fitness business goals?";
     }
   };
   
-  // Function to send gym data to Gemini and get insights
-  const sendGymDataToGemini = async (gymData) => {
+  // Update the generateMatrix function to actually use the collected information
+  const generateMatrix = async () => {
     try {
-      // Create a formatted representation of the gym data
-      const gymDataString = gymData.map(gym => `
-Gym: ${gym.name}
-Offerings: ${gym.offerings || 'Not available'}
-Positive feedback: ${gym.positives || 'Not available'}
-Negative feedback: ${gym.negatives || 'Not available'}
-Target audience: ${gym.targetAudience || 'Not available'}
-Location: ${gym.location || 'Not available'}
-Opportunities: ${gym.opportunities || 'Not available'}
-`).join('\n---\n');
-
-      // Build a prompt for analysis
-      const prompt = `You are analyzing fitness business competitors to help create a marketing strategy.
+      // Create matrix based on user's answers
+      const userAnswers = userData.answers;
       
-COMPETITOR DATA:
-${gymDataString}
-
-Based on this competitor data, provide insights that would help the user develop their marketing strategy. Focus on:
-1. Gaps in the market they could fill
-2. How they could differentiate themselves
-3. Target audiences that might be underserved
-
-Present your insights in a helpful, conversational way. Don't mention that you're analyzing competitor data - just present your findings as expert advice.
-
-After providing insights, ask a follow-up question to gather more information for the strategy matrix.`;
-
-      // Make direct call to Gemini API
-      const response = await fetch('/api/strategy/generate-direct', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          isDebugMode: true
-        }),
+      // Extract information from answers
+      const name = userAnswers[0] || 'User';
+      const business = userAnswers[1] || 'fitness business';
+      const audience = userAnswers[2] || 'fitness enthusiasts';
+      const goals = userAnswers[3] || 'attract new clients';
+      const unique = userAnswers[4] || 'personalized approach';
+      const content = userAnswers[5] || 'various content types';
+      
+      // Generate audience segments based on answers
+      const targetAudience = [
+        `${audience.includes(',') ? audience.split(',')[0] : audience} seeking personalized fitness solutions`,
+        `Busy professionals looking for ${business.toLowerCase().includes('personal') ? 'efficient personal training' : 'effective workout options'}`,
+        `${audience.includes('beginners') ? 'Beginners starting their fitness journey' : 'Fitness enthusiasts wanting to reach new goals'}`
+      ];
+      
+      // Generate objectives based on goals
+      const objectives = [
+        `${goals.toLowerCase().includes('client') ? 'Attract new clients through targeted marketing' : 'Increase brand visibility in the local fitness market'}`,
+        `Build a reputation as a trusted ${business.toLowerCase().includes('train') ? 'trainer' : 'fitness provider'} through consistent content`,
+        `${goals.toLowerCase().includes('social') ? 'Grow social media following by 30% in 3 months' : 'Convert prospects to paying clients through effective messaging'}`
+      ];
+      
+      // Generate key messages based on unique selling points
+      const keyMessages = [
+        `Experience ${unique.toLowerCase().includes('personal') ? 'truly personalized fitness guidance' : 'a fitness approach tailored to your needs'}`,
+        `Achieve your goals faster with our proven ${business.toLowerCase().includes('train') ? 'training methods' : 'fitness systems'}`,
+        `Join a supportive community that helps you stay accountable and motivated`
+      ];
+      
+      // Set the matrix state
+      setMatrix({
+        targetAudience,
+        objectives,
+        keyMessages
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to analyze competitors');
-      }
+      // Show the matrix view
+      setShowMatrix(true);
       
-      const data = await response.json();
-      return data.response;
     } catch (error) {
-      console.error('Error analyzing competitors:', error);
-      return "Based on my research of fitness businesses in your area, I've noticed there might be opportunities to differentiate yourself through specialized offerings. Could you tell me what makes your fitness approach unique compared to others?";
+      console.error('Error generating matrix:', error);
+      
+      // Fallback matrix if there's an error
+      const fallbackMatrix = {
+        targetAudience: [
+          `Fitness enthusiasts looking for personalized training`,
+          `Busy professionals seeking efficient workouts`,
+          `Beginners interested in starting their fitness journey`
+        ],
+        objectives: [
+          `Increase social media engagement by 30%`,
+          `Build a reputation as a trusted voice in fitness`,
+          `Convert followers to paying clients`
+        ],
+        keyMessages: [
+          `Achieve real results with personalized guidance`,
+          `Transform your fitness journey with expert support`,
+          `Join a supportive community that helps you reach your goals`
+        ]
+      };
+      
+      setMatrix(fallbackMatrix);
+      setShowMatrix(true);
     }
   };
   
+  // Update handleSubmit to handle the hardcoded flow
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -274,53 +218,57 @@ After providing insights, ask a follow-up question to gather more information fo
     setMessages(updatedMessages);
     setCurrentInput('');
     
-    // Store user data in a more general way
-    // Just keep track of the first input as name for personalization
-    if (messages.length === 1) {
-      setUserData({
-        ...userData,
-        name: currentInput,
-        answers: [...userData.answers, currentInput]
-      });
-    } else {
-      setUserData({
-        ...userData,
-        answers: [...userData.answers, currentInput]
-      });
-    }
+    // Store user input in userData
+    setUserData(prev => ({
+      ...prev,
+      name: messages.length === 1 ? currentInput : prev.name,
+      answers: [...prev.answers, currentInput]
+    }));
     
-    // Process the user input with Gemini
+    // Process the user input with the hardcoded flow
     setIsProcessing(true);
     
     try {
-      // Increase timeout for API call
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('API request timed out')), 20000);
-      });
+      // Get response from hardcoded flow
+      const response = await sendToGemini(currentInput);
       
-      // Race the API call against the timeout
-      const response = await Promise.race([
-        sendToGemini(currentInput),
-        timeoutPromise
-      ]);
-      
-      // Add AI response to chat
-      setMessages([
-        ...updatedMessages,
-        {
-          sender: 'assistant',
-          text: response,
-        }
-      ]);
+      // Check for matrix trigger
+      if (response.includes('[READY_FOR_MATRIX]')) {
+        // Clean up the response by removing the trigger
+        const cleanResponse = response.replace('[READY_FOR_MATRIX]', '').trim();
+        
+        // Add AI response to chat
+        setMessages([
+          ...updatedMessages,
+          {
+            sender: 'assistant',
+            text: cleanResponse,
+          }
+        ]);
+        
+        // Generate and show matrix
+        setTimeout(() => {
+          generateMatrix();
+        }, 1000);
+      } else {
+        // Add AI response to chat
+        setMessages([
+          ...updatedMessages,
+          {
+            sender: 'assistant',
+            text: response,
+          }
+        ]);
+      }
     } catch (error) {
       console.error("Error in chat:", error);
       
-      // Add a generic fallback message
+      // Add fallback message
       setMessages([
         ...updatedMessages,
         {
           sender: 'assistant',
-          text: "I apologize for the technical difficulty. Let's continue with your strategy development. Could you tell me more about your fitness business or goals?",
+          text: "I apologize for the technical difficulty. Let's continue with your strategy development. Could you tell me more about your fitness business?",
         }
       ]);
     } finally {
@@ -353,65 +301,6 @@ After providing insights, ask a follow-up question to gather more information fo
     } catch (error) {
       console.error("Error fetching competitive insights:", error);
       return [];
-    }
-  };
-  
-  const generateMatrix = async (data) => {
-    try {
-      // Call Gemini to generate the matrix based on conversation
-      const response = await fetch('/api/strategy/generate-matrix', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: messages.map(msg => ({
-            role: msg.sender === 'assistant' ? 'assistant' : 'user',
-            content: msg.text
-          })),
-          userData: data
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate matrix');
-      }
-      
-      const matrixData = await response.json();
-      
-      // Add final message from assistant
-      setMessages(prev => [
-        ...prev,
-        {
-          sender: 'assistant',
-          text: `Thanks for sharing all that information, ${data.name}! I've analyzed your responses and created a strategic marketing matrix for your fitness business. This will help guide your content strategy. Click on any cell to refine it with your feedback.`,
-        }
-      ]);
-      
-      setMatrix(matrixData.matrix);
-      
-    } catch (error) {
-      console.error('Error generating matrix:', error);
-      // Fallback to basic matrix if API fails
-      const fallbackMatrix = {
-        targetAudience: [
-          `Fitness enthusiasts looking for personalized training`,
-          `Busy professionals seeking efficient workouts`,
-          `Beginners interested in starting their fitness journey`
-        ],
-        objectives: [
-          `Increase social media engagement by 30%`,
-          `Build a reputation as a trusted voice in fitness`,
-          `Convert followers to paying clients`
-        ],
-        keyMessages: [
-          `Achieve real results with personalized guidance`,
-          `Transform your fitness journey with expert support`,
-          `Join a supportive community that helps you reach your goals`
-        ]
-      };
-      
-      setMatrix(fallbackMatrix);
     }
   };
   
