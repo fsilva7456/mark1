@@ -7,9 +7,8 @@
 
 .main {
   margin-top: 70px; /* To account for the fixed navbar */
-  flex: 1;
   display: flex;
-  flex-direction: column;
+  flex: 1;
   height: 100vh;
   align-items: center;
 }
