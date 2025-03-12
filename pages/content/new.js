@@ -142,22 +142,26 @@ export default function NewContent() {
     // Fetch strategy details when strategy ID is available
     if (strategy && user) {
       try {
-        console.log("Strategy parameter:", strategy);
-        // Validate that strategy is a UUID
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(strategy)) {
-          console.error("Invalid UUID format for strategy:", strategy);
-          setError('Invalid strategy ID format. Please select a strategy from your dashboard.');
-          setIsLoading(false);
-          return;
+        console.log("Raw strategy parameter:", strategy);
+        
+        // Try to clean up the strategy ID - it might be URL encoded or have extra characters
+        let cleanStrategyId = strategy;
+        try {
+          // Try to decode if it's URL encoded
+          cleanStrategyId = decodeURIComponent(strategy.trim());
+          console.log("Decoded strategy ID:", cleanStrategyId);
+        } catch (decodeError) {
+          console.error("Error decoding strategy ID:", decodeError);
         }
         
-        console.log("Strategy ID available:", strategy);
-        fetchStrategyDetails(strategy);
+        // For now, simply proceed with the strategy ID without strict validation
+        // to debug what's happening
+        console.log("Using strategy ID:", cleanStrategyId);
+        fetchStrategyDetails(cleanStrategyId);
       } catch (err) {
         console.error("Error in useEffect:", err);
         setIsLoading(false);
-        setError('Failed to start content generation process.');
+        setError('Failed to start content generation process: ' + err.message);
       }
     } else if (!loading && !strategy) {
       console.error("No strategy ID found in URL");

@@ -279,7 +279,7 @@ export default function Dashboard() {
                             View Strategy
                           </Link>
                           <Link 
-                            href={`/content/new?strategy=${strategy?.id}`}
+                            href={`/content/new?strategy=${encodeURIComponent(strategy?.id || '')}`}
                             className={styles.contentButton}
                           >
                             Create Content
