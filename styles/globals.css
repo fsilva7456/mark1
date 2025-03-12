@@ -1,18 +1,16 @@
 :root {
-  --primary: #2a5298;
-  --primary-dark: #1e3c72;
-  --primary-light: #4266a6;
-  --secondary: #f5a623;
-  --secondary-dark: #e09010;
-  --secondary-light: #f7b84e;
-  --background: #f9f9f9;
-  --text-dark: #333333;
-  --text-medium: #4a5568;
+  --primary-color: #3454D1;
+  --primary-hover: #2a43a7;
+  --secondary-color: #E9ECEF;
+  --text-primary: #1A2B3C;
+  --text-secondary: #4A5568;
   --text-light: #718096;
-  --success: #38a169;
-  --error: #e53e3e;
-  --warning: #dd6b20;
-  --info: #3182ce;
+  --background-main: #F7F9FC;
+  --background-card: #FFFFFF;
+  --border-color: #E2E8F0;
+  --success-color: #38A169;
+  --warning-color: #ED8936;
+  --error-color: #E53E3E;
 }
 
 html,
@@ -21,43 +19,28 @@ body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   letter-spacing: -0.011em;
-  background-color: var(--background);
-  color: var(--text-dark);
+  color: var(--text-primary);
+  background-color: var(--background-main);
 }
 
 h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  line-height: 1.4;
   font-weight: 600;
-  line-height: 1.3;
-  margin-top: 0;
-}
-
-h1 {
-  font-size: 2.5rem;
-}
-
-h2 {
-  font-size: 2rem;
-}
-
-h3 {
-  font-size: 1.5rem;
 }
 
 p {
+  margin: 0;
   line-height: 1.6;
 }
 
 a {
-  color: var(--primary);
+  color: inherit;
   text-decoration: none;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-button {
-  font-family: 'Inter', sans-serif;
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 * {
@@ -73,21 +56,21 @@ button {
 
 /* Error and success messages */
 .error {
-  color: var(--error);
+  color: var(--error-color);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   background-color: rgba(229, 62, 62, 0.1);
   padding: 0.75rem;
   border-radius: 8px;
-  border-left: 3px solid var(--error);
+  border-left: 3px solid var(--error-color);
 }
 
 .message {
-  color: var(--success);
+  color: var(--success-color);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   background-color: rgba(56, 161, 105, 0.1);
   padding: 0.75rem;
   border-radius: 8px;
-  border-left: 3px solid var(--success);
+  border-left: 3px solid var(--success-color);
 } 
