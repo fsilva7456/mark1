@@ -143,21 +143,59 @@
 }
 
 .cardActions {
+  margin-top: auto; /* Push to bottom of card */
   display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+  padding: 0.5rem;
 }
 
-.actionButton {
-  flex: 1;
-  padding: 0.6rem 1rem;
-  text-align: center;
-  border-radius: 6px;
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s;
+/* Consistent button styling for all card buttons */
+.actionButton, .viewButton, .contentButton, .emptyCardButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
   font-size: 0.9rem;
-  min-width: 120px;
+  text-align: center;
+  transition: all 0.2s ease;
+  min-width: 140px; /* Set minimum width for consistency */
+  margin: 0.5rem;
+  cursor: pointer;
+}
+
+/* Style variants while maintaining size consistency */
+.viewButton, .emptyCardButton {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.viewButton:hover, .emptyCardButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
+}
+
+.contentButton, .actionButton {
+  background-color: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.contentButton:hover, .actionButton:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Card actions in smaller screens */
+@media (max-width: 480px) {
+  .actionButton, .viewButton, .contentButton, .emptyCardButton {
+    width: 100%; /* Full width on very small screens */
+    min-width: 0; /* Override min-width */
+  }
 }
 
 .strategyCard .actionButton:first-child {
@@ -414,10 +452,6 @@
 .cardPreview {
   flex: 1;
   overflow: hidden;
-}
-
-.cardActions {
-  margin-top: auto; /* Push to bottom of card */
 }
 
 /* Media query adjustments for smaller screens */
