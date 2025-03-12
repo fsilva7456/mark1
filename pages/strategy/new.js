@@ -129,9 +129,11 @@ export default function NewStrategy() {
     }
   };
   
-  // Update the generateMatrix function to actually use the collected information
+  // Update the generateMatrix function to incorporate gym data insights
   const generateMatrix = async () => {
     try {
+      setIsProcessing(true);
+      
       // Create matrix based on user's answers
       const userAnswers = userData.answers;
       
@@ -142,6 +144,28 @@ export default function NewStrategy() {
       const goals = userAnswers[3] || 'attract new clients';
       const unique = userAnswers[4] || 'personalized approach';
       const content = userAnswers[5] || 'various content types';
+      
+      // Fetch gym data to inform the strategy
+      console.log("Fetching gym data to enhance strategy...");
+      const gymData = await fetchCompetitiveInsights('Downtown Toronto');
+      
+      if (gymData && gymData.length > 0) {
+        // Send all data to Gemini for analysis and enhanced strategy generation
+        const enhancedStrategy = await generateEnhancedStrategy(
+          name, business, audience, goals, unique, content, gymData
+        );
+        
+        if (enhancedStrategy) {
+          // Set the matrix state with Gemini's enhanced strategy
+          setMatrix(enhancedStrategy);
+          setShowMatrix(true);
+          setIsProcessing(false);
+          return;
+        }
+      }
+      
+      // Fallback to basic strategy generation if gym data fetch fails or is empty
+      console.log("Using fallback strategy generation without gym data");
       
       // Generate audience segments based on answers
       const targetAudience = [
@@ -198,6 +222,56 @@ export default function NewStrategy() {
       
       setMatrix(fallbackMatrix);
       setShowMatrix(true);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  // New function to generate enhanced strategy using Gemini and gym data
+  const generateEnhancedStrategy = async (name, business, audience, goals, unique, content, gymData) => {
+    try {
+      console.log("Generating enhanced strategy with gym data insights...");
+      
+      // Format gym data for the API
+      const formattedGymData = gymData.map(gym => ({
+        name: gym.name,
+        offerings: gym.offerings,
+        positives: gym.positives,
+        negatives: gym.negatives,
+        targetAudience: gym.targetAudience,
+        opportunities: gym.opportunities
+      }));
+      
+      // Send request to a new API endpoint that will use Gemini to analyze the data
+      const response = await fetch('/api/strategy/generate-with-insights', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userData: {
+            name,
+            business,
+            audience,
+            goals,
+            unique,
+            content
+          },
+          gymData: formattedGymData
+        }),
+      });
+      
+      if (!response.ok) {
+        console.error("Failed to generate enhanced strategy:", await response.text());
+        return null;
+      }
+      
+      const data = await response.json();
+      return data.matrix;
+      
+    } catch (error) {
+      console.error("Error generating enhanced strategy:", error);
+      return null;
     }
   };
   
