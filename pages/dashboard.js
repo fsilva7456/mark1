@@ -209,13 +209,19 @@ export default function Dashboard() {
                 <div className={styles.cardGrid}>
                   {savedStrategies.map((strategy) => (
                     <div key={strategy.id} className={styles.card}>
-                      <h3>{strategy.name}</h3>
-                      <p>Created: {new Date(strategy.created_at).toLocaleDateString()}</p>
+                      <h3>{strategy.name || 'Unnamed Strategy'}</h3>
+                      <p>Created: {new Date(strategy.created_at || Date.now()).toLocaleDateString()}</p>
                       
                       <div className={styles.cardPreview}>
                         <div className={styles.previewItem}>
                           <strong>Target Audience:</strong> 
-                          <span>{strategy.target_audience?.[0]?.substring(0, 40)}...</span>
+                          <span>
+                            {Array.isArray(strategy.target_audience) && strategy.target_audience.length > 0
+                              ? typeof strategy.target_audience[0] === 'string'
+                                ? strategy.target_audience[0].substring(0, 40) + '...'
+                                : 'Target audience defined'
+                              : 'No target audience defined'}
+                          </span>
                         </div>
                       </div>
                       
