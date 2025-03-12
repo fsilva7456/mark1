@@ -29,7 +29,10 @@ export default function Home() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signIn({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
       if (error) throw error;
       
@@ -43,7 +46,10 @@ export default function Home() {
 
   const handleGoogleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signIn({ provider: 'google' });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google'
+      });
+      
       if (error) {
         setError(error.message);
       }
