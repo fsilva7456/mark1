@@ -458,4 +458,43 @@
   .card, .strategyCard, .calendarCard {
     margin: 1rem auto;
   }
+}
+
+/* Base button styling for all card buttons */
+.actionButton, .viewButton, .contentButton, .emptyCardButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Style variants */
+.viewButton, .emptyCardButton {
+  background-color: var(--primary-color, #3454D1);
+  color: white;
+}
+
+.viewButton:hover, .emptyCardButton:hover {
+  background-color: var(--primary-hover, #2a43a7);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
+}
+
+.contentButton, .actionButton {
+  background-color: white;
+  color: var(--primary-color, #3454D1);
+  border: 1px solid var(--primary-color, #3454D1);
+}
+
+.contentButton:hover, .actionButton:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 } 
