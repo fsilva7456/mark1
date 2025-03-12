@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Navbar from '../../components/Navbar';
 import styles from '../../styles/Strategy.module.css';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function NewStrategy() {
   const router = useRouter();
