@@ -135,7 +135,6 @@ export default function Dashboard() {
             <div className={styles.header}>
               <div className={styles.headerContent}>
                 <h1>Welcome to Mark1{user ? `, ${user.email.split('@')[0]}` : ''}</h1>
-                <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
               </div>
             </div>
 
@@ -143,9 +142,6 @@ export default function Dashboard() {
               <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                   <h2>Marketing Strategies</h2>
-                  <Link href="/strategy/new" className={styles.createButton}>
-                    Create New Strategy
-                  </Link>
                 </div>
 
                 <div className={styles.cardsContainer}>

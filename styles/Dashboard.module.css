@@ -391,4 +391,43 @@
 .retryButton:hover {
   background-color: #2a43a7;
   transform: translateY(-2px);
+}
+
+/* Fixed size cards for strategies and content outlines */
+.card, .strategyCard, .calendarCard {
+  width: 340px; /* Fixed width */
+  height: 280px; /* Fixed height */
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cardGrid, .cardsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+/* Ensure content is properly displayed with fixed size */
+.cardPreview {
+  flex: 1;
+  overflow: hidden;
+}
+
+.cardActions {
+  margin-top: auto; /* Push to bottom of card */
+}
+
+/* Media query adjustments for smaller screens */
+@media (max-width: 768px) {
+  .cardGrid, .cardsContainer {
+    justify-content: center;
+  }
+  
+  /* Still maintain fixed size but center the cards */
+  .card, .strategyCard, .calendarCard {
+    margin: 1rem auto;
+  }
 } 
