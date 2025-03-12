@@ -125,6 +125,10 @@ export default function NewContent() {
   const [contentOutline, setContentOutline] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [startDate, setStartDate] = useState(new Date());
+  const [dailyEngagement, setDailyEngagement] = useState([]);
+  const [isDailyEngagementLoading, setIsDailyEngagementLoading] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState(1);
   
   useEffect(() => {
     // Redirect if not logged in
@@ -135,19 +139,58 @@ export default function NewContent() {
     
     if (strategy) {
       // Generate content ideas based on the strategy
-      generateContentIdeas();
+      generateContent();
     }
   }, [user, loading, strategy, router]);
   
-  const generateContentIdeas = async () => {
-    setIsLoading(true);
-    
-    // Simulate API call with delay
-    setTimeout(() => {
-      // Use mock data directly
-      setContentOutline(mockContent);
+  const generateContent = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Simulate API call with delay
+      setTimeout(() => {
+        // Use mock data directly
+        setContentOutline(mockContent);
+        setIsLoading(false);
+      }, 1500);
+      
+      // After campaigns are generated, generate daily engagement content
+      try {
+        setIsDailyEngagementLoading(true);
+        
+        // Call the API to generate daily engagement content
+        const dailyEngagementResponse = await fetch('/api/content/generate-daily-engagement', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            strategyMatrix: selectedStrategy,
+            campaigns: generatedContent,
+            businessType: userData?.answers?.[1] || 'fitness business'
+          }),
+        });
+        
+        if (!dailyEngagementResponse.ok) {
+          throw new Error('Failed to generate daily engagement content');
+        }
+        
+        const dailyEngagementData = await dailyEngagementResponse.json();
+        setDailyEngagement(dailyEngagementData.dailyEngagement);
+      } catch (dailyError) {
+        console.error('Error generating daily engagement:', dailyError);
+        // Don't block the overall flow if daily engagement fails
+      } finally {
+        setIsDailyEngagementLoading(false);
+      }
+      
       setIsLoading(false);
-    }, 1500);
+      setShowContent(true);
+    } catch (error) {
+      console.error('Error generating content:', error);
+      setIsLoading(false);
+      setError('Failed to generate content. Please try again.');
+    }
   };
   
   const handleSaveCalendar = async () => {
@@ -169,6 +212,32 @@ export default function NewContent() {
       router.push('/dashboard?success=calendar-created');
     } catch (error) {
       console.error('Error saving calendar:', error);
+    }
+  };
+
+  const handleSaveContent = async () => {
+    try {
+      // Save the content to Supabase
+      const { data, error } = await supabase
+        .from('content_plans')
+        .insert([
+          { 
+            user_id: user.id,
+            name: `Content Plan for ${selectedStrategy.name || 'Marketing Strategy'}`,
+            strategy_id: selectedStrategy.id,
+            campaigns: generatedContent,
+            daily_engagement: dailyEngagement, // Add daily engagement content
+            created_at: new Date()
+          }
+        ]);
+      
+      if (error) throw error;
+      
+      // Redirect to dashboard with success message
+      router.push('/dashboard?success=content-created');
+    } catch (error) {
+      console.error('Error saving content:', error);
+      setError('Failed to save content. Please try again.');
     }
   };
 
@@ -270,6 +339,105 @@ export default function NewContent() {
             </div>
           )}
         </div>
+
+        {showContent && (
+          <div className={styles.contentDisplay}>
+            <h2>Your Content Plan</h2>
+            
+            {/* Campaigns Section */}
+            <div className={styles.campaignsSection}>
+              <h3>Campaigns</h3>
+              <div className={styles.contentGrid}>
+                {contentOutline.map((week, weekIndex) => (
+                  <div key={weekIndex} className={styles.contentCard}>
+                    <div className={styles.weekHeader}>
+                      <h4>Week {weekIndex + 1}</h4>
+                      <div className={styles.weekTheme}>
+                        {week.theme}
+                      </div>
+                    </div>
+                    <ul className={styles.contentList}>
+                      {week.posts.map((post, itemIndex) => (
+                        <li key={itemIndex}>{post.topic}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Daily Engagement Section */}
+            <div className={styles.dailyEngagementSection}>
+              <h3>Daily Engagement</h3>
+              {isDailyEngagementLoading ? (
+                <div className={styles.loadingSpinner}></div>
+              ) : dailyEngagement && dailyEngagement.length > 0 ? (
+                <div className={styles.dailyEngagementTabs}>
+                  <div className={styles.tabs}>
+                    <button 
+                      className={selectedWeek === 1 ? styles.activeTab : ''}
+                      onClick={() => setSelectedWeek(1)}
+                    >
+                      Week 1
+                    </button>
+                    <button 
+                      className={selectedWeek === 2 ? styles.activeTab : ''}
+                      onClick={() => setSelectedWeek(2)}
+                    >
+                      Week 2
+                    </button>
+                    <button 
+                      className={selectedWeek === 3 ? styles.activeTab : ''}
+                      onClick={() => setSelectedWeek(3)}
+                    >
+                      Week 3
+                    </button>
+                  </div>
+                  
+                  <div className={styles.weekContent}>
+                    <div className={styles.dailyPostsGrid}>
+                      {dailyEngagement
+                        .filter(post => post.week === selectedWeek)
+                        .map((post, index) => (
+                          <div key={index} className={styles.dailyPost}>
+                            <div className={styles.postHeader}>
+                              <span className={styles.postDay}>Day {post.day}</span>
+                              <span className={styles.postType}>{post.contentType}</span>
+                            </div>
+                            <h4 className={styles.postTitle}>{post.description}</h4>
+                            <p className={styles.postCaption}>{post.caption}</p>
+                            <div className={styles.postAudience}>
+                              <span>For: {post.targetAudience}</span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className={styles.noContent}>
+                  No daily engagement content available. Please try regenerating the content.
+                </p>
+              )}
+            </div>
+            
+            {/* Buttons Section */}
+            <div className={styles.contentActions}>
+              <button
+                onClick={handleSaveContent}
+                className={styles.saveButton}
+              >
+                Save Content Plan
+              </button>
+              <button
+                onClick={() => setShowContent(false)}
+                className={styles.cancelButton}
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
