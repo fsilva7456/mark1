@@ -810,9 +810,15 @@ export default function NewStrategy() {
                   </button>
                   
                   <button
-                    onClick={() => router.push(`/content/new?strategy=${encodeURIComponent(strategyId)}`)}
+                    onClick={() => {
+                      if (!strategyId) {
+                        alert('Please save your strategy first before generating content.');
+                        return;
+                      }
+                      router.push(`/content/new?strategy=${strategyId}`);
+                    }}
                     className={styles.outlineButton}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !strategyId}
                   >
                     Generate Content Outline
                   </button>

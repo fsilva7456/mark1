@@ -142,6 +142,16 @@ export default function NewContent() {
     // Fetch strategy details when strategy ID is available
     if (strategy && user) {
       try {
+        console.log("Strategy parameter:", strategy);
+        // Validate that strategy is a UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(strategy)) {
+          console.error("Invalid UUID format for strategy:", strategy);
+          setError('Invalid strategy ID format. Please select a strategy from your dashboard.');
+          setIsLoading(false);
+          return;
+        }
+        
         console.log("Strategy ID available:", strategy);
         fetchStrategyDetails(strategy);
       } catch (err) {
