@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Navbar from '../../components/Navbar';
 import styles from '../../styles/Strategy.module.css';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function NewStrategy() {
   const router = useRouter();
@@ -38,6 +38,8 @@ export default function NewStrategy() {
   
   // Add state for storing the strategy ID
   const [strategyId, setStrategyId] = useState(null);
+  
+  const { user } = useAuth();
   
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
@@ -516,39 +518,71 @@ export default function NewStrategy() {
     try {
       setIsProcessing(true);
       
+      // Check if user is logged in
+      if (!user || !user.id) {
+        console.error("No user ID available");
+        alert('Please log in to save your strategy.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Validate matrix data before saving
+      if (!matrix.targetAudience || 
+          !matrix.objectives || 
+          !matrix.keyMessages ||
+          matrix.targetAudience.length === 0 ||
+          matrix.objectives.length === 0 ||
+          matrix.keyMessages.length === 0) {
+        console.error("Invalid matrix data:", matrix);
+        alert('Strategy data is incomplete. Please regenerate the strategy.');
+        setIsProcessing(false);
+        return;
+      }
+      
+      console.log("Attempting to save strategy with user ID:", user.id);
+      
       // Prepare the strategy data for saving
       const strategyData = {
         user_id: user.id,
-        name: `${userData.name}'s Marketing Strategy`,
+        name: `${userData.name || 'User'}'s Marketing Strategy`,
         target_audience: matrix.targetAudience,
         objectives: matrix.objectives,
         key_messages: matrix.keyMessages,
         // Store original answers for context
         user_data: userData,
-        created_at: new Date()
+        created_at: new Date().toISOString() // Ensure ISO string format for date
       };
       
-      // Save to Supabase
+      console.log("Strategy data prepared:", strategyData);
+      
+      // Save to Supabase with explicit error handling
       const { data, error } = await supabase
         .from('strategies')
         .insert([strategyData])
         .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw new Error(`Database error: ${error.message}`);
+      }
       
       // Store the strategy ID
       if (data && data.length > 0) {
+        console.log("Strategy saved successfully with ID:", data[0].id);
         setStrategyId(data[0].id);
+        
+        // Show success message
+        alert('Strategy saved successfully!');
+        
+        // Redirect to dashboard
+        router.push('/dashboard?success=strategy-saved');
+      } else {
+        console.error("No data returned from insert operation");
+        throw new Error('Failed to retrieve saved strategy ID');
       }
-      
-      // Show success message
-      alert('Strategy saved successfully!');
-      
-      // Redirect to dashboard
-      router.push('/dashboard?success=strategy-saved');
     } catch (error) {
       console.error('Error saving strategy:', error);
-      alert('Failed to save strategy. Please try again.');
+      alert(`Failed to save strategy: ${error.message || 'Unknown error'}`);
     } finally {
       setIsProcessing(false);
     }
