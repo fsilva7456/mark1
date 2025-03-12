@@ -105,7 +105,20 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.formTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.formSubtitle {
+  color: var(--text-light);
+  margin-bottom: 2.5rem;
+  display: block;
 }
 
 .inputGroup {
@@ -427,8 +440,9 @@
 
 /* Improved input styling with floating label effect */
 .formGroup {
-  margin-bottom: 1.8rem;
+  margin-bottom: 2rem;
   position: relative;
+  padding-top: 0.5rem;
 }
 
 .formGroup label {
