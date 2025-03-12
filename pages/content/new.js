@@ -129,6 +129,8 @@ export default function NewContent() {
   const [isDailyEngagementLoading, setIsDailyEngagementLoading] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
+  const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [error, setError] = useState('');
   
   useEffect(() => {
     // Redirect if not logged in
@@ -137,13 +139,36 @@ export default function NewContent() {
       return;
     }
     
-    if (strategy) {
-      // Generate content ideas based on the strategy
-      generateContent();
+    // Fetch strategy details when strategy ID is available
+    if (strategy && user) {
+      fetchStrategyDetails(strategy);
     }
   }, [user, loading, strategy, router]);
   
-  const generateContent = async () => {
+  const fetchStrategyDetails = async (strategyId) => {
+    try {
+      const { data, error } = await supabase
+        .from('strategies')
+        .select('*')
+        .eq('id', strategyId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setSelectedStrategy(data);
+        // Generate content after strategy is loaded
+        generateContent(data);
+      } else {
+        setError('Strategy not found.');
+      }
+    } catch (err) {
+      console.error('Error fetching strategy:', err);
+      setError('Failed to load strategy details.');
+    }
+  };
+  
+  const generateContent = async (strategyData) => {
     try {
       setIsLoading(true);
       
@@ -165,9 +190,9 @@ export default function NewContent() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            strategyMatrix: selectedStrategy,
-            campaigns: generatedContent,
-            businessType: userData?.answers?.[1] || 'fitness business'
+            strategyMatrix: strategyData, // Use the passed strategy data
+            campaigns: mockContent, // Use the mock content directly
+            businessType: strategyData?.user_data?.answers?.[1] || 'fitness business'
           }),
         });
         
@@ -217,6 +242,11 @@ export default function NewContent() {
 
   const handleSaveContent = async () => {
     try {
+      if (!selectedStrategy || !selectedStrategy.id) {
+        setError('Strategy information is missing.');
+        return;
+      }
+      
       // Save the content to Supabase
       const { data, error } = await supabase
         .from('content_plans')
@@ -225,8 +255,8 @@ export default function NewContent() {
             user_id: user.id,
             name: `Content Plan for ${selectedStrategy.name || 'Marketing Strategy'}`,
             strategy_id: selectedStrategy.id,
-            campaigns: generatedContent,
-            daily_engagement: dailyEngagement, // Add daily engagement content
+            campaigns: contentOutline,
+            daily_engagement: dailyEngagement,
             created_at: new Date()
           }
         ]);
