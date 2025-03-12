@@ -129,7 +129,7 @@ export default function NewStrategy() {
     }
   };
   
-  // Update the generateMatrix function to incorporate gym data insights
+  // Update the generateMatrix function with more detailed logging
   const generateMatrix = async () => {
     try {
       setIsProcessing(true);
@@ -145,23 +145,32 @@ export default function NewStrategy() {
       const unique = userAnswers[4] || 'personalized approach';
       const content = userAnswers[5] || 'various content types';
       
-      // Fetch gym data to inform the strategy
-      console.log("Fetching gym data to enhance strategy...");
+      // Fetch gym data to inform the strategy - add more logging
+      console.log("DEBUG: Starting to fetch gym data for strategy generation...");
       const gymData = await fetchCompetitiveInsights('Downtown Toronto');
+      console.log("DEBUG: Gym data fetch result:", gymData ? `${gymData.length} records` : "no data", gymData);
       
       if (gymData && gymData.length > 0) {
+        console.log("DEBUG: Gym data available, calling generate enhanced strategy");
         // Send all data to Gemini for analysis and enhanced strategy generation
         const enhancedStrategy = await generateEnhancedStrategy(
           name, business, audience, goals, unique, content, gymData
         );
         
+        console.log("DEBUG: Enhanced strategy result:", enhancedStrategy ? "success" : "failed");
+        
         if (enhancedStrategy) {
           // Set the matrix state with Gemini's enhanced strategy
+          console.log("DEBUG: Using Gemini-generated strategy");
           setMatrix(enhancedStrategy);
           setShowMatrix(true);
           setIsProcessing(false);
           return;
+        } else {
+          console.log("DEBUG: Enhanced strategy generation failed, falling back to hardcoded");
         }
+      } else {
+        console.log("DEBUG: No gym data available, falling back to hardcoded strategy");
       }
       
       // Fallback to basic strategy generation if gym data fetch fails or is empty
@@ -227,50 +236,71 @@ export default function NewStrategy() {
     }
   };
   
-  // New function to generate enhanced strategy using Gemini and gym data
+  // Update generateEnhancedStrategy with better error handling
   const generateEnhancedStrategy = async (name, business, audience, goals, unique, content, gymData) => {
     try {
-      console.log("Generating enhanced strategy with gym data insights...");
+      console.log("DEBUG: Generating enhanced strategy with gym data...");
       
       // Format gym data for the API
       const formattedGymData = gymData.map(gym => ({
-        name: gym.name,
-        offerings: gym.offerings,
-        positives: gym.positives,
-        negatives: gym.negatives,
-        targetAudience: gym.targetAudience,
-        opportunities: gym.opportunities
+        name: gym.name || "Unknown",
+        offerings: gym.offerings || "Not specified",
+        positives: gym.positives || "Not specified",
+        negatives: gym.negatives || "Not specified",
+        targetAudience: gym.targetAudience || "Not specified",
+        opportunities: gym.opportunities || "Not specified"
       }));
       
-      // Send request to a new API endpoint that will use Gemini to analyze the data
-      const response = await fetch('/api/strategy/generate-with-insights', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userData: {
-            name,
-            business,
-            audience,
-            goals,
-            unique,
-            content
-          },
-          gymData: formattedGymData
-        }),
-      });
+      console.log("DEBUG: Formatted gym data for API:", formattedGymData.length);
       
-      if (!response.ok) {
-        console.error("Failed to generate enhanced strategy:", await response.text());
+      // Send request to a new API endpoint that will use Gemini to analyze the data
+      let response;
+      try {
+        response = await fetch('/api/strategy/generate-with-insights', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userData: {
+              name,
+              business,
+              audience,
+              goals,
+              unique,
+              content
+            },
+            gymData: formattedGymData
+          }),
+          // Add timeout to prevent hanging requests
+          timeout: 15000
+        });
+        
+        console.log("DEBUG: Gemini API response status:", response.status);
+      } catch (fetchError) {
+        console.error("DEBUG: Fetch error:", fetchError);
         return null;
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("DEBUG: Failed to generate enhanced strategy:", response.status, errorText);
+        return null;
+      }
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log("DEBUG: Received data from API:", data ? "success" : "null");
+      } catch (jsonError) {
+        console.error("DEBUG: JSON parse error:", jsonError);
+        return null;
+      }
+      
       return data.matrix;
       
     } catch (error) {
-      console.error("Error generating enhanced strategy:", error);
+      console.error("DEBUG: Error generating enhanced strategy:", error);
       return null;
     }
   };
@@ -350,18 +380,31 @@ export default function NewStrategy() {
     }
   };
   
+  // Update fetchCompetitiveInsights to better handle errors and use hardcoded data if needed
   const fetchCompetitiveInsights = async (userLocation) => {
     try {
       // Get gyms near the user's location
-      const response = await fetch(`/api/gyms/get-competitive-data?location=${userLocation}`);
-      const { data } = await response.json();
+      console.log("DEBUG: Fetching competitor data for location:", userLocation);
       
-      if (!data || data.length === 0) {
-        return [];
+      const response = await fetch(`/api/gyms/get-competitive-data?location=${userLocation}`);
+      console.log("DEBUG: Competitor API response status:", response.status);
+      
+      if (!response.ok) {
+        console.log("DEBUG: API error, status:", response.status);
+        // Return hardcoded data if API fails
+        return getHardcodedGymData();
+      }
+      
+      const responseData = await response.json();
+      console.log("DEBUG: API response data:", responseData);
+      
+      if (!responseData.data || responseData.data.length === 0) {
+        console.log("DEBUG: No gym data in API response, using hardcoded data");
+        return getHardcodedGymData();
       }
       
       // Use the gym data for Gemini prompting
-      const competitiveInsights = data.map(gym => ({
+      const competitiveInsights = responseData.data.map(gym => ({
         name: gym.Name,
         offerings: gym.Offerings, 
         positives: gym["What People Are Saying (Positive)"],
@@ -371,11 +414,47 @@ export default function NewStrategy() {
         location: gym["Localized Location in Downtown Toronto"]
       }));
       
+      console.log("DEBUG: Mapped competitive insights:", competitiveInsights.length);
       return competitiveInsights;
     } catch (error) {
       console.error("Error fetching competitive insights:", error);
-      return [];
+      // Return hardcoded data in case of any error
+      return getHardcodedGymData();
     }
+  };
+  
+  // Add hardcoded gym data function for fallback
+  const getHardcodedGymData = () => {
+    console.log("DEBUG: Using hardcoded gym data");
+    return [
+      {
+        name: "GoodLife Fitness",
+        offerings: "Full service gym with equipment, classes, and personal training",
+        positives: "Modern facilities, variety of equipment, convenient locations",
+        negatives: "Often crowded, impersonal service, extra charges for classes",
+        opportunities: "Offer more personalized service and individual attention that large chains lack",
+        targetAudience: "General fitness enthusiasts, 25-55 age range",
+        location: "Downtown Toronto"
+      },
+      {
+        name: "F45 Training",
+        offerings: "High-intensity functional training in 45-minute group sessions",
+        positives: "Effective workouts, community atmosphere, innovative exercises",
+        negatives: "High price point, may be too intense for beginners",
+        opportunities: "Provide more beginner-friendly options with personalized guidance",
+        targetAudience: "Fitness enthusiasts seeking efficiency, 25-40 age range",
+        location: "Downtown Toronto"
+      },
+      {
+        name: "Studio Lagree",
+        offerings: "Megaformer workouts focused on core strength and low-impact training",
+        positives: "Effective results, trendy workout, good for all fitness levels",
+        negatives: "Expensive, limited class times, steep learning curve",
+        opportunities: "Offer more accessible training that combines core strength with other fitness methods",
+        targetAudience: "Affluent professionals, predominantly women, 28-45 age range",
+        location: "Downtown Toronto"
+      }
+    ];
   };
   
   const handleSaveStrategy = async () => {

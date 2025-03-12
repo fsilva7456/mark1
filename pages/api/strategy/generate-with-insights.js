@@ -8,11 +8,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  console.log("DEBUG API: generate-with-insights called");
+  
   try {
     const { userData, gymData } = req.body;
     
+    console.log("DEBUG API: Received user data:", userData?.name, "and gym data:", gymData?.length);
+    
     if (!userData) {
+      console.log("DEBUG API: No user data provided");
       return res.status(400).json({ error: 'User data is required' });
+    }
+    
+    if (!process.env.GEMINI_API_KEY) {
+      console.log("DEBUG API: No Gemini API key found");
+      return res.status(500).json({ error: 'Gemini API key not configured' });
     }
     
     // Format the gym data insights
@@ -26,6 +36,8 @@ Target audience: ${gym.targetAudience || 'Not specified'}
 Market opportunities: ${gym.opportunities || 'Not specified'}
       `).join('\n---\n')
       : 'No competitor data available';
+    
+    console.log("DEBUG API: Created gym insights, length:", gymInsights.length);
     
     // Create prompt for Gemini
     const prompt = `
@@ -75,8 +87,13 @@ Return your response in this JSON format:
 
     // Call Gemini API to generate the strategy
     try {
+      console.log("DEBUG API: Initializing Gemini model");
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      
+      console.log("DEBUG API: Sending prompt to Gemini");
       const result = await model.generateContent(prompt);
+      
+      console.log("DEBUG API: Received response from Gemini");
       const responseText = result.response.text();
       
       // Parse JSON from the response
@@ -119,11 +136,11 @@ Return your response in this JSON format:
       
       return res.status(200).json({ matrix });
     } catch (geminiError) {
-      console.error('Error calling Gemini API:', geminiError);
+      console.error('DEBUG API: Error calling Gemini API:', geminiError);
       throw new Error(`Gemini API error: ${geminiError.message}`);
     }
   } catch (error) {
-    console.error('Error generating enhanced strategy:', error);
+    console.error('DEBUG API: Error generating enhanced strategy:', error);
     return res.status(500).json({ 
       error: 'Failed to generate enhanced strategy',
       details: error.message 
