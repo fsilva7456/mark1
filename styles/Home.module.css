@@ -490,4 +490,161 @@
 .ctaButton:hover {
   background-color: var(--secondary-dark);
   transform: translateY(-2px);
+}
+
+/* Restore form element styling */
+.formGroup {
+  margin-bottom: 2rem;
+  position: relative;
+  padding-top: 0.5rem;
+}
+
+.formGroup label {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  background-color: white;
+  padding: 0 8px;
+  z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 1rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s;
+  background-color: #f8fafc;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(52, 84, 209, 0.1);
+  background-color: white;
+}
+
+/* Button styling */
+.loginButton {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 1.5rem;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.loginButton:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 84, 209, 0.25);
+}
+
+.loginButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Google sign-in button */
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1rem;
+  background-color: white;
+  color: #333;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.googleButton:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Divider styling */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.divider:before,
+.divider:after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.divider:before {
+  margin-right: 0.5rem;
+}
+
+.divider:after {
+  margin-left: 0.5rem;
+}
+
+/* Error message styling */
+.error {
+  background-color: #feebc8;
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* Form footer styling */
+.formFooter {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.formFooter a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.formFooter a:hover {
+  text-decoration: underline;
+}
+
+/* Form layout */
+.form {
+  display: flex;
+  flex-direction: column;
 } 
