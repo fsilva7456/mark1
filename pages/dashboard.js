@@ -156,12 +156,18 @@ export default function Dashboard() {
                       onClick={() => router.push(`/strategy/${strategy.id}`)}
                     >
                       <div className={styles.cardHeader}>
-                        <h3>{strategy.name}</h3>
-                        <span className={`${styles.statusBadge} ${styles[strategy.status]}`}>
-                          {strategy.status.charAt(0).toUpperCase() + strategy.status.slice(1)}
-                        </span>
+                        <h3>{strategy.name || 'Unnamed Strategy'}</h3>
+                        {strategy.status ? (
+                          <span className={`${styles.statusBadge} ${styles[strategy.status]}`}>
+                            {strategy.status.charAt(0).toUpperCase() + strategy.status.slice(1)}
+                          </span>
+                        ) : (
+                          <span className={`${styles.statusBadge} ${styles.draft}`}>
+                            Draft
+                          </span>
+                        )}
                       </div>
-                      <p className={styles.lastUpdated}>Last updated: {strategy.lastUpdated}</p>
+                      <p className={styles.lastUpdated}>Last updated: {strategy.lastUpdated || 'Not available'}</p>
                       <div className={styles.cardActions}>
                         <Link href={`/strategy/${strategy.id}`} className={styles.actionButton}>
                           Edit Strategy
