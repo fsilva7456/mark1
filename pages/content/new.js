@@ -139,24 +139,34 @@ export default function NewContent() {
       return;
     }
     
+    // Add detailed debugging for the strategy parameter
+    console.log("========= STRATEGY PARAMETER DEBUG =========");
+    console.log("Raw strategy from URL:", strategy);
+    console.log("Strategy parameter type:", typeof strategy);
+    console.log("Strategy parameter length:", strategy?.length);
+    console.log("URL search string:", window.location.search);
+    
     // Fetch strategy details when strategy ID is available
     if (strategy && user) {
       try {
-        console.log("Raw strategy parameter:", strategy);
-        
-        // Try to clean up the strategy ID - it might be URL encoded or have extra characters
         let cleanStrategyId = strategy;
         try {
           // Try to decode if it's URL encoded
           cleanStrategyId = decodeURIComponent(strategy.trim());
-          console.log("Decoded strategy ID:", cleanStrategyId);
         } catch (decodeError) {
           console.error("Error decoding strategy ID:", decodeError);
         }
         
-        // For now, simply proceed with the strategy ID without strict validation
-        // to debug what's happening
-        console.log("Using strategy ID:", cleanStrategyId);
+        console.log("Attempting to use strategy ID:", cleanStrategyId);
+        
+        // If the strategy looks like a name rather than a UUID, show error
+        if (cleanStrategyId.includes(" ") || cleanStrategyId.includes("'")) {
+          console.error("Strategy ID appears to be a name, not a UUID:", cleanStrategyId);
+          setError("Received strategy name instead of ID. Please go back to the dashboard and try again.");
+          setIsLoading(false);
+          return;
+        }
+        
         fetchStrategyDetails(cleanStrategyId);
       } catch (err) {
         console.error("Error in useEffect:", err);
