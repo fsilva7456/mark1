@@ -78,48 +78,65 @@ export default function NewStrategy() {
     try {
       console.log("Sending to Gemini:", isInitial ? "Initial prompt" : userInput);
       
-      // Prepare conversation history for context
-      const conversationHistory = messages.map(msg => ({
-        role: msg.sender === 'assistant' ? 'assistant' : 'user',
-        content: msg.text
-      }));
-      
-      // Add the new user input if present
-      if (userInput) {
-        conversationHistory.push({
-          role: 'user',
-          content: userInput
-        });
+      // Special handling for hardcoded messages in initial conversation flow
+      // Return hardcoded responses for first 3 interactions to ensure stability
+      if (messages.length <= 3) {
+        console.log("Using hardcoded response flow for initial messages");
+        
+        if (isInitial) {
+          // First message (greeting)
+          return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
+        }
+        
+        if (messages.length === 1) {
+          // Second message (after user provides name)
+          return `It's great to meet you, ${userInput}! To help create an effective marketing strategy for your fitness business, I'd like to understand more about what you do. Could you briefly describe your fitness business? For example, are you a personal trainer, run a studio, or offer another type of fitness service?`;
+        }
+        
+        if (messages.length === 3) {
+          // Third message (after user describes business)
+          return `Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Consider factors like age range, fitness goals, and any specific demographics you currently serve or would like to attract.`;
+        }
       }
       
-      // Initial system prompt that explains what Gemini should do
-      const systemPrompt = `You are an AI marketing assistant for fitness professionals. 
+      // For later messages, use simplified direct content generation instead of chat API
+      // This bypasses any issues with chat history management
+      
+      // Prepare the full conversation context as a single prompt
+      let prompt = `You are an AI marketing assistant for fitness professionals.
 Your goal is to help the user create a 3x3 marketing strategy matrix with these components:
 1. Target Audience (who they should market to)
 2. Objectives (what they want to achieve)
 3. Key Messages (what they should communicate)
 
-Ask questions to understand the user's fitness business, their goals, and their unique approach.
-You can request competitor data from Supabase when relevant to provide insights.
-Use your judgment to determine what information you need to build the strategy matrix.
-After gathering sufficient information, let the user know you're ready to create their strategy matrix.
+Here's the conversation so far:`;
 
-${isInitial ? "Start by introducing yourself and asking for the user's name." : ""}`;
-
-      console.log("System prompt:", systemPrompt);
+      // Add conversation history in a clear format
+      messages.forEach(msg => {
+        prompt += `\n\n${msg.sender === 'assistant' ? 'AI' : 'User'}: ${msg.text}`;
+      });
       
-      // Call API endpoint that will interact with Gemini
-      const response = await fetch('/api/strategy/generate-question', {
+      // Add the current user input
+      prompt += `\n\nUser: ${userInput}`;
+      
+      // Add instructions for the response
+      prompt += `\n\nPlease provide the next response to help create a marketing strategy. Your response should be conversational and helpful.
+
+If you need competitor data, include [REQUEST_COMPETITOR_DATA] and the location in your response.
+If you have enough information to create the strategy matrix, include [READY_FOR_MATRIX] in your response.`;
+
+      console.log("Simplified prompt approach:", prompt.substring(0, 200) + "...");
+      
+      // Make direct call to Gemini API
+      const response = await fetch('/api/strategy/generate-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          systemPrompt,
-          messages: conversationHistory,
-          matrixStage: showMatrix,
+          prompt,
           userData,
-          isDebugMode: true  // Add this for debugging
+          isDebugMode: true
         }),
       });
       
@@ -132,29 +149,37 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
       const data = await response.json();
       console.log("API response:", data);
       
-      // Check if Gemini indicates we should show the matrix
+      // Handle special commands
       if (data.showMatrix) {
         generateMatrix(userData);
         setShowMatrix(true);
       }
       
-      // If Gemini requested competitor data, we'll fetch it
       if (data.requestCompetitorData) {
         const location = data.location || userData.location || 'Downtown Toronto';
         const gymData = await fetchCompetitiveInsights(location);
         
-        // Send the gym data back to Gemini for analysis
-        return await sendGymDataToGemini(gymData, conversationHistory);
+        return await sendGymDataToGemini(gymData);
       }
       
-      return data.response || "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
+      return data.response;
     } catch (error) {
       console.error('Error generating response:', error);
-      // Provide a fallback first message if this is the initial call
-      if (isInitial) {
+      
+      // Provide an appropriate fallback message
+      if (messages.length <= 1) {
         return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
       }
-      return "I'm having trouble processing that. Could you please try again?";
+      
+      if (messages.length === 3) {
+        return "Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Consider factors like age range, fitness goals, and any specific demographics you currently serve or would like to attract.";
+      }
+      
+      if (messages.length === 5) {
+        return "Great! Now let's focus on your goals. What are your top 3 marketing objectives for the next few months? For example, are you looking to increase client retention, attract new clients, launch a new service, or increase your social media presence?";
+      }
+      
+      return "I apologize for the technical difficulty. Let's continue with your strategy. Could you tell me more about what makes your fitness approach unique compared to others in your area?";
     }
   };
   
@@ -201,8 +226,9 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
     setMessages(updatedMessages);
     setCurrentInput('');
     
-    // Store user's answer if it's the name question (first question)
+    // Store user's answer
     if (messages.length === 1) {
+      // Name question
       setUserData({
         ...userData,
         name: currentInput,
@@ -210,11 +236,7 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
       });
       
       // SPECIAL HANDLING FOR NAME INPUT
-      // Add hardcoded response directly in the client for the second message
-      // This bypasses any API issues completely for this critical transition
       setIsProcessing(true);
-      
-      // Delay to simulate processing
       setTimeout(() => {
         setMessages([
           ...updatedMessages,
@@ -225,16 +247,34 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
         ]);
         setIsProcessing(false);
       }, 1000);
-      
-      // Exit early - don't call the API for this specific message
       return;
+    } else if (messages.length === 3) {
+      // Business description question
+      setUserData({
+        ...userData,
+        business: currentInput,
+        answers: [...userData.answers, currentInput]
+      });
+      
+      // SPECIAL HANDLING FOR BUSINESS DESCRIPTION
+      setIsProcessing(true);
+      setTimeout(() => {
+        setMessages([
+          ...updatedMessages,
+          {
+            sender: 'assistant',
+            text: `Thanks for sharing that information about your ${currentInput.includes('train') ? 'training' : 'fitness'} business. Now I'd like to understand your target audience better. Who are your ideal clients? Consider factors like age range, fitness goals, and any specific demographics you currently serve or would like to attract.`,
+          }
+        ]);
+        setIsProcessing(false);
+      }, 1000);
+      return;
+    } else {
+      setUserData({
+        ...userData,
+        answers: [...userData.answers, currentInput]
+      });
     }
-    
-    // For all other messages, continue with normal API processing
-    setUserData({
-      ...userData,
-      answers: [...userData.answers, currentInput]
-    });
     
     // Process the user input with Gemini
     setIsProcessing(true);
@@ -252,12 +292,23 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
       ]);
     } catch (error) {
       console.error("Error in chat:", error);
-      // Add error message to chat
+      
+      // Add fallback message based on conversation progress
+      let fallbackMessage = "I'm sorry, I encountered a technical issue. Let's continue with your marketing strategy.";
+      
+      if (messages.length === 5) {
+        fallbackMessage += " Could you tell me about your marketing goals and what you hope to achieve in the next few months?";
+      } else if (messages.length === 7) {
+        fallbackMessage += " What makes your fitness approach unique compared to others in your area?";
+      } else {
+        fallbackMessage += " What type of content do you feel most comfortable creating (videos, images, written posts)?";
+      }
+      
       setMessages([
         ...updatedMessages,
         {
           sender: 'assistant',
-          text: "I'm sorry, I encountered a technical issue. Let's continue with your marketing strategy. Could you tell me about your fitness business?",
+          text: fallbackMessage,
         }
       ]);
     } finally {
