@@ -38,7 +38,10 @@ export default function NewStrategy() {
   
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Add a small delay to ensure DOM has updated
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   };
   
   // Initial setup - show first AI message
@@ -72,6 +75,12 @@ export default function NewStrategy() {
       generateSuggestions(feedbackPopup.currentValue, feedbackPopup.section);
     }
   }, [feedbackPopup.visible]);
+  
+  // Update the useEffect hook for scrolling
+  useEffect(() => {
+    // Scroll to bottom whenever messages change or when processing state changes
+    scrollToBottom();
+  }, [messages, isProcessing]);
   
   // Replace the dynamic sendToGemini with a hardcoded version
   const sendToGemini = async (userInput, isInitial = false) => {
@@ -322,6 +331,9 @@ export default function NewStrategy() {
     setMessages(updatedMessages);
     setCurrentInput('');
     
+    // Scroll to bottom after user message
+    scrollToBottom();
+    
     // Store user input in userData
     setUserData(prev => ({
       ...prev,
@@ -350,6 +362,9 @@ export default function NewStrategy() {
           }
         ]);
         
+        // Scroll to bottom after AI response
+        scrollToBottom();
+        
         // Generate and show matrix
         setTimeout(() => {
           generateMatrix();
@@ -363,6 +378,9 @@ export default function NewStrategy() {
             text: response,
           }
         ]);
+        
+        // Scroll to bottom after AI response
+        scrollToBottom();
       }
     } catch (error) {
       console.error("Error in chat:", error);
@@ -375,6 +393,9 @@ export default function NewStrategy() {
           text: "I apologize for the technical difficulty. Let's continue with your strategy development. Could you tell me more about your fitness business?",
         }
       ]);
+      
+      // Make sure to scroll even after an error
+      scrollToBottom();
     } finally {
       setIsProcessing(false);
     }

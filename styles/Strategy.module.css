@@ -393,24 +393,37 @@
 
 /* Chat UI Styles */
 .chatContainer {
-  width: 100%;
-  max-width: 800px;
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  height: 70vh; /* Fixed height */
+  max-height: 70vh;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background-color: #fff;
 }
 
 .messages {
-  padding: 1.5rem;
+  flex: 1;
   overflow-y: auto;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  max-height: 70vh;
-  min-height: 400px;
+  scrollbar-width: thin;
+  scrollbar-color: #E2E8F0 transparent;
+}
+
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background-color: #E2E8F0;
+  border-radius: 6px;
 }
 
 .message {
