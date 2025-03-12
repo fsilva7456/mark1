@@ -134,7 +134,7 @@ export default function Dashboard() {
           <div className={styles.dashboard}>
             <div className={styles.header}>
               <div className={styles.headerContent}>
-                <h1>Welcome to your dashboard{user ? `, ${user.email.split('@')[0]}` : ''}</h1>
+                <h1>Welcome to Mark1{user ? `, ${user.email.split('@')[0]}` : ''}</h1>
                 <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
               </div>
             </div>
