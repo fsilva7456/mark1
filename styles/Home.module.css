@@ -10,6 +10,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  align-items: center;
 }
 
 /* Login Layout */
@@ -327,12 +329,6 @@
   flex-direction: column;
 }
 
-.main {
-  display: flex;
-  flex: 1;
-  height: 100vh;
-}
-
 .backgroundSection {
   flex: 1;
   display: flex;
@@ -343,6 +339,7 @@
   background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(52, 84, 209, 0.9) 100%);
   color: white;
   overflow: hidden;
+  height: 100%;
 }
 
 .backgroundOverlay {
