@@ -208,27 +208,61 @@ ${isInitial ? "Start by introducing yourself and asking for the user's name." : 
         name: currentInput,
         answers: [...userData.answers, currentInput]
       });
-    } else {
-      setUserData({
-        ...userData,
-        answers: [...userData.answers, currentInput]
-      });
+      
+      // SPECIAL HANDLING FOR NAME INPUT
+      // Add hardcoded response directly in the client for the second message
+      // This bypasses any API issues completely for this critical transition
+      setIsProcessing(true);
+      
+      // Delay to simulate processing
+      setTimeout(() => {
+        setMessages([
+          ...updatedMessages,
+          {
+            sender: 'assistant',
+            text: `It's great to meet you, ${currentInput}! To help create an effective marketing strategy for your fitness business, I'd like to understand more about what you do. Could you briefly describe your fitness business? For example, are you a personal trainer, run a studio, or offer another type of fitness service?`,
+          }
+        ]);
+        setIsProcessing(false);
+      }, 1000);
+      
+      // Exit early - don't call the API for this specific message
+      return;
     }
+    
+    // For all other messages, continue with normal API processing
+    setUserData({
+      ...userData,
+      answers: [...userData.answers, currentInput]
+    });
     
     // Process the user input with Gemini
     setIsProcessing(true);
-    const response = await sendToGemini(currentInput);
     
-    // Add AI response to chat
-    setMessages([
-      ...updatedMessages,
-      {
-        sender: 'assistant',
-        text: response,
-      }
-    ]);
-    
-    setIsProcessing(false);
+    try {
+      const response = await sendToGemini(currentInput);
+      
+      // Add AI response to chat
+      setMessages([
+        ...updatedMessages,
+        {
+          sender: 'assistant',
+          text: response,
+        }
+      ]);
+    } catch (error) {
+      console.error("Error in chat:", error);
+      // Add error message to chat
+      setMessages([
+        ...updatedMessages,
+        {
+          sender: 'assistant',
+          text: "I'm sorry, I encountered a technical issue. Let's continue with your marketing strategy. Could you tell me about your fitness business?",
+        }
+      ]);
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const fetchCompetitiveInsights = async (userLocation) => {
