@@ -59,13 +59,15 @@ Based on this information, create a highly strategic and differentiated 3x3 mark
 2. Objectives (3 measurable marketing goals they should pursue)
 3. Key Messages (3 compelling value propositions that will resonate with their audience)
 
+IMPORTANT: ENSURE YOU PROVIDE EXACTLY 3 ITEMS FOR EACH CATEGORY. THE MATRIX MUST HAVE ALL 9 ITEMS FULLY COMPLETED.
+
 Each element of the matrix should:
 - Leverage insights from competitor data to identify gaps and opportunities
 - Consider the unique selling proposition of the user's business
 - Be specific, actionable, and tailored to the fitness industry
 - Help differentiate from competitors in the market
 
-Return your response in this JSON format:
+Return your response in this JSON format ONLY:
 {
   "targetAudience": [
     "First audience segment with specific details",
@@ -83,6 +85,8 @@ Return your response in this JSON format:
     "Third compelling value proposition"
   ]
 }
+
+I need the matrix to have all 9 elements filled in with high-quality, strategic content.
 `;
 
     // Call Gemini API to generate the strategy
@@ -107,6 +111,39 @@ Return your response in this JSON format:
         if (jsonMatch) {
           const jsonText = jsonMatch[1] ? jsonMatch[1] : jsonMatch[0];
           matrix = JSON.parse(jsonText);
+          
+          // Validate that all 9 elements exist
+          if (!matrix.targetAudience || 
+              !matrix.objectives || 
+              !matrix.keyMessages ||
+              matrix.targetAudience.length !== 3 ||
+              matrix.objectives.length !== 3 ||
+              matrix.keyMessages.length !== 3) {
+            
+            console.error('Matrix validation failed: Missing elements or incorrect count');
+            console.log('Invalid matrix structure:', matrix);
+            
+            // Fix any missing items by filling in
+            const fullMatrix = {
+              targetAudience: Array(3).fill("").map((_, i) => 
+                matrix.targetAudience && matrix.targetAudience[i] 
+                  ? matrix.targetAudience[i] 
+                  : `${userData.audience || 'Fitness enthusiasts'} segment ${i+1}`
+              ),
+              objectives: Array(3).fill("").map((_, i) => 
+                matrix.objectives && matrix.objectives[i] 
+                  ? matrix.objectives[i] 
+                  : `Marketing objective ${i+1} for ${userData.business || 'fitness business'}`
+              ),
+              keyMessages: Array(3).fill("").map((_, i) => 
+                matrix.keyMessages && matrix.keyMessages[i] 
+                  ? matrix.keyMessages[i] 
+                  : `Value proposition ${i+1} highlighting ${userData.unique || 'unique approach'}`
+              )
+            };
+            
+            matrix = fullMatrix;
+          }
         } else {
           throw new Error('Failed to extract JSON from response');
         }

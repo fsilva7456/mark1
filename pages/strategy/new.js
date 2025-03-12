@@ -260,56 +260,87 @@ export default function NewStrategy() {
         opportunities: gym.opportunities || "Not specified"
       }));
       
-      console.log("DEBUG: Formatted gym data for API:", formattedGymData.length);
+      let attempts = 0;
+      const maxAttempts = 2;
+      let matrix = null;
       
-      // Send request to a new API endpoint that will use Gemini to analyze the data
-      let response;
-      try {
-        response = await fetch('/api/strategy/generate-with-insights', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userData: {
-              name,
-              business,
-              audience,
-              goals,
-              unique,
-              content
-            },
-            gymData: formattedGymData
-          }),
-          // Add timeout to prevent hanging requests
-          timeout: 15000
-        });
+      while (!matrix && attempts < maxAttempts) {
+        attempts++;
+        console.log(`DEBUG: Strategy generation attempt ${attempts}/${maxAttempts}`);
         
-        console.log("DEBUG: Gemini API response status:", response.status);
-      } catch (fetchError) {
-        console.error("DEBUG: Fetch error:", fetchError);
-        return null;
+        try {
+          const response = await fetch('/api/strategy/generate-with-insights', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userData: {
+                name,
+                business,
+                audience,
+                goals,
+                unique,
+                content
+              },
+              gymData: formattedGymData
+            }),
+            // Add timeout to prevent hanging requests
+            timeout: 20000
+          });
+          
+          if (!response.ok) {
+            console.error(`DEBUG: API request failed with status ${response.status}`);
+            continue; // Try again
+          }
+          
+          const data = await response.json();
+          
+          // Validate the matrix structure
+          if (data.matrix && 
+              data.matrix.targetAudience && 
+              data.matrix.objectives && 
+              data.matrix.keyMessages &&
+              data.matrix.targetAudience.length === 3 &&
+              data.matrix.objectives.length === 3 &&
+              data.matrix.keyMessages.length === 3) {
+            
+            console.log("DEBUG: Valid matrix structure received from API");
+            matrix = data.matrix;
+          } else {
+            console.error("DEBUG: Invalid matrix structure received:", data);
+          }
+        } catch (apiError) {
+          console.error(`DEBUG: API call error on attempt ${attempts}:`, apiError);
+        }
       }
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("DEBUG: Failed to generate enhanced strategy:", response.status, errorText);
-        return null;
+      // If we still don't have a valid matrix after all attempts, create one
+      if (!matrix) {
+        console.log("DEBUG: Creating fallback matrix after failed API attempts");
+        matrix = {
+          targetAudience: [
+            `${audience} seeking personalized fitness solutions`,
+            `Busy professionals looking for efficient workout options`,
+            `${audience.includes('beginners') ? 'Beginners starting their fitness journey' : 'Fitness enthusiasts wanting to reach new goals'}`
+          ],
+          objectives: [
+            `${goals.toLowerCase().includes('client') ? 'Attract new clients through targeted marketing' : 'Increase brand visibility in the local fitness market'}`,
+            `Build a reputation as a trusted ${business.toLowerCase().includes('train') ? 'trainer' : 'fitness provider'} through consistent content`,
+            `${goals.toLowerCase().includes('social') ? 'Grow social media following by 30% in 3 months' : 'Convert prospects to paying clients through effective messaging'}`
+          ],
+          keyMessages: [
+            `Experience ${unique.toLowerCase().includes('personal') ? 'truly personalized fitness guidance' : 'a fitness approach tailored to your needs'}`,
+            `Achieve your goals faster with our proven ${business.toLowerCase().includes('train') ? 'training methods' : 'fitness systems'}`,
+            `Join a supportive community that helps you stay accountable and motivated`
+          ]
+        };
       }
       
-      let data;
-      try {
-        data = await response.json();
-        console.log("DEBUG: Received data from API:", data ? "success" : "null");
-      } catch (jsonError) {
-        console.error("DEBUG: JSON parse error:", jsonError);
-        return null;
-      }
-      
-      return data.matrix;
+      return matrix;
       
     } catch (error) {
-      console.error("DEBUG: Error generating enhanced strategy:", error);
+      console.error("DEBUG: Error in enhance strategy generation:", error);
       return null;
     }
   };
