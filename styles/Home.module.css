@@ -6,11 +6,14 @@
 }
 
 .main {
-  margin-top: 70px; /* To account for the fixed navbar */
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
-  flex: 1;
-  height: 100vh;
+  justify-content: flex-end; /* Position login card on the right */
   align-items: center;
+  padding: 2rem;
+  overflow: hidden;
 }
 
 /* Login Layout */
@@ -328,35 +331,39 @@
   flex-direction: column;
 }
 
+/* Full screen background section */
 .backgroundSection {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 3rem;
-  position: relative;
-  background: linear-gradient(135deg, rgba(30, 60, 114, 0.95) 0%, rgba(52, 84, 209, 0.9) 100%);
-  color: white;
-  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
+  background: linear-gradient(135deg, rgba(30, 60, 114, 0.8) 0%, rgba(52, 84, 209, 0.7) 100%);
+  z-index: 1;
 }
 
+/* Background image overlay */
 .backgroundOverlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('/images/fitness-background.jpg') no-repeat center center/cover;
-  opacity: 0.4;
-  mix-blend-mode: multiply;
-  z-index: 1;
+  background: url('/images/fitness-background.jpg') no-repeat center 30%/cover; /* 30% from top */
+  opacity: 0.6;
+  z-index: 0;
 }
 
+/* Content positioned on the left */
 .content {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  left: 5%;
+  top: 50%;
+  transform: translateY(-50%);
   max-width: 600px;
+  z-index: 2;
+  color: white;
+  padding-right: 2rem;
 }
 
 .title {
@@ -393,218 +400,67 @@
   font-weight: bold;
 }
 
-.formSection {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background-color: #f8fafc;
-  position: relative;
-  overflow: hidden;
-}
-
-.formSection::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('/images/pattern.svg') repeat;
-  opacity: 0.03;
-  pointer-events: none;
-}
-
-/* Fixed size form container */
+/* Form container positioned on the right */
 .formContainer {
-  width: 450px; /* Fixed width instead of max-width */
+  position: relative;
+  z-index: 3;
+  width: 450px;
   background-color: white;
   padding: 2.5rem;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+  margin-right: 5%;
+}
+
+/* Remove the separate form section */
+.formSection {
   position: relative;
-  z-index: 2;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 3;
 }
 
-.formContainer:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .content {
+    left: 2%;
+    max-width: 500px;
+  }
+  
+  .formContainer {
+    margin-right: 2%;
+  }
 }
 
-/* Improved input styling with floating label effect */
-.formGroup {
-  margin-bottom: 2rem;
-  position: relative;
-  padding-top: 0.5rem;
-}
-
-.formGroup label {
-  position: absolute;
-  top: -10px;
-  left: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  background-color: white;
-  padding: 0 8px;
-  z-index: 1;
-  transition: all 0.2s ease;
-}
-
-.formGroup input {
-  width: 100%;
-  padding: 1rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s;
-  background-color: #f8fafc;
-}
-
-.formGroup input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(52, 84, 209, 0.1);
-  background-color: white;
-}
-
-/* Enhanced button styling */
-.loginButton {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 1.5rem;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-.loginButton:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: all 0.5s;
-}
-
-.loginButton:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 84, 209, 0.25);
-}
-
-.loginButton:hover:before {
-  left: 100%;
-}
-
-.loginButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Google sign-in button */
-.googleButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 1rem;
-  margin-top: 1rem;
-  background-color: white;
-  color: #333;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.googleButton:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.googleIcon {
-  width: 20px;
-  height: 20px;
-}
-
-/* Adding a divider */
-.divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 1.5rem 0;
-  color: var(--text-light);
-  font-size: 0.9rem;
-}
-
-.divider:before,
-.divider:after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.divider:before {
-  margin-right: 0.5rem;
-}
-
-.divider:after {
-  margin-left: 0.5rem;
-}
-
-/* Update responsive adjustments to maintain form size */
-@media (max-width: 1024px) {
+@media (max-width: 992px) {
   .main {
     flex-direction: column;
-  }
-  
-  .backgroundSection,
-  .formSection {
-    flex: 0 0 auto;
-  }
-  
-  .backgroundSection {
-    padding: 3rem 2rem;
+    justify-content: center;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
   
   .content {
-    max-width: 100%;
+    position: relative;
+    left: 0;
+    top: 0;
+    transform: none;
+    max-width: 600px;
+    margin-bottom: 2rem;
+    padding-right: 0;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
   }
   
-  /* Remove this line to keep formContainer width fixed */
-  /* .formContainer {
-    max-width: 100%;
-  } */
+  .formContainer {
+    margin-right: 0;
+  }
 }
 
-/* Only for very small screens, adjust the form to be usable */
 @media (max-width: 480px) {
   .formContainer {
-    width: 90%; /* Allow some flexibility on very small screens */
+    width: 100%;
+    max-width: 380px;
     padding: 2rem 1.5rem;
-  }
-  
-  .formSection {
-    padding: 1rem;
   }
 }
 

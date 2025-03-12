@@ -79,62 +79,56 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <motion.div 
-          className={styles.backgroundSection}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-        >
-          <div className={styles.backgroundOverlay} />
-          
-          <div className={styles.content}>
-            <motion.h1
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              className={styles.title}
-            >
-              AI-POWERED MARKETING FOR THE FITNESS INDUSTRY
-            </motion.h1>
-            
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className={styles.subtitle}
-            >
-              MARK1 helps fitness professionals define their marketing strategy, create engaging content, and grow their business.
-            </motion.p>
-            
-            <motion.ul
-              variants={listVariants}
-              initial="hidden"
-              animate="visible"
-              className={styles.featureList}
-            >
-              {[
-                'Generate engaging social media content',
-                'Attract and convert more clients',
-                'Track performance with AI insights',
-                'Build a consistent marketing strategy'
-              ].map((feature, index) => (
-                <motion.li 
-                  key={index}
-                  variants={itemVariants}
-                >
-                  {feature}
-                </motion.li>
-              ))}
-            </motion.ul>
-          </div>
-        </motion.div>
+        {/* Background with gradient overlay */}
+        <div className={styles.backgroundSection}></div>
         
-        <motion.div 
-          className={styles.formSection}
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-        >
+        {/* Image background */}
+        <div className={styles.backgroundOverlay}></div>
+        
+        {/* Content section - features and intro */}
+        <div className={styles.content}>
+          <motion.h1
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className={styles.title}
+          >
+            AI-POWERED MARKETING FOR THE FITNESS INDUSTRY
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className={styles.subtitle}
+          >
+            MARK1 helps fitness professionals define their marketing strategy, create engaging content, and grow their business.
+          </motion.p>
+          
+          <motion.ul
+            variants={listVariants}
+            initial="hidden"
+            animate="visible"
+            className={styles.featureList}
+          >
+            {[
+              'Generate engaging social media content',
+              'Attract and convert more clients',
+              'Track performance with AI insights',
+              'Build a consistent marketing strategy'
+            ].map((feature, index) => (
+              <motion.li 
+                key={index}
+                variants={itemVariants}
+              >
+                {feature}
+              </motion.li>
+            ))}
+          </motion.ul>
+        </div>
+        
+        {/* Login form */}
+        <div className={styles.formSection}>
           <div className={styles.formContainer}>
             <h2 className={styles.formTitle}>Welcome Back</h2>
             <p className={styles.formSubtitle}>Login to your account</p>
@@ -194,7 +188,7 @@ export default function Home() {
               <p>Don't have an account? <Link href="/signup">Sign up</Link></p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </main>
 
       <footer className={styles.footer}>
