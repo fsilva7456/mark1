@@ -541,16 +541,20 @@ export default function NewStrategy() {
       
       console.log("Attempting to save strategy with user ID:", user.id);
       
-      // Prepare the strategy data for saving
+      // Extract business description from userData if possible
+      const businessDescription = userData.answers && userData.answers.length > 1 
+        ? userData.answers[1] 
+        : "Fitness business";
+      
+      // Prepare the strategy data for saving WITH MATCHING DATABASE SCHEMA
       const strategyData = {
         user_id: user.id,
         name: `${userData.name || 'User'}'s Marketing Strategy`,
+        business_description: businessDescription, // Add missing field from schema
         target_audience: matrix.targetAudience,
         objectives: matrix.objectives,
         key_messages: matrix.keyMessages,
-        // Store original answers for context
-        user_data: userData,
-        created_at: new Date().toISOString() // Ensure ISO string format for date
+        created_at: new Date().toISOString()
       };
       
       console.log("Strategy data prepared:", strategyData);
