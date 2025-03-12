@@ -120,51 +120,87 @@ ${isInitial ? "START BY INTRODUCING YOURSELF AND ASKING FOR THE USER'S NAME." : 
 
 Your response:`;
 
-      console.log("Prompt approach:", prompt.substring(0, 200) + "...");
+      // Log full prompt for debugging in non-production environments
+      console.log("DIAGNOSTIC - Full prompt:", prompt);
       
-      // Make direct call to Gemini API
-      const response = await fetch('/api/strategy/generate-direct', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt,
-          isDebugMode: true
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate response');
-      }
-      
-      const data = await response.json();
-      console.log("API response:", data);
-      
-      // Handle special commands
-      if (data.showMatrix) {
-        generateMatrix(userData);
-        setShowMatrix(true);
-      }
-      
-      if (data.requestCompetitorData && data.location) {
-        const gymData = await fetchCompetitiveInsights(data.location);
+      // Make direct call to Gemini API with error logging
+      try {
+        const response = await fetch('/api/strategy/generate-direct', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt,
+            isDebugMode: true
+          }),
+        });
         
-        if (gymData && gymData.length > 0) {
-          return await sendGymDataToGemini(gymData);
+        // Log the raw response for debugging
+        console.log("DIAGNOSTIC - API response status:", response.status);
+        
+        // Get response body text for debugging
+        const responseText = await response.text();
+        let data;
+        
+        try {
+          // Try to parse as JSON
+          data = JSON.parse(responseText);
+          console.log("DIAGNOSTIC - API response data:", data);
+        } catch (parseError) {
+          // If can't parse as JSON, log the raw text
+          console.error("DIAGNOSTIC - Failed to parse response as JSON:", responseText);
+          throw new Error("Invalid response format from API");
         }
+        
+        if (!response.ok) {
+          console.error("DIAGNOSTIC - API error response:", data);
+          throw new Error(`API request failed: ${data.error || response.statusText}`);
+        }
+        
+        // Handle special commands
+        if (data.showMatrix) {
+          generateMatrix(userData);
+          setShowMatrix(true);
+        }
+        
+        if (data.requestCompetitorData && data.location) {
+          const gymData = await fetchCompetitiveInsights(data.location);
+          
+          if (gymData && gymData.length > 0) {
+            return await sendGymDataToGemini(gymData);
+          }
+        }
+        
+        return data.response || "No valid response received from API";
+      } catch (apiError) {
+        console.error("DIAGNOSTIC - API call error:", apiError);
+        
+        // Special handling for second message
+        if (messages.length === 1) {
+          console.log("DIAGNOSTIC - Falling back to hardcoded second message due to API error");
+          return `Hi ${userInput}! Now I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized fitness classes?`;
+        }
+        
+        throw apiError; // Re-throw to be caught by outer try/catch
       }
-      
-      return data.response;
     } catch (error) {
-      console.error('Error generating response:', error);
+      console.error('DIAGNOSTIC - Overall error in sendToGemini:', error);
+      console.error('DIAGNOSTIC - Error stack:', error.stack);
+      console.error('DIAGNOSTIC - Messages length:', messages.length);
       
       // Provide a simple fallback that asks a generic question
       if (isInitial) {
         return "Hi! I'm your AI marketing assistant. I'll help you create a marketing strategy for your fitness business. First, could you tell me your name?";
       }
       
-      // Generic fallback questions based on previous message count
+      // Special handling for second message to ensure continuity
+      if (messages.length === 1) {
+        const name = userInput.trim();
+        return `Hi ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized fitness classes?`;
+      }
+      
+      // Generic fallback questions
       return "I apologize for the technical difficulty. Let's continue with your strategy. Could you tell me more about your fitness business goals or what makes your approach unique?";
     }
   };
@@ -692,6 +728,27 @@ After providing insights, ask a follow-up question to gather more information fo
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {process.env.NODE_ENV !== 'production' && (
+        <div className={styles.diagnosticTools}>
+          <button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/strategy/test-gemini');
+                const data = await response.json();
+                console.log("Gemini API Test Result:", data);
+                alert(data.success ? "API Test Successful: " + data.response : "API Test Failed: " + data.error);
+              } catch (e) {
+                console.error("Test failed:", e);
+                alert("API Test Error: " + e.message);
+              }
+            }}
+            className={styles.diagnosticButton}
+          >
+            Test Gemini API
+          </button>
         </div>
       )}
     </div>

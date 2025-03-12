@@ -593,4 +593,27 @@
   background-color: #2F855A;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(56, 161, 105, 0.2);
+}
+
+.diagnosticTools {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed #ccc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.diagnosticButton {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.diagnosticButton:hover {
+  background-color: #e0e0e0;
 } 

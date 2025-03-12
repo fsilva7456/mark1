@@ -11,11 +11,17 @@ export default async function handler(req, res) {
   try {
     const { prompt, isDebugMode } = req.body;
     
+    console.log("DIAGNOSTIC - API received request with prompt length:", prompt?.length || 0);
+    
     // Check if API key is set
     if (!process.env.GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY is not set");
+      console.error("DIAGNOSTIC - GEMINI_API_KEY is not set");
       return res.status(500).json({ error: 'API key not configured' });
     }
+    
+    // Log truncated prompt for debugging
+    const promptPreview = prompt ? `${prompt.substring(0, 100)}...` : 'No prompt provided';
+    console.log("DIAGNOSTIC - Prompt preview:", promptPreview);
 
     try {
       // Use direct content generation with better error handling
@@ -29,6 +35,8 @@ export default async function handler(req, res) {
         }
       });
       
+      console.log("DIAGNOSTIC - Initialized Gemini model, sending content...");
+      
       // Add timeout handling
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('API request timed out')), 15000);
@@ -40,7 +48,10 @@ export default async function handler(req, res) {
         timeoutPromise
       ]);
       
+      console.log("DIAGNOSTIC - Received response from Gemini");
+      
       const responseText = result.response.text();
+      console.log("DIAGNOSTIC - Response preview:", responseText.substring(0, 100) + "...");
       
       // Check for special commands
       const showMatrix = responseText.includes('[READY_FOR_MATRIX]');
@@ -68,23 +79,46 @@ export default async function handler(req, res) {
         location
       });
     } catch (generationError) {
-      console.error("Gemini API error:", generationError);
+      console.error("DIAGNOSTIC - Gemini API error:", generationError);
+      console.error("DIAGNOSTIC - Error stack:", generationError.stack);
+      
+      // For the second message, provide a hardcoded response
+      if (prompt.includes("User: ") && !prompt.includes("AI: ")) {
+        // This is likely the second message (after name)
+        console.log("DIAGNOSTIC - Providing hardcoded response for second message");
+        
+        // Extract the name from the prompt
+        const nameMatch = prompt.match(/User: ([^\n]+)/);
+        const name = nameMatch ? nameMatch[1].trim() : "there";
+        
+        return res.status(200).json({
+          response: `Hi ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized fitness classes?`,
+          showMatrix: false,
+          requestCompetitorData: false
+        });
+      }
       
       if (isDebugMode) {
         return res.status(500).json({
           error: 'Generation failed',
           details: generationError.message,
-          stack: generationError.stack
+          stack: generationError.stack,
+          promptLength: prompt?.length || 0,
+          promptPreview: promptPreview
         });
       }
       
       throw generationError;
     }
   } catch (error) {
-    console.error('Error in API handler:', error);
+    console.error('DIAGNOSTIC - Error in API handler:', error);
+    console.error('DIAGNOSTIC - Error stack:', error.stack);
+    
     return res.status(500).json({ 
       error: 'Failed to generate content',
-      details: error.message
+      details: error.message,
+      errorType: error.constructor.name,
+      stack: isDebugMode ? error.stack : undefined
     });
   }
 } 
