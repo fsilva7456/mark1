@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 import styles from '../../styles/Strategy.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 export default function NewStrategy() {
   const router = useRouter();
@@ -515,78 +516,47 @@ export default function NewStrategy() {
   };
   
   const handleSaveStrategy = async () => {
+    // Ensure we're saving a strategy with a proper UUID as the ID
     try {
       setIsProcessing(true);
       
-      // Check if user is logged in
-      if (!user || !user.id) {
-        console.error("No user ID available");
-        alert('Please log in to save your strategy.');
-        setIsProcessing(false);
-        return;
-      }
+      // Create a UUID explicitly for the strategy if needed
+      const strategyId = crypto.randomUUID(); // Or use another UUID generation method
       
-      // Validate matrix data before saving
-      if (!matrix.targetAudience || 
-          !matrix.objectives || 
-          !matrix.keyMessages ||
-          matrix.targetAudience.length === 0 ||
-          matrix.objectives.length === 0 ||
-          matrix.keyMessages.length === 0) {
-        console.error("Invalid matrix data:", matrix);
-        alert('Strategy data is incomplete. Please regenerate the strategy.');
-        setIsProcessing(false);
-        return;
-      }
-      
-      console.log("Attempting to save strategy with user ID:", user.id);
-      
-      // Extract business description from userData if possible
-      const businessDescription = userData.answers && userData.answers.length > 1 
-        ? userData.answers[1] 
-        : "Fitness business";
-      
-      // Prepare the strategy data for saving WITH MATCHING DATABASE SCHEMA
-      const strategyData = {
-        user_id: user.id,
-        name: `${userData.name || 'User'}'s Marketing Strategy`,
-        business_description: businessDescription, // Add missing field from schema
-        target_audience: matrix.targetAudience,
-        objectives: matrix.objectives,
-        key_messages: matrix.keyMessages,
-        created_at: new Date().toISOString()
-      };
-      
-      console.log("Strategy data prepared:", strategyData);
-      
-      // Save to Supabase with explicit error handling
       const { data, error } = await supabase
         .from('strategies')
-        .insert([strategyData])
+        .insert([
+          {
+            id: strategyId, // Explicitly set the ID to ensure it's a UUID
+            name: strategyName || 'Unnamed Strategy',
+            user_id: user.id,
+            target_audience: targetAudience,
+            objectives: objectives,
+            key_messages: keyMessages,
+            // Other strategy data
+          }
+        ])
         .select();
       
-      if (error) {
-        console.error("Supabase insert error:", error);
-        throw new Error(`Database error: ${error.message}`);
-      }
+      if (error) throw error;
       
-      // Store the strategy ID
-      if (data && data.length > 0) {
-        console.log("Strategy saved successfully with ID:", data[0].id);
-        setStrategyId(data[0].id);
-        
-        // Show success message
-        alert('Strategy saved successfully!');
-        
-        // Redirect to dashboard
-        router.push('/dashboard?success=strategy-saved');
-      } else {
-        console.error("No data returned from insert operation");
-        throw new Error('Failed to retrieve saved strategy ID');
-      }
+      // Update strategy ID state with the UUID
+      setStrategyId(strategyId);
+      
+      toast({
+        title: 'Strategy saved',
+        description: 'Your marketing strategy has been saved successfully.',
+        status: 'success',
+      });
+      
+      router.push(`/strategy/view/${strategyId}`);
     } catch (error) {
       console.error('Error saving strategy:', error);
-      alert(`Failed to save strategy: ${error.message || 'Unknown error'}`);
+      toast({
+        title: 'Error',
+        description: 'Failed to save your strategy. Please try again.',
+        status: 'error',
+      });
     } finally {
       setIsProcessing(false);
     }

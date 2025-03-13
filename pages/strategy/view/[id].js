@@ -141,12 +141,18 @@ export default function ViewStrategy() {
                     href={`/content/new?strategy=${encodeURIComponent(strategy.id)}`}
                     className={styles.outlineButton}
                     onClick={(e) => {
-                      // Log the actual strategy ID being passed
-                      console.log("Generate Content - Strategy ID:", strategy.id);
+                      // Enhanced debugging and validation
+                      console.log("Generate Content - Strategy Data:", {
+                        id: strategy.id,
+                        name: strategy.name,
+                        idType: typeof strategy.id,
+                        obj: JSON.stringify(strategy)
+                      });
                       
-                      // Check if we have a valid ID before proceeding
-                      if (!strategy.id) {
+                      // Check if strategy.id is definitely a UUID (simple check)
+                      if (!strategy.id || typeof strategy.id !== 'string' || strategy.id.includes(' ')) {
                         e.preventDefault();
+                        console.error("Invalid strategy ID detected:", strategy.id);
                         alert('Invalid strategy ID. Please go back to the dashboard and try again.');
                       }
                     }}

@@ -177,8 +177,11 @@ export default function Dashboard() {
                         <Link href={`/strategy/${strategy.id}`} className={styles.actionButton}>
                           Edit Strategy
                         </Link>
-                        <Link href={`/calendar/new?strategyId=${strategy.id}`} className={styles.actionButton}>
-                          Create Calendar
+                        <Link 
+                          href={`/content/new?strategy=${encodeURIComponent(strategy.id)}`} 
+                          className={styles.actionButton}
+                        >
+                          Create Content
                         </Link>
                       </div>
                     </div>
