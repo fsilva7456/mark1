@@ -8,6 +8,8 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const { user, signOut } = useAuth();
+  
+  const isDashboard = router.pathname === '/dashboard';
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -39,8 +41,8 @@ export default function Navbar() {
             </div>
           )}
           
-          {/* Show logout when user is logged in */}
-          {user && (
+          {/* Show logout when user is logged in AND not on dashboard */}
+          {user && !isDashboard && (
             <button onClick={signOut} className={styles.logoutButton}>
               Logout
             </button>
