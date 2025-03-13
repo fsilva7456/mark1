@@ -135,6 +135,14 @@ export default function Dashboard() {
             <div className={styles.header}>
               <div className={styles.headerContent}>
                 <h1>Welcome to Mark1{user ? `, ${user.email.split('@')[0]}` : ''}</h1>
+                <div className={styles.headerActions}>
+                  <Link href="/user/settings" className={styles.actionButton}>
+                    User Setup
+                  </Link>
+                  <button onClick={handleLogout} className={styles.logoutButton}>
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -153,15 +161,6 @@ export default function Dashboard() {
                     >
                       <div className={styles.cardHeader}>
                         <h3>{strategy.name || 'Unnamed Strategy'}</h3>
-                        {strategy.status ? (
-                          <span className={`${styles.statusBadge} ${styles[strategy.status]}`}>
-                            {strategy.status.charAt(0).toUpperCase() + strategy.status.slice(1)}
-                          </span>
-                        ) : (
-                          <span className={`${styles.statusBadge} ${styles.draft}`}>
-                            Draft
-                          </span>
-                        )}
                       </div>
                       <p className={styles.lastUpdated}>Last updated: {strategy.lastUpdated || 'Not available'}</p>
                       <div className={styles.cardActions}>

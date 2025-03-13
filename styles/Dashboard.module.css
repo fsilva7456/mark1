@@ -71,20 +71,46 @@
   margin: 0;
 }
 
-.createButton {
-  background-color: #3454D1;
-  color: white;
-  padding: 0.75rem 1.5rem;
+.createButton, .actionButton, .viewButton, .contentButton, .emptyCardButton, .logoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px; /* Fixed width for all buttons */
+  height: 42px; /* Fixed height for all buttons */
+  padding: 0.75rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s ease;
   text-decoration: none;
-  transition: all 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.createButton:hover {
+/* Primary and secondary button variants */
+.createButton, .viewButton, .emptyCardButton {
+  background-color: #3454D1;
+  color: white;
+  border: none;
+}
+
+.createButton:hover, .viewButton:hover, .emptyCardButton:hover {
   background-color: #2a43a7;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(52, 84, 209, 0.3);
+  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
+}
+
+.contentButton, .actionButton, .logoutButton {
+  background-color: white;
+  color: #3454D1;
+  border: 1px solid #3454D1;
+}
+
+.contentButton:hover, .actionButton:hover, .logoutButton:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .cardsContainer {
@@ -94,11 +120,17 @@
 }
 
 .strategyCard, .calendarCard, .emptyCard {
+  width: 340px; /* Fixed width */
+  height: 300px; /* Fixed height */
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .strategyCard:hover, .calendarCard:hover {
@@ -497,4 +529,44 @@
   background-color: #f8fafc;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Ensure content area takes up available space */
+.cardPreview, .cardContent {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Header action buttons container */
+.headerActions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Updated card layouts */
+.cardsContainer, .cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+
+/* Card actions at bottom */
+.cardActions {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+}
+
+/* Make empty cards match others */
+.emptyCard {
+  border: 2px dashed #E2E8F0;
+  background-color: #F8FAFC;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 } 
