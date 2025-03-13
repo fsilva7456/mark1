@@ -143,21 +143,20 @@ export default function NewContent() {
     console.log("========= STRATEGY PARAMETER DEBUG =========");
     console.log("Raw strategy from URL:", strategy);
     console.log("Strategy parameter type:", typeof strategy);
-    console.log("Strategy parameter length:", strategy?.length);
     console.log("URL search string:", window.location.search);
+    console.log("Router query object:", router.query);
+    
+    // Get the strategy ID from the URL
+    // In a fully loaded page, router.query.strategy should have the ID
+    const strategyId = router.isReady ? router.query.strategy : strategy;
+    
+    console.log("Final strategy ID to use:", strategyId);
     
     // Fetch strategy details when strategy ID is available
-    if (strategy && user) {
+    if (strategyId && user) {
       try {
-        let cleanStrategyId = strategy;
-        try {
-          // Try to decode if it's URL encoded
-          cleanStrategyId = decodeURIComponent(strategy.trim());
-        } catch (decodeError) {
-          console.error("Error decoding strategy ID:", decodeError);
-        }
-        
-        console.log("Attempting to use strategy ID:", cleanStrategyId);
+        // Make sure we're working with a string
+        let cleanStrategyId = String(strategyId).trim();
         
         // If the strategy looks like a name rather than a UUID, show error
         if (cleanStrategyId.includes(" ") || cleanStrategyId.includes("'")) {
@@ -167,13 +166,14 @@ export default function NewContent() {
           return;
         }
         
+        console.log("Attempting to fetch strategy with ID:", cleanStrategyId);
         fetchStrategyDetails(cleanStrategyId);
       } catch (err) {
         console.error("Error in useEffect:", err);
         setIsLoading(false);
         setError('Failed to start content generation process: ' + err.message);
       }
-    } else if (!loading && !strategy) {
+    } else if (!loading && !strategyId) {
       console.error("No strategy ID found in URL");
       setIsLoading(false);
       setError('No strategy ID provided in URL. Please select a strategy first.');
