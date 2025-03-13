@@ -36,6 +36,16 @@ export default function Dashboard() {
     }
   }, [user, loading, router]);
 
+  useEffect(() => {
+    // Add dashboard class to body when component mounts
+    document.body.classList.add('dashboard');
+    
+    // Clean up on unmount
+    return () => {
+      document.body.classList.remove('dashboard');
+    };
+  }, []);
+
   const fetchUserData = async () => {
     try {
       setIsLoading(true);

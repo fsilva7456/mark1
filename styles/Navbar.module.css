@@ -99,4 +99,10 @@
   .menu.active {
     transform: translateY(0);
   }
+}
+
+/* Hide logout and user setup links in navbar when on dashboard */
+.dashboard .navLogout,
+.dashboard .navUserSetup {
+  display: none;
 } 

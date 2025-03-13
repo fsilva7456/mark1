@@ -60,9 +60,6 @@ export default function Navbar() {
           <Link href="/about" className={router.pathname === '/about' ? styles.active : ''}>
             About
           </Link>
-          <Link href="/setup" className={styles.navLink}>
-            User Setup
-          </Link>
         </div>
       </div>
     </nav>
