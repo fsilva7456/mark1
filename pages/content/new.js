@@ -260,12 +260,46 @@ export default function NewContent() {
         return;
       }
       
-      // TEMPORARY: Skip API call and just use mock data
-      console.log("Using mock content temporarily while API issues are fixed");
+      // Use the Gemini API to generate personalized content
+      console.log("Calling Gemini API for personalized content generation");
       
-      // Create personalized mock content by using strategy elements
-      const customizedMockContent = createCustomizedMockContent(strategyData);
-      setContentOutline(customizedMockContent);
+      try {
+        const response = await fetch('/api/content/generate-outline', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            strategy: {
+              name: strategyData.name,
+              business_description: strategyData.business_description,
+              target_audience: strategyData.target_audience,
+              objectives: strategyData.objectives,
+              key_messages: strategyData.key_messages
+            }
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data || !data.campaigns) {
+          throw new Error('Invalid response format from API');
+        }
+        
+        console.log("Setting personalized content from Gemini API");
+        setContentOutline(data.campaigns);
+      } catch (apiError) {
+        console.error('Gemini API error:', apiError);
+        
+        // Fall back to customized mock content if API fails
+        console.warn("Using fallback customized mock content due to API error");
+        const customizedMockContent = createCustomizedMockContent(strategyData);
+        setContentOutline(customizedMockContent);
+      }
       
       // After setting content, generate daily engagement content
       try {

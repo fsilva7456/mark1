@@ -26,90 +26,102 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    // Create a simplified prompt to reduce potential errors
+    // Create a simplified prompt that should work better
     const prompt = `
-      Create a 3-week content marketing campaign for this fitness business:
-      ${strategy.business_description || 'Fitness business'}
+      Create a highly specific 3-week content marketing campaign for this fitness business:
+      
+      BUSINESS DESCRIPTION:
+      "${strategy.business_description || 'Fitness business'}"
       
       TARGET AUDIENCE:
-      ${strategy.target_audience.map((audience, i) => `${i+1}. ${audience}`).join('\n')}
+      ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
       
       OBJECTIVES:
-      ${strategy.objectives.map((objective, i) => `${i+1}. ${objective}`).join('\n')}
+      ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
       
       KEY MESSAGES:
-      ${strategy.key_messages.map((message, i) => `${i+1}. ${message}`).join('\n')}
+      ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
-      Format the response as a JSON with this structure:
+      Instructions:
+      1. Create a detailed social media content plan with 3 weeks of content
+      2. For each week, provide a clear theme based on one of the key messages
+      3. For each week, create 3 posts with detailed topics
+      4. Each post must include: content type, topic, target audience, CTA, principle, explanation, and visual recommendation
+      5. Use exact language from the key messages and target the specific audiences listed
+      
+      Format your response as a clean JSON object like this (no explanation, just the JSON):
+      
       {
         "campaigns": [
           {
             "week": 1,
-            "theme": "Theme based on key message",
+            "theme": "Theme from key message 1",
             "posts": [
               {
-                "type": "Content type",
-                "topic": "Topic description",
-                "audience": "Target audience",
+                "type": "Carousel/Video/Reel/Story/Image",
+                "topic": "Detailed post topic",
+                "audience": "One of the target audiences listed above",
                 "cta": "Call to action",
                 "principle": "Persuasion principle",
-                "principleExplanation": "Explanation",
+                "principleExplanation": "Brief explanation",
                 "visual": "Visual recommendation"
               },
-              // 2 more posts
+              // More posts for week 1
             ]
           },
-          // Weeks 2 and 3
+          // Week 2 and 3 with same structure
         ]
       }
     `;
     
     console.log("Sending prompt to Gemini API...");
-    const result = await model.generateContent(prompt);
-    console.log("Received response from Gemini API");
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+    });
     
     const response = result.response;
     const text = response.text();
     
-    // Attempt to parse JSON more safely
-    let campaigns;
+    // Process the response to extract clean JSON
+    let jsonData;
     try {
-      // First try to match JSON block
+      // Try to find JSON in the response first
       const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || 
                         text.match(/```\n([\s\S]*?)\n```/) || 
                         text.match(/{[\s\S]*?}/);
-                        
+      
       if (jsonMatch) {
+        // Clean up the JSON string
         const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '');
-        campaigns = JSON.parse(jsonString);
+        jsonData = JSON.parse(jsonString);
       } else {
-        // If no JSON format detected, try to extract from the whole response
-        campaigns = JSON.parse(text);
+        // Direct parse if no markdown code blocks
+        jsonData = JSON.parse(text);
       }
       
-      // Verify campaigns structure
-      if (!campaigns || !campaigns.campaigns) {
-        console.error("Invalid campaigns structure:", campaigns);
-        throw new Error('Invalid response structure from API');
+      // Verify we have the right structure
+      if (!jsonData.campaigns) {
+        throw new Error("Response missing 'campaigns' property");
       }
       
-      return res.status(200).json(campaigns);
+      return res.status(200).json(jsonData);
     } catch (parseError) {
-      console.error('Failed to parse API response:', parseError);
-      console.log('Raw API response:', text.substring(0, 1000)); // Log first 1000 chars
-      
-      // Return a fallback structure if parsing fails
+      console.error("Error parsing Gemini response:", parseError);
+      console.log("Raw response:", text.substring(0, 500)); // Log first 500 chars
       return res.status(500).json({ 
-        error: 'Failed to parse API response', 
-        rawResponse: text.substring(0, 500) // First 500 chars for debugging
+        error: "Failed to parse Gemini response",
+        rawResponsePreview: text.substring(0, 200) // First 200 chars for debugging
       });
     }
   } catch (error) {
     console.error('Error generating content outline:', error);
     return res.status(500).json({ 
       error: 'Failed to generate content outline', 
-      details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 } 
