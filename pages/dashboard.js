@@ -68,6 +68,12 @@ export default function Dashboard() {
       
       setStrategies(strategiesData || []);
       setCalendars(calendarsData || []);
+
+      console.log("Fetched strategies:", strategiesData?.map(s => ({
+        id: s.id,
+        name: s.name,
+        id_is_uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.id)
+      })));
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -181,7 +187,17 @@ export default function Dashboard() {
                           Edit Strategy
                         </Link>
                         <Link 
-                          href={`/content/new?strategy=${encodeURIComponent(strategy.id)}`} 
+                          href={(() => {
+                            // UUID format check
+                            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strategy.id);
+                            if (isUuid) {
+                              return `/content/new?strategy=${encodeURIComponent(strategy.id)}`;
+                            } else {
+                              console.error("Strategy has invalid ID format:", strategy.id, strategy.name);
+                              // Return dashboard with error message
+                              return `/dashboard?error=invalid-strategy-id`;
+                            }
+                          })()}
                           className={styles.actionButton}
                         >
                           Create Content
