@@ -397,7 +397,12 @@ export default function NewContent() {
       }
       
       toast.success('Calendar created successfully!');
-      router.push(`/calendar/${calendarId}`);
+      
+      // Temporarily redirect to dashboard instead of calendar page
+      router.push('/dashboard?success=calendar-created');
+      
+      // To debug, log the calendar ID
+      console.log("Created calendar with ID:", calendarId);
     } catch (error) {
       console.error('Error saving calendar:', error);
       toast.error('Failed to create calendar. Please try again.');
