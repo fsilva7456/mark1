@@ -682,6 +682,27 @@ export default function NewContent() {
           </div>
         )}
       </main>
+
+      {process.env.NODE_ENV !== 'production' && (
+        <div className={styles.diagnosticTools}>
+          <button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/content/test-gemini');
+                const data = await response.json();
+                console.log("Gemini API Test Result:", data);
+                alert(data.success ? "API Test Successful: " + data.response : "API Test Failed: " + data.error);
+              } catch (e) {
+                console.error("Test failed:", e);
+                alert("API Test Error: " + e.message);
+              }
+            }}
+            className={styles.diagnosticButton}
+          >
+            Test Gemini API
+          </button>
+        </div>
+      )}
     </div>
   );
 } 
