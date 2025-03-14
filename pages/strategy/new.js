@@ -530,15 +530,11 @@ export default function NewStrategy() {
         .insert([
           {
             id: strategyId,
-            name: `${name}'s Marketing Strategy`, // Use userData for name
+            name: `${name}'s Marketing Strategy`,
             user_id: user.id,
-            target_audience: matrix.targetAudience, // Get from matrix state
-            objectives: matrix.objectives, // Get from matrix state
-            key_messages: matrix.keyMessages, // Get from matrix state
-            // Include original user answers for context
-            user_data: {
-              answers: userData.answers
-            },
+            target_audience: matrix.targetAudience,
+            objectives: matrix.objectives,
+            key_messages: matrix.keyMessages,
             created_at: new Date().toISOString()
           }
         ])
