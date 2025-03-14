@@ -167,91 +167,66 @@ export default function NewStrategy() {
       const unique = userAnswers[4] || 'personalized approach';
       const content = userAnswers[5] || 'various content types';
       
-      // Fetch gym data to inform the strategy - add more logging
+      // Fetch gym data to inform the strategy
       console.log("DEBUG: Starting to fetch gym data for strategy generation...");
       const gymData = await fetchCompetitiveInsights('Downtown Toronto');
-      console.log("DEBUG: Gym data fetch result:", gymData ? `${gymData.length} records` : "no data", gymData);
+      console.log("DEBUG: Gym data fetch result:", gymData ? `${gymData.length} records` : "no data");
       
+      // Variables to track errors
+      let errorMessage = "";
+      let error = false;
+      
+      // Try to generate enhanced strategy with Gemini
       if (gymData && gymData.length > 0) {
         console.log("DEBUG: Gym data available, calling generate enhanced strategy");
-        // Send all data to Gemini for analysis and enhanced strategy generation
-        const enhancedStrategy = await generateEnhancedStrategy(
+        // Send all data to Gemini for analysis
+        const result = await generateEnhancedStrategy(
           name, business, audience, goals, unique, content, gymData
         );
         
-        console.log("DEBUG: Enhanced strategy result:", enhancedStrategy ? "success" : "failed");
+        console.log("DEBUG: Enhanced strategy result:", result);
         
-        if (enhancedStrategy) {
+        if (result.success && result.matrix) {
           // Set the matrix state with Gemini's enhanced strategy
           console.log("DEBUG: Using Gemini-generated strategy");
-          setMatrix(enhancedStrategy);
+          setMatrix(result.matrix);
           setShowMatrix(true);
           setIsProcessing(false);
           return;
         } else {
-          console.log("DEBUG: Enhanced strategy generation failed, falling back to hardcoded");
+          // Handle error case - no fallback, just report the error
+          error = true;
+          errorMessage = "Could not generate strategy matrix with Gemini. Specific errors:\n\n";
+          if (result.errors && result.errors.length > 0) {
+            errorMessage += result.errors.map((err, idx) => `${idx + 1}. ${err}`).join("\n");
+          } else {
+            errorMessage += "Unknown error occurred during strategy generation.";
+          }
         }
       } else {
-        console.log("DEBUG: No gym data available, falling back to hardcoded strategy");
+        error = true;
+        errorMessage = "Could not fetch competitor data to generate a strategy. Please try again.";
       }
       
-      // Fallback to basic strategy generation if gym data fetch fails or is empty
-      console.log("Using fallback strategy generation without gym data");
-      
-      // Generate audience segments based on answers
-      const targetAudience = [
-        `${audience.includes(',') ? audience.split(',')[0] : audience} seeking personalized fitness solutions`,
-        `Busy professionals looking for ${business.toLowerCase().includes('personal') ? 'efficient personal training' : 'effective workout options'}`,
-        `${audience.includes('beginners') ? 'Beginners starting their fitness journey' : 'Fitness enthusiasts wanting to reach new goals'}`
-      ];
-      
-      // Generate objectives based on goals
-      const objectives = [
-        `${goals.toLowerCase().includes('client') ? 'Attract new clients through targeted marketing' : 'Increase brand visibility in the local fitness market'}`,
-        `Build a reputation as a trusted ${business.toLowerCase().includes('train') ? 'trainer' : 'fitness provider'} through consistent content`,
-        `${goals.toLowerCase().includes('social') ? 'Grow social media following by 30% in 3 months' : 'Convert prospects to paying clients through effective messaging'}`
-      ];
-      
-      // Generate key messages based on unique selling points
-      const keyMessages = [
-        `Experience ${unique.toLowerCase().includes('personal') ? 'truly personalized fitness guidance' : 'a fitness approach tailored to your needs'}`,
-        `Achieve your goals faster with our proven ${business.toLowerCase().includes('train') ? 'training methods' : 'fitness systems'}`,
-        `Join a supportive community that helps you stay accountable and motivated`
-      ];
-      
-      // Set the matrix state
-      setMatrix({
-        targetAudience,
-        objectives,
-        keyMessages
-      });
-      
-      // Show the matrix view
-      setShowMatrix(true);
+      // If we've reached this point, there was an error
+      if (error) {
+        // Display the error state in the UI instead of the matrix
+        setShowMatrix(true); // Still switch to matrix view
+        setMatrix({
+          error: true,
+          errorMessage: errorMessage
+        });
+      }
       
     } catch (error) {
       console.error('Error generating matrix:', error);
       
-      // Fallback matrix if there's an error
-      const fallbackMatrix = {
-        targetAudience: [
-          `Fitness enthusiasts looking for personalized training`,
-          `Busy professionals seeking efficient workouts`,
-          `Beginners interested in starting their fitness journey`
-        ],
-        objectives: [
-          `Increase social media engagement by 30%`,
-          `Build a reputation as a trusted voice in fitness`,
-          `Convert followers to paying clients`
-        ],
-        keyMessages: [
-          `Achieve real results with personalized guidance`,
-          `Transform your fitness journey with expert support`,
-          `Join a supportive community that helps you reach your goals`
-        ]
-      };
+      // Set error state in matrix
+      setMatrix({
+        error: true,
+        errorMessage: `Failed to generate strategy: ${error.message}`
+      });
       
-      setMatrix(fallbackMatrix);
       setShowMatrix(true);
     } finally {
       setIsProcessing(false);
@@ -276,6 +251,7 @@ export default function NewStrategy() {
       let attempts = 0;
       const maxAttempts = 2;
       let matrix = null;
+      let errors = [];
       
       while (!matrix && attempts < maxAttempts) {
         attempts++;
@@ -298,13 +274,13 @@ export default function NewStrategy() {
               },
               gymData: formattedGymData
             }),
-            // Add timeout to prevent hanging requests
             timeout: 20000
           });
           
           if (!response.ok) {
-            console.error(`DEBUG: API request failed with status ${response.status}`);
-            continue; // Try again
+            const errorText = await response.text();
+            errors.push(`API request failed with status ${response.status}: ${errorText}`);
+            continue;
           }
           
           const data = await response.json();
@@ -313,48 +289,70 @@ export default function NewStrategy() {
           if (data.matrix && 
               data.matrix.targetAudience && 
               data.matrix.objectives && 
-              data.matrix.keyMessages &&
-              data.matrix.targetAudience.length === 3 &&
-              data.matrix.objectives.length === 3 &&
-              data.matrix.keyMessages.length === 3) {
+              data.matrix.keyMessages) {
+            
+            // Additional validation for each section
+            const validationErrors = [];
+            
+            if (!Array.isArray(data.matrix.targetAudience) || data.matrix.targetAudience.length !== 3) {
+              validationErrors.push("targetAudience: Expected 3 items but got " + 
+                                   (Array.isArray(data.matrix.targetAudience) ? 
+                                    data.matrix.targetAudience.length : "non-array"));
+            }
+            
+            if (!Array.isArray(data.matrix.objectives) || data.matrix.objectives.length !== 3) {
+              validationErrors.push("objectives: Expected 3 items but got " + 
+                                   (Array.isArray(data.matrix.objectives) ? 
+                                    data.matrix.objectives.length : "non-array"));
+            }
+            
+            if (!Array.isArray(data.matrix.keyMessages) || data.matrix.keyMessages.length !== 3) {
+              validationErrors.push("keyMessages: Expected 3 items but got " + 
+                                   (Array.isArray(data.matrix.keyMessages) ? 
+                                    data.matrix.keyMessages.length : "non-array"));
+            }
+            
+            if (validationErrors.length > 0) {
+              errors.push("Matrix validation failed: " + validationErrors.join(", "));
+              continue;
+            }
             
             console.log("DEBUG: Valid matrix structure received from API");
             matrix = data.matrix;
           } else {
-            console.error("DEBUG: Invalid matrix structure received:", data);
+            const missingFields = [];
+            if (!data.matrix) missingFields.push("matrix");
+            else {
+              if (!data.matrix.targetAudience) missingFields.push("targetAudience");
+              if (!data.matrix.objectives) missingFields.push("objectives");
+              if (!data.matrix.keyMessages) missingFields.push("keyMessages");
+            }
+            errors.push(`Invalid matrix structure, missing: ${missingFields.join(", ")}`);
           }
         } catch (apiError) {
-          console.error(`DEBUG: API call error on attempt ${attempts}:`, apiError);
+          errors.push(`API call error on attempt ${attempts}: ${apiError.message}`);
         }
       }
       
-      // If we still don't have a valid matrix after all attempts, create one
+      // If we still don't have a valid matrix after all attempts, return the errors
       if (!matrix) {
-        console.log("DEBUG: Creating fallback matrix after failed API attempts");
-        matrix = {
-          targetAudience: [
-            `${audience} seeking personalized fitness solutions`,
-            `Busy professionals looking for efficient workout options`,
-            `${audience.includes('beginners') ? 'Beginners starting their fitness journey' : 'Fitness enthusiasts wanting to reach new goals'}`
-          ],
-          objectives: [
-            `${goals.toLowerCase().includes('client') ? 'Attract new clients through targeted marketing' : 'Increase brand visibility in the local fitness market'}`,
-            `Build a reputation as a trusted ${business.toLowerCase().includes('train') ? 'trainer' : 'fitness provider'} through consistent content`,
-            `${goals.toLowerCase().includes('social') ? 'Grow social media following by 30% in 3 months' : 'Convert prospects to paying clients through effective messaging'}`
-          ],
-          keyMessages: [
-            `Experience ${unique.toLowerCase().includes('personal') ? 'truly personalized fitness guidance' : 'a fitness approach tailored to your needs'}`,
-            `Achieve your goals faster with our proven ${business.toLowerCase().includes('train') ? 'training methods' : 'fitness systems'}`,
-            `Join a supportive community that helps you stay accountable and motivated`
-          ]
+        return { 
+          success: false, 
+          errors: errors 
         };
       }
       
-      return matrix;
+      return { 
+        success: true, 
+        matrix: matrix 
+      };
       
     } catch (error) {
-      console.error("DEBUG: Error in enhance strategy generation:", error);
-      return null;
+      console.error("DEBUG: Error in enhanced strategy generation:", error);
+      return { 
+        success: false, 
+        errors: [`Unexpected error: ${error.message}`] 
+      };
     }
   };
   
@@ -833,50 +831,65 @@ export default function NewStrategy() {
             <div className={styles.matrixLayout}>
               <div className={styles.matrixContainer}>
                 <h2>Your Marketing Strategy</h2>
-                <div className={styles.matrix}>
-                  <div className={styles.matrixColumn}>
-                    <h3>Target Audience</h3>
-                    <ul>
-                      {matrix.targetAudience.map((item, index) => (
-                        <li 
-                          key={index} 
-                          onClick={() => handleCellClick('targetAudience', index, item)}
-                          className={styles.interactiveCell}
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                {matrix.error ? (
+                  <div className={styles.matrixError}>
+                    <h3>Strategy Generation Error</h3>
+                    <div className={styles.errorDetails}>
+                      <pre>{matrix.errorMessage}</pre>
+                    </div>
+                    <button
+                      onClick={() => setShowMatrix(false)}
+                      className={styles.tryAgainButton}
+                    >
+                      Go Back and Try Again
+                    </button>
                   </div>
-                  <div className={styles.matrixColumn}>
-                    <h3>Objectives</h3>
-                    <ul>
-                      {matrix.objectives.map((item, index) => (
-                        <li 
-                          key={index} 
-                          onClick={() => handleCellClick('objectives', index, item)}
-                          className={styles.interactiveCell}
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                ) : (
+                  <div className={styles.matrix}>
+                    <div className={styles.matrixColumn}>
+                      <h3>Target Audience</h3>
+                      <ul>
+                        {matrix.targetAudience.map((item, index) => (
+                          <li 
+                            key={index} 
+                            onClick={() => handleCellClick('targetAudience', index, item)}
+                            className={styles.interactiveCell}
+                          >
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className={styles.matrixColumn}>
+                      <h3>Objectives</h3>
+                      <ul>
+                        {matrix.objectives.map((item, index) => (
+                          <li 
+                            key={index} 
+                            onClick={() => handleCellClick('objectives', index, item)}
+                            className={styles.interactiveCell}
+                          >
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className={styles.matrixColumn}>
+                      <h3>Key Messages</h3>
+                      <ul>
+                        {matrix.keyMessages.map((item, index) => (
+                          <li 
+                            key={index} 
+                            onClick={() => handleCellClick('keyMessages', index, item)}
+                            className={styles.interactiveCell}
+                          >
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <div className={styles.matrixColumn}>
-                    <h3>Key Messages</h3>
-                    <ul>
-                      {matrix.keyMessages.map((item, index) => (
-                        <li 
-                          key={index} 
-                          onClick={() => handleCellClick('keyMessages', index, item)}
-                          className={styles.interactiveCell}
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                )}
                 <div className={styles.matrixActions}>
                   <button
                     onClick={handleSaveStrategy}
