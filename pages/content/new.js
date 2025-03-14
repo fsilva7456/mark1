@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 import styles from '../../styles/Content.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 const mockContent = [
   {
@@ -323,22 +324,84 @@ export default function NewContent() {
   const handleSaveCalendar = async () => {
     try {
       // Create a new calendar in Supabase
-      const { data, error } = await supabase
+      const { data: calendarData, error: calendarError } = await supabase
         .from('calendars')
         .insert([
           { 
             user_id: user.id,
-            name: `Content Calendar for ${strategy}`,
+            name: `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`,
+            description: 'Generated from content outline',
+            progress: 0,
             posts_scheduled: contentOutline.reduce((total, week) => total + week.posts.length, 0),
-            progress: 0
+            posts_published: 0
           }
-        ]);
+        ])
+        .select();
       
-      if (error) throw error;
+      if (calendarError) throw calendarError;
       
-      router.push('/dashboard?success=calendar-created');
+      const calendarId = calendarData[0].id;
+      
+      // Link the content plan to the calendar
+      const { data: contentPlanData, error: contentPlanError } = await supabase
+        .from('content_plans')
+        .insert([
+          { 
+            user_id: user.id,
+            name: `Content Plan for ${selectedStrategy?.name || 'Marketing Strategy'}`,
+            strategy_id: selectedStrategy.id,
+            calendar_id: calendarId,
+            campaigns: contentOutline,
+            daily_engagement: dailyEngagement
+          }
+        ])
+        .select();
+      
+      if (contentPlanError) throw contentPlanError;
+      
+      // Generate initial posts from content outline
+      const postsList = [];
+      const startingDate = new Date(startDate);
+      
+      contentOutline.forEach((week, weekIndex) => {
+        week.posts.forEach((post, postIndex) => {
+          // Set date for this post (each post is 1-2 days apart)
+          const postDate = new Date(startingDate);
+          postDate.setDate(postDate.getDate() + (weekIndex * 7) + postIndex);
+          
+          postsList.push({
+            calendar_id: calendarId,
+            title: post.topic,
+            content: post.topic,
+            post_type: post.type,
+            target_audience: post.audience,
+            scheduled_date: postDate.toISOString(),
+            status: 'scheduled',
+            engagement: {
+              likes: 0,
+              comments: 0,
+              shares: 0,
+              saves: 0,
+              clicks: 0
+            }
+          });
+        });
+      });
+      
+      // Add posts to the database
+      if (postsList.length > 0) {
+        const { error: postsError } = await supabase
+          .from('calendar_posts')
+          .insert(postsList);
+        
+        if (postsError) throw postsError;
+      }
+      
+      toast.success('Calendar created successfully!');
+      router.push(`/calendar/${calendarId}`);
     } catch (error) {
       console.error('Error saving calendar:', error);
+      toast.error('Failed to create calendar. Please try again.');
     }
   };
 
