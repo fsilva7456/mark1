@@ -42,9 +42,12 @@ export default function NewStrategy() {
   
   const { user } = useAuth();
   
-  // Add a new state to store AI suggestions
+  // Replace the AI suggestions code with this modified version that works with the chat flow
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  
+  // Track current question in a different way
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
@@ -632,10 +635,23 @@ export default function NewStrategy() {
     });
   };
 
-  // Add this function to generate AI suggestions for the current question
-  const generateAISuggestions = async () => {
-    // Skip generating suggestions for name question
-    if (currentQuestion === 0) {
+  // Add this effect to monitor messages and update current question index
+  useEffect(() => {
+    // Update current question index based on message count
+    // First message is AI greeting, then alternates between user and AI
+    const userMessageCount = Math.floor(messages.length / 2);
+    setCurrentQuestionIndex(userMessageCount);
+    
+    // Generate suggestions whenever the AI asks a new question (odd-numbered messages)
+    if (messages.length > 0 && messages.length % 2 === 1 && messages.length > 1) {
+      generateAISuggestionsForChat(messages[messages.length - 1].text);
+    }
+  }, [messages]);
+
+  // Modified function to work with chat interface
+  const generateAISuggestionsForChat = async (latestQuestion) => {
+    // Skip generating suggestions for name question (first question)
+    if (currentQuestionIndex === 0) {
       setAiSuggestions([]);
       return;
     }
@@ -643,8 +659,15 @@ export default function NewStrategy() {
     setIsLoadingSuggestions(true);
     
     try {
-      const questionText = questionData[currentQuestion].question;
-      const businessContext = answers[1] || "fitness business"; // Use business type if available
+      // Extract previous user answers from messages
+      const previousAnswers = [];
+      for (let i = 1; i < messages.length; i += 2) {
+        if (messages[i] && messages[i].sender === 'user') {
+          previousAnswers.push(messages[i].text);
+        }
+      }
+      
+      const businessContext = previousAnswers.length > 1 ? previousAnswers[1] : "fitness business";
       
       const response = await fetch('/api/strategy/generate-suggestions', {
         method: 'POST',
@@ -652,10 +675,10 @@ export default function NewStrategy() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          question: questionText,
+          question: latestQuestion,
           businessContext: businessContext,
-          previousAnswers: answers.slice(0, currentQuestion),
-          questionIndex: currentQuestion
+          previousAnswers: previousAnswers,
+          questionIndex: currentQuestionIndex
         }),
       });
       
@@ -683,14 +706,14 @@ export default function NewStrategy() {
     }
   };
 
-  // Call this when the question changes
-  useEffect(() => {
-    if (currentQuestion > 0) { // Skip for first question (name)
-      generateAISuggestions();
-    } else {
-      setAiSuggestions([]);
-    }
-  }, [currentQuestion]);
+  // Add this function to handle suggestion selection
+  const handleSuggestionSelect = (suggestion) => {
+    setCurrentInput(suggestion);
+    // Optional: Submit automatically
+    // setTimeout(() => {
+    //   handleSubmit({ preventDefault: () => {} });
+    // }, 500);
+  };
 
   return (
     <div className={styles.container}>
@@ -759,6 +782,27 @@ export default function NewStrategy() {
                     </button>
                   ))}
                 </div>
+                
+                {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
+                  <div className={styles.suggestionsContainer}>
+                    <h3>Suggestions:</h3>
+                    {isLoadingSuggestions ? (
+                      <div className={styles.loadingSpinner}></div>
+                    ) : (
+                      <div className={styles.suggestionsList}>
+                        {aiSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSuggestionSelect(suggestion)}
+                            className={styles.suggestionButton}
+                          >
+                            {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <form onSubmit={handleSubmit} className={styles.inputForm}>
                   <input
