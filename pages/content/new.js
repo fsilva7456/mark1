@@ -139,46 +139,73 @@ export default function NewContent() {
       return;
     }
     
-    // Add detailed debugging for the strategy parameter
-    console.log("========= STRATEGY PARAMETER DEBUG =========");
-    console.log("Raw strategy from URL:", strategy);
-    console.log("Strategy parameter type:", typeof strategy);
-    console.log("URL search string:", window.location.search);
-    console.log("Router query object:", router.query);
+    if (!router.isReady) return;
     
-    // Get the strategy ID from the URL
-    // In a fully loaded page, router.query.strategy should have the ID
-    const strategyId = router.isReady ? router.query.strategy : strategy;
-    
-    console.log("Final strategy ID to use:", strategyId);
-    
-    // Fetch strategy details when strategy ID is available
-    if (strategyId && user) {
+    const handleStrategy = async () => {
+      setIsLoading(true);
       try {
-        // Make sure we're working with a string
-        let cleanStrategyId = String(strategyId).trim();
+        const strategyParam = router.query.strategy;
+        console.log("Strategy parameter received:", strategyParam);
         
-        // If the strategy looks like a name rather than a UUID, show error
-        if (cleanStrategyId.includes(" ") || cleanStrategyId.includes("'")) {
-          console.error("Strategy ID appears to be a name, not a UUID:", cleanStrategyId);
-          setError("Received strategy name instead of ID. Please go back to the dashboard and try again.");
+        if (!strategyParam) {
+          setError('No strategy ID provided. Please select a strategy first.');
           setIsLoading(false);
           return;
         }
         
-        console.log("Attempting to fetch strategy with ID:", cleanStrategyId);
-        fetchStrategyDetails(cleanStrategyId);
+        // Check if the strategy param is a UUID
+        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const isUuid = uuidPattern.test(strategyParam);
+        
+        if (isUuid) {
+          // We have a UUID, proceed normally
+          console.log("Strategy ID is a valid UUID, fetching directly");
+          fetchStrategyDetails(strategyParam);
+        } else {
+          // We have a name instead of ID, need to look up the ID
+          console.log("Strategy parameter is not a valid UUID, looking up by name");
+          
+          // Look up the strategy ID by name
+          const { data, error } = await supabase
+            .from('strategies')
+            .select('id')
+            .eq('name', strategyParam)
+            .single();
+          
+          if (error || !data) {
+            console.error("Error finding strategy by name:", error);
+            setError('Could not find strategy with this name. Please go back to the dashboard and try again.');
+            setIsLoading(false);
+            return;
+          }
+          
+          console.log("Found strategy ID from name:", data.id);
+          
+          // Check if the retrieved ID is a valid UUID
+          if (!uuidPattern.test(data.id)) {
+            console.error("Retrieved ID is not a valid UUID:", data.id);
+            setError('Invalid strategy ID format in database. Please contact support.');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Silently update the URL to use the UUID instead of the name
+          router.replace(`/content/new?strategy=${encodeURIComponent(data.id)}`, undefined, { shallow: true });
+          
+          // Fetch strategy details with the correct ID
+          fetchStrategyDetails(data.id);
+        }
       } catch (err) {
-        console.error("Error in useEffect:", err);
+        console.error("Error handling strategy parameter:", err);
+        setError('Error processing strategy information: ' + err.message);
         setIsLoading(false);
-        setError('Failed to start content generation process: ' + err.message);
       }
-    } else if (!loading && !strategyId) {
-      console.error("No strategy ID found in URL");
-      setIsLoading(false);
-      setError('No strategy ID provided in URL. Please select a strategy first.');
+    };
+    
+    if (user) {
+      handleStrategy();
     }
-  }, [user, loading, strategy, router]);
+  }, [router.isReady, router.query, user, loading]);
   
   const fetchStrategyDetails = async (strategyId) => {
     try {
