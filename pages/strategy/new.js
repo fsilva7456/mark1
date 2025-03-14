@@ -516,24 +516,30 @@ export default function NewStrategy() {
   };
   
   const handleSaveStrategy = async () => {
-    // Ensure we're saving a strategy with a proper UUID as the ID
     try {
       setIsProcessing(true);
       
+      // Extract the user name from userData
+      const name = userData.name || 'User';
+      
       // Create a UUID explicitly for the strategy if needed
-      const strategyId = crypto.randomUUID(); // Or use another UUID generation method
+      const strategyId = crypto.randomUUID();
       
       const { data, error } = await supabase
         .from('strategies')
         .insert([
           {
-            id: strategyId, // Explicitly set the ID to ensure it's a UUID
-            name: strategyName || 'Unnamed Strategy',
+            id: strategyId,
+            name: `${name}'s Marketing Strategy`, // Use userData for name
             user_id: user.id,
-            target_audience: targetAudience,
-            objectives: objectives,
-            key_messages: keyMessages,
-            // Other strategy data
+            target_audience: matrix.targetAudience, // Get from matrix state
+            objectives: matrix.objectives, // Get from matrix state
+            key_messages: matrix.keyMessages, // Get from matrix state
+            // Include original user answers for context
+            user_data: {
+              answers: userData.answers
+            },
+            created_at: new Date().toISOString()
           }
         ])
         .select();
