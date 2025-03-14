@@ -5,14 +5,8 @@ import Link from 'next/link';
 import Navbar from '../../components/Navbar';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styles from '../../styles/Calendar.module.css';
 import { toast } from 'react-hot-toast';
-
-// Setup the localizer
-const localizer = momentLocalizer(moment);
 
 export default function CalendarView() {
   const router = useRouter();
@@ -22,6 +16,8 @@ export default function CalendarView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [calendarDays, setCalendarDays] = useState([]);
 
   useEffect(() => {
     // Redirect if not logged in
@@ -35,6 +31,48 @@ export default function CalendarView() {
       fetchCalendarContent(strategy);
     }
   }, [strategy, user, loading, router]);
+
+  useEffect(() => {
+    // Generate calendar days for the current month
+    generateCalendarDays(currentMonth);
+  }, [currentMonth, events]);
+
+  const generateCalendarDays = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    // Get first day of month and last day
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Get day of week of first day (0 = Sunday, 6 = Saturday)
+    const firstDayOfWeek = firstDay.getDay();
+    
+    // Create array of days
+    const days = [];
+    
+    // Add empty slots for days before the first of the month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push({ date: null, events: [] });
+    }
+    
+    // Add days of the month with their events
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      const currentDate = new Date(year, month, i);
+      
+      // Find events for this day
+      const dayEvents = events.filter(event => {
+        const eventDate = new Date(event.start);
+        return eventDate.getDate() === i && 
+               eventDate.getMonth() === month && 
+               eventDate.getFullYear() === year;
+      });
+      
+      days.push({ date: currentDate, events: dayEvents });
+    }
+    
+    setCalendarDays(days);
+  };
 
   const fetchCalendarContent = async (strategyId) => {
     try {
@@ -80,6 +118,8 @@ export default function CalendarView() {
       }
       
       const baseDate = startDate ? new Date(startDate) : new Date();
+      setCurrentMonth(baseDate);
+      
       const calendarEvents = [];
       
       // Generate events from campaign posts
@@ -91,9 +131,8 @@ export default function CalendarView() {
           calendarEvents.push({
             id: `${weekIndex}-${postIndex}`,
             title: post.topic,
-            start: new Date(eventDate),
-            end: new Date(eventDate),
-            allDay: true,
+            start: eventDate,
+            end: eventDate,
             resource: {
               type: post.type,
               audience: post.audience,
@@ -113,9 +152,8 @@ export default function CalendarView() {
           calendarEvents.push({
             id: `daily-${post.week}-${post.day}`,
             title: post.description,
-            start: new Date(eventDate),
-            end: new Date(eventDate),
-            allDay: true,
+            start: eventDate,
+            end: eventDate,
             resource: {
               type: post.contentType,
               audience: post.targetAudience,
@@ -142,6 +180,8 @@ export default function CalendarView() {
       const mockWeeks = 3;
       const postsPerWeek = 3;
       const baseDate = startDate ? new Date(startDate) : new Date();
+      setCurrentMonth(baseDate);
+      
       const calendarEvents = [];
       
       for (let week = 0; week < mockWeeks; week++) {
@@ -154,9 +194,8 @@ export default function CalendarView() {
           calendarEvents.push({
             id: `mock-${week}-${post}`,
             title: `Content for ${strategyData?.name || 'Strategy'} - Week ${week + 1}, Post ${post + 1}`,
-            start: new Date(eventDate),
-            end: new Date(eventDate),
-            allDay: true,
+            start: eventDate,
+            end: eventDate,
             resource: {
               type: postTypes[Math.floor(Math.random() * postTypes.length)],
               audience: strategyData?.target_audience?.[0] || 'General audience',
@@ -180,45 +219,31 @@ export default function CalendarView() {
     setSelectedEvent(event);
   };
 
-  const eventStyleGetter = (event) => {
-    let backgroundColor = '#3454D1'; // Default blue
-    
-    // Different colors based on post type
-    switch (event.resource?.type) {
-      case 'Video':
-        backgroundColor = '#e74c3c'; // Red
-        break;
-      case 'Carousel':
-        backgroundColor = '#2ecc71'; // Green
-        break;
-      case 'Story':
-        backgroundColor = '#f39c12'; // Orange
-        break;
-      case 'Reel':
-        backgroundColor = '#9b59b6'; // Purple
-        break;
-      case 'Image':
-        backgroundColor = '#1abc9c'; // Teal
-        break;
+  const getPreviousMonth = () => {
+    const date = new Date(currentMonth);
+    date.setMonth(date.getMonth() - 1);
+    setCurrentMonth(date);
+  };
+
+  const getNextMonth = () => {
+    const date = new Date(currentMonth);
+    date.setMonth(date.getMonth() + 1);
+    setCurrentMonth(date);
+  };
+
+  const getMonthName = (date) => {
+    return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+  };
+  
+  const getDayColor = (type) => {
+    switch (type) {
+      case 'Video': return '#e74c3c';
+      case 'Carousel': return '#2ecc71';
+      case 'Story': return '#f39c12';
+      case 'Reel': return '#9b59b6';
+      case 'Image': return '#1abc9c';
+      default: return '#3454D1';
     }
-    
-    // Daily engagement posts get a different style
-    if (event.resource?.isDailyEngagement) {
-      backgroundColor = '#3498db'; // Light blue
-    }
-    
-    return {
-      style: {
-        backgroundColor,
-        border: '0',
-        borderRadius: '4px',
-        opacity: 0.9,
-        color: '#fff',
-        display: 'block',
-        fontWeight: '600',
-        padding: '3px 6px'
-      }
-    };
   };
 
   return (
@@ -258,19 +283,57 @@ export default function CalendarView() {
             </div>
           ) : (
             <div className={styles.calendarContainer}>
-              <div className={styles.calendarWrapper}>
-                <Calendar
-                  localizer={localizer}
-                  events={events}
-                  startAccessor="start"
-                  endAccessor="end"
-                  style={{ height: 600 }}
-                  onSelectEvent={handleEventClick}
-                  eventPropGetter={eventStyleGetter}
-                  views={['month', 'week', 'agenda']}
-                  defaultView="month"
-                  defaultDate={startDate ? new Date(startDate) : new Date()}
-                />
+              <div className={styles.simpleCalendar}>
+                <div className={styles.calendarHeader}>
+                  <button onClick={getPreviousMonth} className={styles.calendarButton}>
+                    &lt; Previous
+                  </button>
+                  <h2>{getMonthName(currentMonth)}</h2>
+                  <button onClick={getNextMonth} className={styles.calendarButton}>
+                    Next &gt;
+                  </button>
+                </div>
+                
+                <div className={styles.calendarGrid}>
+                  <div className={styles.weekDays}>
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                  </div>
+                  <div className={styles.calendarDays}>
+                    {calendarDays.map((day, index) => (
+                      <div 
+                        key={index} 
+                        className={`${styles.calendarDay} ${!day.date ? styles.emptyDay : ''}`}
+                      >
+                        {day.date && (
+                          <>
+                            <div className={styles.dayNumber}>{day.date.getDate()}</div>
+                            <div className={styles.dayEvents}>
+                              {day.events.map((event, eventIndex) => (
+                                <div
+                                  key={eventIndex}
+                                  className={styles.calendarEvent}
+                                  style={{ backgroundColor: getDayColor(event.resource.type) }}
+                                  onClick={() => handleEventClick(event)}
+                                >
+                                  {event.title.length > 18 ? 
+                                    `${event.title.substring(0, 18)}...` : 
+                                    event.title
+                                  }
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
               
               {selectedEvent && (
@@ -278,12 +341,22 @@ export default function CalendarView() {
                   <h3>Post Details</h3>
                   <div className={styles.eventCard}>
                     <div className={styles.eventHeader}>
-                      <span className={styles.eventType}>{selectedEvent.resource.type}</span>
+                      <span 
+                        className={styles.eventType}
+                        style={{ backgroundColor: getDayColor(selectedEvent.resource.type) }}
+                      >
+                        {selectedEvent.resource.type}
+                      </span>
                       <span className={styles.eventWeek}>Week {selectedEvent.resource.week}</span>
                     </div>
                     <h4>{selectedEvent.title}</h4>
                     <p className={styles.eventDate}>
-                      {moment(selectedEvent.start).format('dddd, MMMM D, YYYY')}
+                      {new Intl.DateTimeFormat('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      }).format(selectedEvent.start)}
                     </p>
                     <p className={styles.eventAudience}>
                       <strong>Audience:</strong> {selectedEvent.resource.audience}
