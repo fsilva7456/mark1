@@ -506,4 +506,100 @@
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* Calendar-specific styles */
+.calendarWrapper {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.eventDetail {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.eventCard {
+  background-color: #F8FAFC;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.eventType {
+  background-color: #3454D1;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.eventWeek {
+  color: #718096;
+  font-size: 0.8rem;
+}
+
+.eventDate {
+  color: #4A5568;
+  margin: 5px 0;
+  font-size: 0.9rem;
+}
+
+.eventAudience {
+  color: #4A5568;
+  margin: 10px 0 0 0;
+  font-size: 0.9rem;
+}
+
+.calendarActions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.backButton, .dashboardButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.backButton {
+  background-color: white;
+  color: #3454D1;
+  border: 1px solid #3454D1;
+}
+
+.dashboardButton {
+  background-color: #3454D1;
+  color: white;
+  border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backButton:hover {
+  background-color: #F8FAFC;
+  transform: translateY(-2px);
+}
+
+.dashboardButton:hover {
+  background-color: #2a43a7;
+  transform: translateY(-2px);
 } 
