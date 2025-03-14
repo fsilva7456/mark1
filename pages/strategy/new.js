@@ -543,20 +543,12 @@ export default function NewStrategy() {
       // Update strategy ID state with the UUID
       setStrategyId(strategyId);
       
-      toast({
-        title: 'Strategy saved',
-        description: 'Your marketing strategy has been saved successfully.',
-        status: 'success',
-      });
+      toast.success('Strategy saved successfully!');
       
       router.push(`/strategy/view/${strategyId}`);
     } catch (error) {
       console.error('Error saving strategy:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save your strategy. Please try again.',
-        status: 'error',
-      });
+      toast.error('Failed to save your strategy. Please try again.');
     } finally {
       setIsProcessing(false);
     }
