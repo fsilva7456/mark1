@@ -174,7 +174,10 @@ export default function Dashboard() {
                       </div>
                       <p className={styles.lastUpdated}>Last updated: {strategy.lastUpdated || 'Not available'}</p>
                       <div className={styles.cardActions}>
-                        <Link href={`/strategy/${strategy.id}`} className={styles.actionButton}>
+                        <Link 
+                          href={`/strategy/${strategy.id}`} 
+                          className={styles.actionButton}
+                        >
                           Edit Strategy
                         </Link>
                         <Link 

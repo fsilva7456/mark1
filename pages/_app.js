@@ -2,6 +2,7 @@ import '../styles/globals.css'
 import { AuthProvider } from '../contexts/AuthContext'
 import { useState } from 'react'
 import React from 'react'
+import { Toaster } from 'react-hot-toast'
 
 function MyApp({ Component, pageProps }) {
   const [error, setError] = useState(null)
@@ -32,6 +33,7 @@ function MyApp({ Component, pageProps }) {
     <ErrorBoundary setError={setError}>
       <AuthProvider>
         <Component {...pageProps} />
+        <Toaster position="top-right" />
       </AuthProvider>
     </ErrorBoundary>
   )

@@ -6,6 +6,7 @@ import Navbar from '../../../components/Navbar';
 import { useAuth } from '../../../contexts/AuthContext';
 import { supabase } from '../../../utils/supabaseClient';
 import styles from '../../../styles/Strategy.module.css';
+import { toast } from 'react-hot-toast';
 
 export default function ViewStrategy() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function ViewStrategy() {
     try {
       setIsLoading(true);
       
-      console.log("Making Supabase query for strategy ID:", strategyId);
+      console.log("Fetching strategy with ID:", strategyId);
       
       const { data, error } = await supabase
         .from('strategies')
@@ -44,9 +45,16 @@ export default function ViewStrategy() {
       if (error) throw error;
       
       if (data) {
-        console.log("Retrieved strategy:", data);
-        console.log("Strategy ID from database:", data.id);
-        console.log("Strategy ID type:", typeof data.id);
+        console.log("Retrieved strategy details:", {
+          id: data.id,
+          name: data.name,
+          id_type: typeof data.id
+        });
+        
+        // Ensure the ID is correctly set
+        if (!data.id || typeof data.id !== 'string' || data.id.includes(' ')) {
+          console.error("Warning: Strategy has an invalid ID format:", data.id);
+        }
         
         setStrategy(data);
       } else {
@@ -57,6 +65,45 @@ export default function ViewStrategy() {
       setError('Failed to load strategy details.');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const handleGenerateContent = async () => {
+    try {
+      console.log("Generating content for strategy:", {
+        id: strategy.id,
+        name: strategy.name,
+        type: typeof strategy.id
+      });
+      
+      // Check if we have an existing UUID-formatted ID
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (strategy.id && uuidPattern.test(strategy.id)) {
+        // We have a proper UUID, use it directly
+        router.push(`/content/new?strategy=${encodeURIComponent(strategy.id)}`);
+      } else {
+        // No valid UUID, try to get it from the database again or create one
+        console.error("No valid UUID found, attempting to regenerate");
+        
+        // Create a fresh UUID
+        const contentStrategyId = crypto.randomUUID();
+        
+        // Update the existing strategy with this UUID
+        const { error } = await supabase
+          .from('strategies')
+          .update({ id: contentStrategyId })
+          .eq('id', id);
+        
+        if (error) {
+          throw new Error("Could not update strategy with valid UUID");
+        }
+        
+        // Navigate with the new ID
+        router.push(`/content/new?strategy=${encodeURIComponent(contentStrategyId)}`);
+      }
+    } catch (error) {
+      console.error("Error preparing content generation:", error);
+      toast.error("Failed to prepare content generation. Please try again.");
     }
   };
   
@@ -137,28 +184,12 @@ export default function ViewStrategy() {
                     </div>
                   )}
                   
-                  <Link 
-                    href={`/content/new?strategy=${encodeURIComponent(strategy.id)}`}
+                  <button
+                    onClick={handleGenerateContent}
                     className={styles.outlineButton}
-                    onClick={(e) => {
-                      // Enhanced debugging and validation
-                      console.log("Generate Content - Strategy Data:", {
-                        id: strategy.id,
-                        name: strategy.name,
-                        idType: typeof strategy.id,
-                        obj: JSON.stringify(strategy)
-                      });
-                      
-                      // Check if strategy.id is definitely a UUID (simple check)
-                      if (!strategy.id || typeof strategy.id !== 'string' || strategy.id.includes(' ')) {
-                        e.preventDefault();
-                        console.error("Invalid strategy ID detected:", strategy.id);
-                        alert('Invalid strategy ID. Please go back to the dashboard and try again.');
-                      }
-                    }}
                   >
                     Generate Content Outline
-                  </Link>
+                  </button>
                   
                   <button
                     onClick={() => router.push('/dashboard')}
