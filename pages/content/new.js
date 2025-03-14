@@ -698,8 +698,21 @@ export default function NewContent() {
         )}
       </main>
 
-      {process.env.NODE_ENV !== 'production' && (
-        <div className={styles.diagnosticTools}>
+      {process.env.NODE_ENV === 'development' && (
+        <div className={styles.diagnosticTools} style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '15px',
+          backgroundColor: '#f0f8ff',
+          border: '2px solid #3454D1',
+          borderRadius: '8px',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <h3 style={{ margin: '0 0 10px 0', color: '#1A2B3C' }}>Development Tools</h3>
           <button 
             onClick={async () => {
               try {
@@ -712,7 +725,15 @@ export default function NewContent() {
                 alert("API Test Error: " + e.message);
               }
             }}
-            className={styles.diagnosticButton}
+            style={{
+              padding: '10px 15px',
+              backgroundColor: '#3454D1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
           >
             Test Gemini API
           </button>
@@ -728,8 +749,15 @@ export default function NewContent() {
                 alert("Simple API Test Error: " + e.message);
               }
             }}
-            className={styles.diagnosticButton}
-            style={{ marginLeft: '10px' }}
+            style={{
+              padding: '10px 15px',
+              backgroundColor: '#ff7700',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
           >
             Simple API Test
           </button>
