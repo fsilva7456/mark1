@@ -330,7 +330,6 @@ export default function NewContent() {
           { 
             user_id: user.id,
             name: `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`,
-            description: 'Generated from content outline',
             progress: 0,
             posts_scheduled: contentOutline.reduce((total, week) => total + week.posts.length, 0),
             posts_published: 0
