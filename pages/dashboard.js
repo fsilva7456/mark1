@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import styles from '../styles/Dashboard.module.css';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import StrategyContentLink from '../components/StrategyContentLink';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -186,22 +187,10 @@ export default function Dashboard() {
                         >
                           Edit Strategy
                         </Link>
-                        <Link 
-                          href={(() => {
-                            // UUID format check
-                            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strategy.id);
-                            if (isUuid) {
-                              return `/content/new?strategy=${encodeURIComponent(strategy.id)}`;
-                            } else {
-                              console.error("Strategy has invalid ID format:", strategy.id, strategy.name);
-                              // Return dashboard with error message
-                              return `/dashboard?error=invalid-strategy-id`;
-                            }
-                          })()}
-                          className={styles.actionButton}
-                        >
-                          Create Content
-                        </Link>
+                        <StrategyContentLink 
+                          strategy={strategy} 
+                          className={styles.actionButton} 
+                        />
                       </div>
                     </div>
                   ))}
