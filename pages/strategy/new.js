@@ -657,6 +657,8 @@ export default function NewStrategy() {
     setIsLoadingSuggestions(true);
     
     try {
+      console.log("Generating suggestions for question:", latestQuestion);
+      
       // Extract previous user answers from messages
       const previousAnswers = [];
       for (let i = 1; i < messages.length; i += 2) {
@@ -667,6 +669,7 @@ export default function NewStrategy() {
       
       const businessContext = previousAnswers.length > 1 ? previousAnswers[1] : "fitness business";
       
+      // Call API to generate suggestions
       const response = await fetch('/api/strategy/generate-suggestions', {
         method: 'POST',
         headers: {
@@ -681,27 +684,64 @@ export default function NewStrategy() {
       });
       
       if (!response.ok) {
+        console.error("API error", response.status);
         throw new Error(`API error: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log("Received suggestions:", data);
       
       if (data.suggestions && Array.isArray(data.suggestions)) {
         setAiSuggestions(data.suggestions);
       } else {
+        console.error("Invalid suggestions format:", data);
         throw new Error('Invalid suggestions format');
       }
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      // Provide fallback suggestions
-      setAiSuggestions([
-        "Sorry, couldn't generate suggestions at this time.",
-        "Please try again or proceed with your own answer.",
-        "You can refresh the page if the problem persists."
-      ]);
+      // Provide fallback suggestions based on question context
+      const fallbackSuggestions = generateFallbackSuggestions(latestQuestion, currentQuestionIndex);
+      setAiSuggestions(fallbackSuggestions);
     } finally {
       setIsLoadingSuggestions(false);
     }
+  };
+
+  // Add this fallback function to generate contextual suggestions when the API fails
+  const generateFallbackSuggestions = (question, questionIndex) => {
+    const fallbacks = {
+      1: [ // Business type
+        "I'm a personal trainer specializing in strength and conditioning",
+        "I run a yoga studio with classes for all experience levels",
+        "I own a CrossFit box focused on community and functional fitness"
+      ],
+      2: [ // Target audience
+        "Busy professionals aged 30-45 looking to stay fit despite hectic schedules",
+        "Adults 50+ focused on maintaining mobility and preventing injury",
+        "Fitness beginners who are intimidated by traditional gym environments"
+      ],
+      3: [ // Marketing goals 
+        "Increase client retention and generate more referrals from existing clients",
+        "Grow my social media following and convert followers to paying clients",
+        "Launch a new service package and attract at least 15 new clients"
+      ],
+      4: [ // Unique approach
+        "My evidence-based approach that combines strength training with mobility work",
+        "My supportive community atmosphere where clients become friends and accountability partners",
+        "My specialized expertise in nutrition alongside fitness programming"
+      ],
+      5: [ // Content creation
+        "Short-form videos demonstrating exercises and quick fitness tips",
+        "Before/after client transformations with their stories and testimonials",
+        "Educational content about fitness myths and science-backed approaches"
+      ]
+    };
+    
+    return fallbacks[questionIndex] || [
+      "Please provide specific details relevant to your fitness business",
+      "Consider what makes your approach unique in the market",
+      "Think about what resonates most with your target clients"
+    ];
   };
 
   // Update the handleSuggestionSelect function 
@@ -784,7 +824,6 @@ export default function NewStrategy() {
                 
                 {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
                   <div className={styles.aiSuggestionsContainer}>
-                    <h3>Suggestions:</h3>
                     {isLoadingSuggestions ? (
                       <div className={styles.loadingSpinner}></div>
                     ) : (

@@ -674,4 +674,85 @@
   border-left: 3px solid var(--secondary);
   padding-left: 0.75rem;
   background-color: rgba(245, 166, 35, 0.05);
+}
+
+.aiSuggestionsContainer {
+  margin-top: 1rem;
+  background-color: transparent;
+  padding: 0;
+  border: none;
+}
+
+.aiSuggestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aiSuggestionButton {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  color: #3454D1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.aiSuggestionButton:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+}
+
+.matrixError {
+  padding: 2rem;
+  background-color: #fff5f5;
+  border: 1px solid #feb2b2;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.matrixError h3 {
+  color: #e53e3e;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.errorDetails {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.errorDetails pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #1a202c;
+  line-height: 1.5;
+}
+
+.tryAgainButton {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tryAgainButton:hover {
+  background-color: #c53030;
+  transform: translateY(-2px);
 } 
