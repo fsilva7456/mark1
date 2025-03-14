@@ -677,36 +677,40 @@
 }
 
 .aiSuggestionsContainer {
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   background-color: transparent;
   padding: 0;
   border: none;
 }
 
-.aiSuggestionsList {
+.aiSuggestionsRow {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.aiSuggestionButton {
-  background-color: #f8fafc;
+.aiSuggestionPill {
+  background-color: #edf2f7;
+  color: #3454D1;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  text-align: left;
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.95rem;
-  color: #3454D1;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
 }
 
-.aiSuggestionButton:hover {
-  background-color: #edf2f7;
-  border-color: #cbd5e0;
+.aiSuggestionPill:hover {
+  background-color: #e6eef9;
+  border-color: #b9d1f8;
   transform: translateY(-1px);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .matrixError {

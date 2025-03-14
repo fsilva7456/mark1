@@ -633,16 +633,20 @@ export default function NewStrategy() {
     });
   };
 
-  // Add this effect to monitor messages and update current question index
+  // Update this effect to correctly trigger suggestions for the current question
   useEffect(() => {
     // Update current question index based on message count
-    // First message is AI greeting, then alternates between user and AI
+    // First message is AI greeting, then user responds, then next AI question, etc.
     const userMessageCount = Math.floor(messages.length / 2);
     setCurrentQuestionIndex(userMessageCount);
     
-    // Generate suggestions whenever the AI asks a new question (odd-numbered messages)
-    if (messages.length > 0 && messages.length % 2 === 1 && messages.length > 1) {
-      generateAISuggestionsForChat(messages[messages.length - 1].text);
+    // Generate suggestions for the current (not yet answered) question
+    // AI messages are at odd indices (1, 3, 5, etc.)
+    // We want to generate suggestions for the last AI message (current question)
+    if (messages.length > 0 && messages.length % 2 === 1) {
+      const currentQuestion = messages[messages.length - 1].text;
+      console.log("Generating suggestions for current question:", currentQuestion);
+      generateAISuggestionsForChat(currentQuestion);
     }
   }, [messages]);
 
@@ -827,14 +831,14 @@ export default function NewStrategy() {
                     {isLoadingSuggestions ? (
                       <div className={styles.loadingSpinner}></div>
                     ) : (
-                      <div className={styles.aiSuggestionsList}>
+                      <div className={styles.aiSuggestionsRow}>
                         {aiSuggestions.map((suggestion, index) => (
                           <button
                             key={index}
                             onClick={() => handleSuggestionSelect(suggestion)}
-                            className={styles.aiSuggestionButton}
+                            className={styles.aiSuggestionPill}
                           >
-                            {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
+                            {suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion}
                           </button>
                         ))}
                       </div>
