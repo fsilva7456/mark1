@@ -42,6 +42,10 @@ export default function NewStrategy() {
   
   const { user } = useAuth();
   
+  // Add a new state to store AI suggestions
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  
   // Function to scroll to bottom of chat
   const scrollToBottom = () => {
     // Add a small delay to ensure DOM has updated
@@ -627,6 +631,66 @@ export default function NewStrategy() {
       currentValue: ''
     });
   };
+
+  // Add this function to generate AI suggestions for the current question
+  const generateAISuggestions = async () => {
+    // Skip generating suggestions for name question
+    if (currentQuestion === 0) {
+      setAiSuggestions([]);
+      return;
+    }
+    
+    setIsLoadingSuggestions(true);
+    
+    try {
+      const questionText = questionData[currentQuestion].question;
+      const businessContext = answers[1] || "fitness business"; // Use business type if available
+      
+      const response = await fetch('/api/strategy/generate-suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: questionText,
+          businessContext: businessContext,
+          previousAnswers: answers.slice(0, currentQuestion),
+          questionIndex: currentQuestion
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.suggestions && Array.isArray(data.suggestions)) {
+        setAiSuggestions(data.suggestions);
+      } else {
+        throw new Error('Invalid suggestions format');
+      }
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      // Provide fallback suggestions
+      setAiSuggestions([
+        "Sorry, couldn't generate suggestions at this time.",
+        "Please try again or proceed with your own answer.",
+        "You can refresh the page if the problem persists."
+      ]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Call this when the question changes
+  useEffect(() => {
+    if (currentQuestion > 0) { // Skip for first question (name)
+      generateAISuggestions();
+    } else {
+      setAiSuggestions([]);
+    }
+  }, [currentQuestion]);
 
   return (
     <div className={styles.container}>

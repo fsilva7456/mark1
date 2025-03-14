@@ -312,15 +312,18 @@
 }
 
 .suggestionsContainer {
-  background-color: #F8FAFC;
+  margin-top: 1.5rem;
+  background-color: #f8fafc;
   border-radius: 8px;
   padding: 1rem;
+  border: 1px solid #e2e8f0;
 }
 
-.suggestionsContainer h4 {
-  margin: 0 0 1rem 0;
-  color: #3454D1;
+.suggestionsContainer h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
   font-size: 1rem;
+  color: #4a5568;
 }
 
 .suggestionsList {
@@ -329,20 +332,41 @@
   gap: 0.75rem;
 }
 
-.suggestionItem {
-  padding: 0.875rem;
+.suggestionButton {
   background-color: white;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s;
-  color: #4A5568;
+  font-size: 0.9rem;
+  color: #1a202c;
 }
 
-.suggestionItem:hover {
-  border-color: #3454D1;
-  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.1);
-  transform: translateY(-2px);
+.suggestionButton:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.loadingSpinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border-left-color: #3454d1;
+  animation: spin 1s linear infinite;
+  margin: 1rem auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mobile responsiveness for modal */
