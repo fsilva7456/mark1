@@ -260,36 +260,12 @@ export default function NewContent() {
         return;
       }
       
-      // Instead of using mock content, generate personalized content
-      // Call the API to generate personalized content based on strategy
-      const response = await fetch('/api/content/generate-outline', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          strategy: {
-            name: strategyData.name,
-            business_description: strategyData.business_description,
-            target_audience: strategyData.target_audience,
-            objectives: strategyData.objectives,
-            key_messages: strategyData.key_messages
-          }
-        }),
-      });
+      // TEMPORARY: Skip API call and just use mock data
+      console.log("Using mock content temporarily while API issues are fixed");
       
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!data || !data.campaigns) {
-        throw new Error('Invalid response format from API');
-      }
-      
-      console.log("Setting personalized content based on strategy");
-      setContentOutline(data.campaigns);
+      // Create personalized mock content by using strategy elements
+      const customizedMockContent = createCustomizedMockContent(strategyData);
+      setContentOutline(customizedMockContent);
       
       // After setting content, generate daily engagement content
       try {
@@ -343,14 +319,53 @@ export default function NewContent() {
       setShowContent(true);
     } catch (error) {
       console.error('Error generating content:', error);
-      
-      // Fallback to mock content in case of error
-      console.warn("Using fallback mock content due to error");
       setContentOutline(mockContent);
-      
       setIsLoading(false);
-      // Don't show error to user, just use mock content as fallback
     }
+  };
+  
+  // Helper function to create mock content that uses the strategy elements
+  const createCustomizedMockContent = (strategyData) => {
+    // Create a deep copy of mock content
+    const customContent = JSON.parse(JSON.stringify(mockContent));
+    
+    // Customize week themes based on key messages
+    if (strategyData.key_messages && strategyData.key_messages.length >= 3) {
+      customContent[0].theme = `Introducing: ${strategyData.key_messages[0]}`;
+      customContent[1].theme = `Focusing on: ${strategyData.key_messages[1]}`;
+      customContent[2].theme = `Highlighting: ${strategyData.key_messages[2]}`;
+    }
+    
+    // Customize audience targeting
+    if (strategyData.target_audience && strategyData.target_audience.length > 0) {
+      // Distribute target audiences across the posts
+      let audienceIndex = 0;
+      customContent.forEach(week => {
+        week.posts.forEach(post => {
+          post.audience = strategyData.target_audience[audienceIndex % strategyData.target_audience.length];
+          audienceIndex++;
+        });
+      });
+    }
+    
+    // Use the business description in at least one post
+    if (strategyData.business_description) {
+      const shortDesc = strategyData.business_description.length > 50 
+        ? strategyData.business_description.substring(0, 50) + "..." 
+        : strategyData.business_description;
+        
+      customContent[0].posts[0].topic = `How ${shortDesc} can transform your fitness journey`;
+    }
+    
+    // Use objectives in some posts
+    if (strategyData.objectives && strategyData.objectives.length > 0) {
+      // Use objective in the second week's first post
+      if (customContent[1].posts[0]) {
+        customContent[1].posts[0].topic = strategyData.objectives[0];
+      }
+    }
+    
+    return customContent;
   };
   
   const handleSaveCalendar = async () => {
@@ -700,6 +715,23 @@ export default function NewContent() {
             className={styles.diagnosticButton}
           >
             Test Gemini API
+          </button>
+          <button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/content/simple-test');
+                const data = await response.json();
+                console.log("Simple Test Result:", data);
+                alert("Simple API Test: " + JSON.stringify(data, null, 2));
+              } catch (e) {
+                console.error("Simple test failed:", e);
+                alert("Simple API Test Error: " + e.message);
+              }
+            }}
+            className={styles.diagnosticButton}
+            style={{ marginLeft: '10px' }}
+          >
+            Simple API Test
           </button>
         </div>
       )}
