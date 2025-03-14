@@ -784,24 +784,26 @@ export default function NewStrategy() {
                   ))}
                 </div>
                 
-                <div className={styles.aiSuggestionsContainer}>
-                  <h3>Suggestions:</h3>
-                  {isLoadingSuggestions ? (
-                    <div className={styles.loadingSpinner}></div>
-                  ) : (
-                    <div className={styles.aiSuggestionsList}>
-                      {aiSuggestions.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSuggestionSelect(suggestion)}
-                          className={styles.aiSuggestionButton}
-                        >
-                          {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
+                  <div className={styles.aiSuggestionsContainer}>
+                    <h3>Suggestions:</h3>
+                    {isLoadingSuggestions ? (
+                      <div className={styles.loadingSpinner}></div>
+                    ) : (
+                      <div className={styles.aiSuggestionsList}>
+                        {aiSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSuggestionSelect(suggestion)}
+                            className={styles.aiSuggestionButton}
+                          >
+                            {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <form onSubmit={handleSubmit} className={styles.inputForm}>
                   <input
