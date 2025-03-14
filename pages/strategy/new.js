@@ -706,13 +706,14 @@ export default function NewStrategy() {
     }
   };
 
-  // Add this function to handle suggestion selection
+  // Update the handleSuggestionSelect function 
   const handleSuggestionSelect = (suggestion) => {
     setCurrentInput(suggestion);
-    // Optional: Submit automatically
-    // setTimeout(() => {
-    //   handleSubmit({ preventDefault: () => {} });
-    // }, 500);
+    // Submit automatically after a brief delay
+    setTimeout(() => {
+      // Create a mock form submit event
+      handleSubmit({ preventDefault: () => {} });
+    }, 800);
   };
 
   return (
@@ -783,26 +784,24 @@ export default function NewStrategy() {
                   ))}
                 </div>
                 
-                {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
-                  <div className={styles.suggestionsContainer}>
-                    <h3>Suggestions:</h3>
-                    {isLoadingSuggestions ? (
-                      <div className={styles.loadingSpinner}></div>
-                    ) : (
-                      <div className={styles.suggestionsList}>
-                        {aiSuggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleSuggestionSelect(suggestion)}
-                            className={styles.suggestionButton}
-                          >
-                            {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className={styles.aiSuggestionsContainer}>
+                  <h3>Suggestions:</h3>
+                  {isLoadingSuggestions ? (
+                    <div className={styles.loadingSpinner}></div>
+                  ) : (
+                    <div className={styles.aiSuggestionsList}>
+                      {aiSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestionSelect(suggestion)}
+                          className={styles.aiSuggestionButton}
+                        >
+                          {suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 
                 <form onSubmit={handleSubmit} className={styles.inputForm}>
                   <input
