@@ -519,8 +519,11 @@ export default function NewStrategy() {
     try {
       setIsProcessing(true);
       
-      // Extract the user name from userData
+      // Extract the user name and business description from userData
       const name = userData.name || 'User';
+      const businessDescription = userData.answers && userData.answers.length > 1 
+        ? userData.answers[1] 
+        : "Fitness business";
       
       // Create a UUID explicitly for the strategy if needed
       const strategyId = crypto.randomUUID();
@@ -532,6 +535,7 @@ export default function NewStrategy() {
             id: strategyId,
             name: `${name}'s Marketing Strategy`,
             user_id: user.id,
+            business_description: businessDescription,
             target_audience: matrix.targetAudience,
             objectives: matrix.objectives,
             key_messages: matrix.keyMessages,
@@ -776,13 +780,19 @@ export default function NewStrategy() {
                   <button
                     onClick={() => {
                       if (!strategyId) {
-                        alert('Please save your strategy first before generating content.');
-                        return;
+                        // First save the strategy, then navigate to content when successful
+                        handleSaveStrategy().then(() => {
+                          if (strategyId) {
+                            router.push(`/content/new?strategy=${strategyId}`);
+                          }
+                        });
+                      } else {
+                        // Already saved, just navigate
+                        router.push(`/content/new?strategy=${strategyId}`);
                       }
-                      router.push(`/content/new?strategy=${strategyId}`);
                     }}
                     className={styles.outlineButton}
-                    disabled={isProcessing || !strategyId}
+                    disabled={isProcessing}
                   >
                     Generate Content Outline
                   </button>
