@@ -70,37 +70,17 @@ export default function ViewStrategy() {
   
   const handleGenerateContent = async () => {
     try {
-      console.log("Generating content for strategy:", {
-        id: strategy.id,
-        name: strategy.name,
-        type: typeof strategy.id
+      // IMPORTANT: Use the ID from the URL, not from the strategy object
+      const strategyIdFromUrl = id; // This is the UUID from the URL
+      
+      console.log("URL ID (should be UUID):", strategyIdFromUrl);
+      console.log("Strategy object:", {
+        id: strategy?.id, 
+        name: strategy?.name
       });
       
-      // Check if we have an existing UUID-formatted ID
-      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (strategy.id && uuidPattern.test(strategy.id)) {
-        // We have a proper UUID, use it directly
-        router.push(`/content/new?strategy=${encodeURIComponent(strategy.id)}`);
-      } else {
-        // No valid UUID, try to get it from the database again or create one
-        console.error("No valid UUID found, attempting to regenerate");
-        
-        // Create a fresh UUID
-        const contentStrategyId = crypto.randomUUID();
-        
-        // Update the existing strategy with this UUID
-        const { error } = await supabase
-          .from('strategies')
-          .update({ id: contentStrategyId })
-          .eq('id', id);
-        
-        if (error) {
-          throw new Error("Could not update strategy with valid UUID");
-        }
-        
-        // Navigate with the new ID
-        router.push(`/content/new?strategy=${encodeURIComponent(contentStrategyId)}`);
-      }
+      // Always use the URL parameter ID which is guaranteed to be the UUID
+      router.push(`/content/new?strategy=${encodeURIComponent(strategyIdFromUrl)}`);
     } catch (error) {
       console.error("Error preparing content generation:", error);
       toast.error("Failed to prepare content generation. Please try again.");
