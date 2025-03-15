@@ -711,40 +711,40 @@ export default function NewStrategy() {
     }
   };
 
-  // Add this fallback function to generate contextual suggestions when the API fails
+  // Update the fallback suggestions to be more concise
   const generateFallbackSuggestions = (question, questionIndex) => {
     const fallbacks = {
       1: [ // Business type
-        "I'm a personal trainer specializing in strength and conditioning",
-        "I run a yoga studio with classes for all experience levels",
-        "I own a CrossFit box focused on community and functional fitness"
+        "Personal trainer specializing in strength training",
+        "Yoga studio with classes for all levels",
+        "CrossFit box focused on community fitness"
       ],
       2: [ // Target audience
-        "Busy professionals aged 30-45 looking to stay fit despite hectic schedules",
-        "Adults 50+ focused on maintaining mobility and preventing injury",
-        "Fitness beginners who are intimidated by traditional gym environments"
+        "Busy professionals aged 30-45 looking for efficient workouts",
+        "Adults 50+ focused on mobility and injury prevention",
+        "Fitness beginners intimidated by traditional gyms"
       ],
       3: [ // Marketing goals 
-        "Increase client retention and generate more referrals from existing clients",
-        "Grow my social media following and convert followers to paying clients",
-        "Launch a new service package and attract at least 15 new clients"
+        "Increase client retention and referrals",
+        "Grow social media following to convert to clients",
+        "Launch a new service package with 15 new clients"
       ],
       4: [ // Unique approach
-        "My evidence-based approach that combines strength training with mobility work",
-        "My supportive community atmosphere where clients become friends and accountability partners",
-        "My specialized expertise in nutrition alongside fitness programming"
+        "Evidence-based training combining strength and mobility",
+        "Supportive community where clients become accountability partners",
+        "Specialized expertise in nutrition alongside fitness"
       ],
       5: [ // Content creation
-        "Short-form videos demonstrating exercises and quick fitness tips",
-        "Before/after client transformations with their stories and testimonials",
-        "Educational content about fitness myths and science-backed approaches"
+        "Short videos demonstrating exercises and quick tips",
+        "Before/after transformations with client testimonials",
+        "Educational content about fitness myths and science"
       ]
     };
     
     return fallbacks[questionIndex] || [
-      "Please provide specific details relevant to your fitness business",
-      "Consider what makes your approach unique in the market",
-      "Think about what resonates most with your target clients"
+      "Specific details about your fitness approach",
+      "Your unique market positioning",
+      "What resonates with your target clients"
     ];
   };
 
@@ -837,8 +837,9 @@ export default function NewStrategy() {
                             key={index}
                             onClick={() => handleSuggestionSelect(suggestion)}
                             className={styles.aiSuggestionPill}
+                            title={suggestion}
                           >
-                            {suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion}
+                            {suggestion.length > 40 ? suggestion.substring(0, 37) + '...' : suggestion}
                           </button>
                         ))}
                       </div>
