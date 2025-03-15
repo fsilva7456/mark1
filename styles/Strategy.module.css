@@ -696,14 +696,15 @@
   border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 250px;
+  max-width: 200px;
+  margin-bottom: 0.25rem;
 }
 
 .aiSuggestionPill:hover {

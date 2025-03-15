@@ -633,27 +633,34 @@ export default function NewStrategy() {
     });
   };
 
-  // Update this effect to correctly trigger suggestions for the current question
+  // Modify the useEffect hook for generating suggestions
   useEffect(() => {
-    // Update current question index based on message count
-    // First message is AI greeting, then user responds, then next AI question, etc.
-    const userMessageCount = Math.floor(messages.length / 2);
-    setCurrentQuestionIndex(userMessageCount);
-    
-    // Generate suggestions for the current (not yet answered) question
-    // AI messages are at odd indices (1, 3, 5, etc.)
-    // We want to generate suggestions for the last AI message (current question)
+    // Update current question index based on message count and generate suggestions immediately
     if (messages.length > 0 && messages.length % 2 === 1) {
-      const currentQuestion = messages[messages.length - 1].text;
-      console.log("Generating suggestions for current question:", currentQuestion);
-      generateAISuggestionsForChat(currentQuestion);
+      // AI messages are at odd indices (1, 3, 5, etc.)
+      const currentAIMessageIndex = messages.length - 1;
+      const currentQuestion = messages[currentAIMessageIndex].text;
+      
+      // Calculate which question number this is (1-indexed)
+      const questionNumber = Math.ceil(currentAIMessageIndex / 2);
+      setCurrentQuestionIndex(questionNumber);
+      
+      console.log(`Generating suggestions for question #${questionNumber}:`, currentQuestion);
+      
+      // Clear previous suggestions first to avoid showing old suggestions
+      setAiSuggestions([]);
+      
+      // Add a small delay to ensure the UI updates before generating new suggestions
+      setTimeout(() => {
+        generateAISuggestionsForChat(currentQuestion, questionNumber);
+      }, 100);
     }
   }, [messages]);
 
-  // Modified function to work with chat interface
-  const generateAISuggestionsForChat = async (latestQuestion) => {
+  // Update the function signature to accept questionNumber
+  const generateAISuggestionsForChat = async (latestQuestion, questionNumber) => {
     // Skip generating suggestions for name question (first question)
-    if (currentQuestionIndex === 0) {
+    if (questionNumber === 0) {
       setAiSuggestions([]);
       return;
     }
@@ -671,9 +678,9 @@ export default function NewStrategy() {
         }
       }
       
-      const businessContext = previousAnswers.length > 1 ? previousAnswers[1] : "fitness business";
+      const businessContext = previousAnswers.length > 0 ? previousAnswers[0] : "fitness business";
       
-      // Call API to generate suggestions
+      // Call API to generate suggestions with explicit question number
       const response = await fetch('/api/strategy/generate-suggestions', {
         method: 'POST',
         headers: {
@@ -683,7 +690,7 @@ export default function NewStrategy() {
           question: latestQuestion,
           businessContext: businessContext,
           previousAnswers: previousAnswers,
-          questionIndex: currentQuestionIndex
+          questionIndex: questionNumber
         }),
       });
       
@@ -704,7 +711,7 @@ export default function NewStrategy() {
     } catch (error) {
       console.error('Error generating suggestions:', error);
       // Provide fallback suggestions based on question context
-      const fallbackSuggestions = generateFallbackSuggestions(latestQuestion, currentQuestionIndex);
+      const fallbackSuggestions = generateFallbackSuggestions(latestQuestion, questionNumber);
       setAiSuggestions(fallbackSuggestions);
     } finally {
       setIsLoadingSuggestions(false);
