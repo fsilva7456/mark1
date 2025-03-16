@@ -846,7 +846,7 @@ export default function NewStrategy() {
                             className={styles.aiSuggestionPill}
                             title={suggestion}
                           >
-                            {suggestion.length > 40 ? suggestion.substring(0, 37) + '...' : suggestion}
+                            {suggestion}
                           </button>
                         ))}
                       </div>
@@ -1054,6 +1054,21 @@ export default function NewStrategy() {
           </button>
         </div>
       )}
+
+      {/* Add somewhere in your component for testing */}
+      <div className={styles.testPills}>
+        <div className={styles.aiSuggestionsRow}>
+          <button className={styles.aiSuggestionPill}>
+            This is a test button with a very long text that should wrap to multiple lines
+          </button>
+          <button className={styles.aiSuggestionPill}>
+            Another test button to see if text wrapping is working properly
+          </button>
+          <button className={styles.aiSuggestionPill}>
+            A third test with sufficient text to force multiple lines
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
