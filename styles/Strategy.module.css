@@ -702,21 +702,27 @@
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
+  
+  /* Fix text wrapping */
   white-space: normal;
+  overflow-wrap: break-word;
+  height: auto;
+  min-height: 60px;
+  
+  /* Remove fixed dimensions */
   max-width: 300px;
   min-width: 120px;
-  min-height: 60px;
   margin-bottom: 0.5rem;
   
-  /* Make content center aligned both horizontally and vertically */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* Change display type to a block level for better text wrapping */
+  display: block;
   
-  /* Better text display properties */
-  overflow: hidden;
-  line-height: 1.5;
-  word-wrap: break-word;
+  /* Add padding for text */
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  
+  /* Improve line height for better readability with multiple lines */
+  line-height: 1.4;
 }
 
 .aiSuggestionPill:hover {
