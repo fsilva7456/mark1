@@ -686,43 +686,46 @@
 .aiSuggestionsRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 0.75rem;
   width: 100%;
-  justify-content: center;
+  padding: 0 8px;
 }
 
 .aiSuggestionPill {
+  /* Basic styling */
   background-color: #edf2f7;
   color: #3454D1;
   border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  
+  /* Fix the text wrapping issue */
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  width: calc(33% - 16px);
+  min-width: 150px;
   text-align: center;
   
-  /* Fix text wrapping */
-  white-space: normal;
-  overflow-wrap: break-word;
+  /* Force text to wrap properly */
+  white-space: pre-wrap;       /* CSS3 */
+  white-space: -moz-pre-wrap;  /* Firefox */
+  white-space: -pre-wrap;      /* Opera <7 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* IE */
+  
+  /* Ensure the height expands with content */
   height: auto;
   min-height: 60px;
+  overflow: visible;
   
-  /* Remove fixed dimensions */
-  max-width: 300px;
-  min-width: 120px;
-  margin-bottom: 0.5rem;
-  
-  /* Change display type to a block level for better text wrapping */
-  display: block;
-  
-  /* Add padding for text */
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  
-  /* Improve line height for better readability with multiple lines */
-  line-height: 1.4;
+  /* Use flexbox for centering content vertically and horizontally */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .aiSuggestionPill:hover {
