@@ -42,7 +42,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 5px;
+  margin-top: 0;
 }
 
 .logoutButton:hover {
@@ -553,8 +553,8 @@
 /* Header action buttons container */
 .headerActions {
   display: flex;
-  gap: 1rem;
   align-items: center;
+  gap: 1rem;
 }
 
 /* Updated card layouts */
