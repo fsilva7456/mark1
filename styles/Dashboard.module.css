@@ -175,27 +175,39 @@
 }
 
 .cardActions {
-  margin-top: auto; /* Push to bottom of card */
+  margin-top: auto; /* Keep pushing to bottom of card */
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Stack buttons vertically */
   align-items: center;
-  flex-wrap: nowrap; /* Prevent wrapping until very small screens */
+  gap: 0.75rem; /* Space between buttons */
   padding: 0.5rem;
-  gap: 0.75rem;
+  width: 100%; /* Ensure container takes full width */
+}
+
+/* Make buttons full width of their container */
+.strategyCard .actionButton,
+.strategyCard .contentButton,
+.strategyCard .viewButton {
+  width: 100%; /* Full width of container */
+  margin: 0; /* Remove any margin that might affect width */
+}
+
+/* Update button sizing for the stacked layout */
+.actionButton, .viewButton, .contentButton {
+  min-width: unset; /* Remove fixed minimum width */
+  max-width: unset; /* Remove fixed maximum width */
+  width: 100%; /* Full width */
+  box-sizing: border-box; /* Ensure padding doesn't add to width */
+  margin-bottom: 0.5rem; /* Add space between buttons */
+}
+
+/* Remove the last margin bottom from the last button */
+.cardActions > button:last-child,
+.cardActions > a:last-child {
+  margin-bottom: 0;
 }
 
 /* Override specific card styles that cause resizing */
-.strategyCard .actionButton,
-.calendarCard .actionButton,
-.card .viewButton,
-.card .contentButton {
-  flex: 0 0 auto; /* Don't grow or shrink */
-  width: auto;
-  min-width: 130px; /* Consistent minimum width */
-  max-width: 150px; /* Consistent maximum width */
-}
-
-/* Remove style overrides that affect sizing */
 .strategyCard .actionButton:first-child,
 .strategyCard .actionButton:last-child,
 .calendarCard .actionButton {
