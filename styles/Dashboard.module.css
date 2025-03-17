@@ -37,12 +37,14 @@
   background-color: transparent;
   color: #3454D1;
   border: 1px solid #3454D1;
-  padding: 0.5rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 0;
+  margin: 0;
+  height: 42px;
+  box-sizing: border-box;
 }
 
 .logoutButton:hover {
@@ -555,7 +557,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  align-self: flex-start;
+  align-self: center;
 }
 
 /* Updated card layouts */
@@ -670,4 +672,42 @@
   .strategiesGrid {
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Wider cards on large screens */
   }
+}
+
+/* Fix for header button alignment */
+.headerActions {
+  display: flex;
+  align-items: center; /* Center vertically */
+  gap: 1rem;
+  /* Remove align-self that's causing misalignment */
+  align-self: center; 
+}
+
+/* Make sure both buttons have the same base properties */
+.headerActions button,
+.headerActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px; /* Fixed height */
+  box-sizing: border-box;
+  margin: 0; /* Remove any margins */
+  padding: 0.75rem 1.25rem;
+}
+
+/* Ensure the logout button has the exact same styling */
+.logoutButton {
+  background-color: transparent;
+  color: #3454D1;
+  border: 1px solid #3454D1;
+  padding: 0.75rem 1.25rem;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  /* Remove all margins */
+  margin: 0;
+  /* Set explicit height */
+  height: 42px;
+  box-sizing: border-box;
 } 
