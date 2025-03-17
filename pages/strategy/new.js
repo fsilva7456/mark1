@@ -760,6 +760,14 @@ export default function NewStrategy() {
     }, 800);
   };
 
+  // Add this function to handle changes in the feedback textarea
+  const handleFeedbackChange = (e) => {
+    setFeedbackPopup({
+      ...feedbackPopup,
+      text: e.target.value
+    });
+  };
+
   return (
     <div className={styles.container}>
       <Head>
