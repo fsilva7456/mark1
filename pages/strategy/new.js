@@ -571,24 +571,24 @@ export default function NewStrategy() {
   };
   
   const generateSuggestions = (input, section) => {
-    // In a real app, this would call an AI API to get suggestions
-    // For now, we'll create contextual mock suggestions
+    // Don't try to incorporate input text into suggestions
+    // Instead, provide contextual suggestions based on section
     
     const mockSuggestions = {
       targetAudience: [
-        `${userData.business} enthusiasts aged 25-50 focused on ${input ? input.toLowerCase() : 'health goals'}`,
-        `Fitness ${input ? input.toLowerCase() + ' seekers' : 'beginners'} looking for personalized guidance`,
-        `Health-conscious individuals interested in ${userData.business?.toLowerCase().includes('personal') ? 'one-on-one training' : 'group fitness classes'}`
+        "Busy professionals aged 25-45 seeking efficient, results-driven workouts",
+        "Health-conscious individuals focusing on holistic wellness and lifestyle changes",
+        "Fitness beginners looking for supportive guidance and personalized attention"
       ],
       objectives: [
-        `${input ? 'Boost ' + input.toLowerCase() : 'Grow your audience'} by creating consistent weekly content`,
-        `Establish ${userData.name} as a thought leader in ${input ? input.toLowerCase() : 'fitness'}`,
-        `Generate ${input ? input.toLowerCase() + ' leads' : 'qualified leads'} through strategic calls-to-action`
+        "Encourage prospects to book a free consultation through your website",
+        "Motivate followers to sign up for a 7-day challenge or trial program",
+        "Get visitors to download your nutrition guide or workout planner"
       ],
       keyMessages: [
-        `${input ? 'Our ' + input.toLowerCase() : 'Our approach'} delivers results other programs can't match`,
-        `Discover how ${userData.name}'s method ${input ? 'focuses on ' + input.toLowerCase() : 'transforms your fitness'}`,
-        `Experience the difference of ${input ? input.toLowerCase() + ' training' : 'personalized training'} with our community`
+        "Transform your fitness journey with our evidence-based, personalized approach",
+        "Experience results that last through sustainable habit-building and expert guidance",
+        "Join a supportive community that keeps you accountable and motivated"
       ]
     };
     
