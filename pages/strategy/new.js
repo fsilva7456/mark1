@@ -715,6 +715,17 @@ export default function NewStrategy() {
 
   // Update the fallback suggestions to be more action-oriented
   const generateFallbackSuggestions = (question, questionIndex) => {
+    // First check if this is the challenges question (which appears at different indices depending on flow)
+    if (question.includes("biggest challenge") || 
+        question.includes("attracting or retaining clients")) {
+      return [
+        "Finding new clients in a saturated market with many competing fitness options",
+        "Converting initial interest into long-term membership commitments",
+        "Building a consistent social media presence that connects with my target audience",
+        "Differentiating my services from lower-priced fitness apps and online programs"
+      ];
+    }
+
     const fallbacks = {
       1: [ // Business type
         "Personal trainer specializing in strength training",
@@ -740,14 +751,16 @@ export default function NewStrategy() {
         "Short videos demonstrating exercises and quick tips",
         "Before/after transformations with client testimonials",
         "Educational content about fitness myths and science"
+      ],
+      // Default fallback for any other question index
+      default: [
+        "Specific details about your fitness approach",
+        "Your unique market positioning",
+        "What resonates with your target clients"
       ]
     };
     
-    return fallbacks[questionIndex] || [
-      "Specific details about your fitness approach",
-      "Your unique market positioning",
-      "What resonates with your target clients"
-    ];
+    return fallbacks[questionIndex] || fallbacks.default;
   };
 
   // Update the handleSuggestionSelect function 
