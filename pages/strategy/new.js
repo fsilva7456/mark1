@@ -132,7 +132,7 @@ export default function NewStrategy() {
       }
       
       // Fallback for any other message count
-      return `Thanks for that information! I'm building your marketing strategy. Could you tell me more about your ideal client journey - from how they first hear about you to becoming a loyal customer?`;
+      return `Thanks for that information! I'm building your marketing strategy. What's the biggest challenge you currently face in attracting or retaining clients for your fitness business?`;
       
     } catch (error) {
       console.error('Error in hardcoded response flow:', error);
