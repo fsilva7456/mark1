@@ -576,9 +576,9 @@ export default function NewStrategy() {
     
     const mockSuggestions = {
       targetAudience: [
-        "Busy professionals aged 25-45 seeking efficient, results-driven workouts",
-        "Health-conscious individuals focusing on holistic wellness and lifestyle changes",
-        "Fitness beginners looking for supportive guidance and personalized attention"
+        "Busy working professionals (25-45) seeking time-efficient fitness solutions",
+        "Health-conscious individuals looking to improve overall wellness and build healthy habits",
+        "Fitness beginners who want personalized guidance and supportive community"
       ],
       objectives: [
         "Encourage prospects to book a free consultation through your website",
@@ -732,10 +732,10 @@ export default function NewStrategy() {
         "Yoga studio with classes for all levels",
         "CrossFit box focused on community fitness"
       ],
-      2: [ // Target audience
-        "Busy professionals aged 30-45 looking for efficient workouts",
-        "Adults 50+ focused on mobility and injury prevention",
-        "Fitness beginners intimidated by traditional gyms"
+      2: [ // Target audience - improved
+        "Busy professionals (30-45) seeking efficient, high-impact workouts",
+        "Active adults (50+) focused on maintaining mobility and strength",
+        "Fitness newcomers looking for supportive, beginner-friendly guidance"
       ],
       3: [ // Marketing objectives (now action-focused)
         "Get potential clients to book a free consultation call",
