@@ -118,15 +118,10 @@ export default function NewStrategy() {
       
       // Fourth message - after user describes target audience
       if (messages.length === 5) {
-        return `Great! Now let's focus on your marketing goals. What are your top marketing objectives for the next few months? For example, are you looking to increase client retention, attract new clients, launch a new service, or increase your social media presence?`;
+        return `Great! Now let's focus on your marketing objectives. What specific actions do you want your target audience to take? For example, are you looking to get them to sign up for classes, follow your social media, or schedule consultations?`;
       }
       
-      // Fifth message - after user describes marketing goals
-      if (messages.length === 7) {
-        return `Thanks for sharing your goals. Now, what makes your fitness approach unique compared to others in your area? What's your unique selling proposition or competitive advantage?`;
-      }
-      
-      // Sixth message - after user describes unique approach
+      // Fifth message - after user describes unique approach
       if (messages.length === 9) {
         return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? For example, videos, photos, written posts, social media stories, etc.`;
       }
@@ -718,7 +713,7 @@ export default function NewStrategy() {
     }
   };
 
-  // Update the fallback suggestions to be more concise
+  // Update the fallback suggestions to be more action-oriented
   const generateFallbackSuggestions = (question, questionIndex) => {
     const fallbacks = {
       1: [ // Business type
@@ -731,10 +726,10 @@ export default function NewStrategy() {
         "Adults 50+ focused on mobility and injury prevention",
         "Fitness beginners intimidated by traditional gyms"
       ],
-      3: [ // Marketing goals 
-        "Increase client retention and referrals",
-        "Grow social media following to convert to clients",
-        "Launch a new service package with 15 new clients"
+      3: [ // Marketing objectives (now action-focused)
+        "Get potential clients to book a free consultation call",
+        "Encourage followers to sign up for weekly fitness classes",
+        "Motivate existing clients to refer friends and family"
       ],
       4: [ // Unique approach
         "Evidence-based training combining strength and mobility",

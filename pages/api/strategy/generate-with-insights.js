@@ -67,6 +67,10 @@ Each element of the matrix should:
 - Be specific, actionable, and tailored to the fitness industry
 - Help differentiate from competitors in the market
 
+For objectives, focus on specific actions you want the target audience to take, 
+not on measurable metrics. Examples include: "Sign up for a free trial class", 
+"Download a meal planning guide", or "Schedule a personal training consultation".
+
 Return your response in this JSON format ONLY:
 {
   "targetAudience": [
