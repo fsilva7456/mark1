@@ -122,7 +122,7 @@
 
 .strategyCard, .calendarCard, .emptyCard {
   width: 340px; /* Fixed width */
-  height: 300px; /* Fixed height */
+  height: 250px; /* Changed from 300px to 250px */
   margin: 1rem;
   display: flex;
   flex-direction: column;
@@ -473,7 +473,7 @@
 /* Fixed size cards for strategies and content outlines */
 .card, .strategyCard, .calendarCard {
   width: 340px; /* Fixed width */
-  height: 300px; /* Slightly increased height to accommodate side-by-side buttons */
+  height: 250px; /* Changed from 300px to 250px */
   margin: 1rem;
   display: flex;
   flex-direction: column;
@@ -614,7 +614,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 1.25rem;
   transition: all 0.3s ease;
-  height: 300px;
+  height: 250px; /* Changed from 300px to 250px */
   overflow: hidden;
   font-size: 0.9rem;
 }
