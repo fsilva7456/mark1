@@ -3,14 +3,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styles from '../styles/Navbar.module.css';
 import { useAuth } from '../contexts/AuthContext';
-import { useDashboard } from '../contexts/DashboardContext';
 import dashboardStyles from '../styles/Dashboard.module.css';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { handleLogout } = useDashboard();
   
   const isDashboard = router.pathname === '/dashboard';
 
@@ -46,7 +44,10 @@ export default function Navbar() {
           
           {/* Show logout when user is logged in AND not on dashboard */}
           {user && !isDashboard && (
-            <button onClick={handleLogout} className={dashboardStyles.logoutButton}>
+            <button 
+              onClick={signOut}
+              className={dashboardStyles.logoutButton}
+            >
               Logout
             </button>
           )}
