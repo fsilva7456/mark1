@@ -573,12 +573,12 @@
 
 /* Update the grid container for strategy cards */
 .strategiesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
   width: 100%;
   margin-top: 1.5rem;
-  justify-items: center; /* Center cards in their grid cells */
+  justify-content: flex-start; /* Align to start so cards fill from left */
 }
 
 /* Or if using flexbox, update the flex container */
@@ -592,22 +592,23 @@
 }
 
 .strategyCard {
-  width: 100%; /* Takes full width of grid cell */
-  max-width: 400px; /* Add maximum width to prevent stretching too wide */
+  width: 200px; /* Static width as requested */
+  min-width: 200px; /* Ensure minimum width */
+  max-width: 200px; /* Ensure maximum width */
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
   transition: all 0.3s ease;
+  /* Fixed height optional */
+  height: 300px; 
+  overflow: hidden;
 }
 
 /* Add responsive adjustments */
 @media (max-width: 768px) {
   .strategiesGrid {
-    grid-template-columns: 1fr; /* Single column on mobile */
-  }
-  .strategyCard {
-    max-width: 100%; /* Allow cards to fill width on mobile */
+    justify-content: center; /* Center on mobile */
   }
 }
 
