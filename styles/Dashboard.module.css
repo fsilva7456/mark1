@@ -569,4 +569,47 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+}
+
+/* Update the grid container for strategy cards */
+.strategiesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+/* Or if using flexbox, update the flex container */
+.strategiesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.strategyCard {
+  /* Remove any fixed width */
+  width: 100%; /* Takes full width of grid cell */
+  /* Keep other styling */
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  /* Add other existing card styles */
+}
+
+/* Add responsive adjustments */
+@media (max-width: 768px) {
+  .strategiesGrid {
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+}
+
+@media (min-width: 1400px) {
+  .strategiesGrid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Wider cards on large screens */
+  }
 } 
