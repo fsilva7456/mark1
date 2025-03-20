@@ -54,7 +54,13 @@ export default async function handler(req, res) {
       KEY MESSAGES:
       ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
-      Make each week's theme match one of the key messages. Each theme should be brief (5-7 words).
+      Make each week's theme match one of the key messages. Each theme should be specific (8-12 words) and clearly communicate the core value proposition for that week.
+      
+      For each theme:
+      1. Focus on ONE specific key message
+      2. Use powerful action words
+      3. Clearly state the benefit to the audience
+      4. Make it memorable and engaging
       
       RETURN ONLY THIS JSON STRUCTURE:
       {"weeklyThemes":[{"week":1,"theme":"Theme for Week 1"},{"week":2,"theme":"Theme for Week 2"},{"week":3,"theme":"Theme for Week 3"}]}

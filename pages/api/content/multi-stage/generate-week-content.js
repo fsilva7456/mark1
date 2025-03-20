@@ -69,13 +69,15 @@ export default async function handler(req, res) {
       
       Each post must have:
       - type (choose from: Carousel, Video, Reel, Story, Image)
-      - topic (brief description)
-      - audience (use exact text from target audience list)
+      - topic (DETAILED: 8-12 words describing the specific objective of the post. Be specific about what the post will achieve and why it matters)
+      - audience (DETAILED: 2-3 sentences describing a specific segment of the target audience, their pain points, desires, and why this content will resonate with them)
       - cta (call to action, under 10 words)
       - principle (one persuasion principle)
       - principleExplanation (1 short sentence only)
       - visual (2-3 words description)
-      - proposedCaption (50-75 words maximum)
+      - proposedCaption (75-100 words with hashtags at the end)
+      
+      Make each post highly specific and actionable with a clear purpose aligned with the objectives.
       
       RETURN ONLY THIS JSON FORMAT:
       {"posts":[{"type":"","topic":"","audience":"","cta":"","principle":"","principleExplanation":"","visual":"","proposedCaption":""}]}
