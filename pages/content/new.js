@@ -137,7 +137,6 @@ export default function NewContent() {
   const [startDate, setStartDate] = useState(new Date());
   const [dailyEngagement, setDailyEngagement] = useState([]);
   const [isDailyEngagementLoading, setIsDailyEngagementLoading] = useState(false);
-  const [showContent, setShowContent] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [error, setError] = useState('');
@@ -359,7 +358,6 @@ export default function NewContent() {
       }
       
       setIsLoading(false);
-      setShowContent(true);
     } catch (error) {
       console.error('Error generating content:', error);
       setContentOutline(mockContent);
@@ -638,6 +636,10 @@ export default function NewContent() {
                             <span className={styles.metaLabel}>Proposed visual:</span>
                             <span className={styles.metaValue}>{post.visual}</span>
                           </div>
+                          <div className={styles.metaItem}>
+                            <span className={styles.metaLabel}>Proposed caption:</span>
+                            <span className={styles.metaValue}>{post.proposedCaption || "No caption proposed for this content."}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -664,12 +666,10 @@ export default function NewContent() {
                   Save Content Calendar
                 </button>
                 <button 
-                  onClick={() => router.push(
-                    `/calendar/view?strategy=${selectedStrategy?.id || ''}&startDate=${startDate.toISOString()}`
-                  )} 
+                  onClick={handleSaveContent}
                   className={styles.calendarButton}
                 >
-                  Create Calendar View
+                  Save Content Plan
                 </button>
                 <button 
                   onClick={() => router.push('/dashboard')} 
@@ -681,120 +681,6 @@ export default function NewContent() {
             </div>
           )}
         </div>
-
-        {showContent && (
-          <div className={styles.contentDisplay}>
-            <h2>Your Content Plan</h2>
-            
-            {/* Campaigns Section */}
-            <div className={styles.campaignsSection}>
-              <h3>Campaigns</h3>
-              <div className={styles.contentGrid}>
-                {contentOutline.map((week, weekIndex) => (
-                  <div key={weekIndex} className={styles.contentCard}>
-                    <div className={styles.weekHeader}>
-                      <h4>Week {weekIndex + 1}</h4>
-                      <div className={styles.weekTheme}>
-                        {week.theme}
-                      </div>
-                    </div>
-                    <ul className={styles.contentList}>
-                      {week.posts.map((post, itemIndex) => (
-                        <li key={itemIndex} className={styles.contentItem}>
-                          <div className={styles.contentItemHead}>
-                            <strong>{post.topic}</strong>
-                            <span className={styles.contentType}>{post.type}</span>
-                          </div>
-                          <div className={styles.contentDetails}>
-                            <div className={styles.contentVisual}>
-                              <strong>Proposed Visual:</strong>
-                              <p>{post.visual}</p>
-                            </div>
-                            <div className={styles.contentCaption}>
-                              <strong>Proposed Caption:</strong>
-                              <p>{post.proposedCaption || "No caption proposed for this content."}</p>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Daily Engagement Section */}
-            <div className={styles.dailyEngagementSection}>
-              <h3>Daily Engagement</h3>
-              {isDailyEngagementLoading ? (
-                <div className={styles.loadingSpinner}></div>
-              ) : dailyEngagement && dailyEngagement.length > 0 ? (
-                <div className={styles.dailyEngagementTabs}>
-                  <div className={styles.tabs}>
-                    <button 
-                      className={selectedWeek === 1 ? styles.activeTab : ''}
-                      onClick={() => setSelectedWeek(1)}
-                    >
-                      Week 1
-                    </button>
-                    <button 
-                      className={selectedWeek === 2 ? styles.activeTab : ''}
-                      onClick={() => setSelectedWeek(2)}
-                    >
-                      Week 2
-                    </button>
-                    <button 
-                      className={selectedWeek === 3 ? styles.activeTab : ''}
-                      onClick={() => setSelectedWeek(3)}
-                    >
-                      Week 3
-                    </button>
-                  </div>
-                  
-                  <div className={styles.weekContent}>
-                    <div className={styles.dailyPostsGrid}>
-                      {dailyEngagement
-                        .filter(post => post.week === selectedWeek)
-                        .map((post, index) => (
-                          <div key={index} className={styles.dailyPost}>
-                            <div className={styles.postHeader}>
-                              <span className={styles.postDay}>Day {post.day}</span>
-                              <span className={styles.postType}>{post.contentType}</span>
-                            </div>
-                            <h4 className={styles.postTitle}>{post.description}</h4>
-                            <p className={styles.postCaption}>{post.caption}</p>
-                            <div className={styles.postAudience}>
-                              <span>For: {post.targetAudience}</span>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className={styles.noContent}>
-                  No daily engagement content available. Please try regenerating the content.
-                </p>
-              )}
-            </div>
-            
-            {/* Buttons Section */}
-            <div className={styles.contentActions}>
-              <button
-                onClick={handleSaveContent}
-                className={styles.saveButton}
-              >
-                Save Content Plan
-              </button>
-              <button
-                onClick={() => setShowContent(false)}
-                className={styles.cancelButton}
-              >
-                Back
-              </button>
-            </div>
-          </div>
-        )}
       </main>
 
       {process.env.NODE_ENV === 'development' && (
