@@ -839,19 +839,21 @@ export default function NewStrategy() {
                 </div>
                 
                 <div className={styles.suggestedAnswers}>
-                  {suggestions.length > 0 && (
+                  {suggestions.length > 0 && !messages[messages.length-1]?.text.includes("building your marketing strategy") && (
                     <h4 className={styles.suggestionsTitle}>Example Answers</h4>
                   )}
-                  {suggestions.map((suggestion, index) => (
-                    <button 
-                      key={index}
-                      onClick={() => handleSuggestionSelect(suggestion)}
-                      className={styles.suggestionChip}
-                      disabled={isProcessing}
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
+                  {suggestions.length > 0 && !messages[messages.length-1]?.text.includes("building your marketing strategy") && 
+                    suggestions.map((suggestion, index) => (
+                      <button 
+                        key={index}
+                        onClick={() => handleSuggestionSelect(suggestion)}
+                        className={styles.suggestionChip}
+                        disabled={isProcessing}
+                      >
+                        {suggestion}
+                      </button>
+                    ))
+                  }
                 </div>
                 
                 {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
