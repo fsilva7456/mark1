@@ -14,32 +14,32 @@ const mockContent = [
     posts: [
       { 
         type: "Carousel", 
-        topic: "5 myths about fitness debunked", 
-        audience: "Beginners & skeptics",
-        cta: "Save this post for future reference",
+        topic: "The 5 most damaging fitness myths debunked with scientific evidence and practical alternatives", 
+        audience: "Beginners and skeptics who have been discouraged by previous fitness attempts. They're wary of industry claims and need solid evidence before committing to a new approach. Their past experiences have created doubt about what actually works.",
+        cta: "Save this myth-busting guide and reference it whenever you hear these common misconceptions",
         principle: "Authority & Social Proof",
         principleExplanation: "Using expert knowledge to debunk myths establishes authority, while referencing what others commonly believe leverages social proof.",
-        visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text",
+        visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text explanations",
         proposedCaption: "Tired of fitness advice that doesn't work? 🤔 Let's bust some common myths! Swipe through to discover what REALLY works based on science, not trends. Save this post for the next time someone tells you one of these myths! #FitnessMyths #FactsNotFiction"
       },
       { 
         type: "Video", 
-        topic: "Quick demo of your training style", 
-        audience: "Potential clients considering personal training",
-        cta: "DM me for a free consultation",
+        topic: "Behind-the-scenes demonstration of my unique training approach and philosophy in action with real clients", 
+        audience: "Potential clients considering personal training who want to see your authentic training style before committing. They're comparing different trainers and need to understand your specific approach and expertise that sets you apart.",
+        cta: "Send me a direct message today to schedule your complimentary consultation session",
         principle: "Reciprocity",
         principleExplanation: "Offering valuable content for free creates a sense of reciprocity, making viewers more likely to respond to your CTA.",
-        visual: "Fast-paced training montage showing your energy and training style in your actual workspace",
+        visual: "Fast-paced dynamic training montage showing diverse client interactions and personalized coaching moments",
         proposedCaption: "This is how we train! 💪 A quick look at what a session with me looks like. Notice how we focus on proper form and sustainable intensity—this isn't about burning you out, it's about building you up! Curious if this approach would work for you? DM me for a free consultation to discuss your fitness goals. #PersonalTrainer #TrainingSession"
       },
       { 
         type: "Story", 
-        topic: "Behind the scenes of your business", 
-        audience: "All followers",
-        cta: "Follow for more insights",
+        topic: "Exclusive behind-the-scenes tour of the thoughtful preparation process that makes your fitness experience exceptional", 
+        audience: "All followers who appreciate transparency and are curious about your professional standards and attention to detail. They want to feel connected to your business on a personal level and understand the care that goes into their experience.",
+        cta: "Follow our account for more regular behind-the-scenes insights into our proven fitness methods",
         principle: "Liking & Familiarity",
         principleExplanation: "Sharing personal aspects of your business creates likability and builds familiarity, which increases trust over time.",
-        visual: "Candid photos or video clips of your workspace, training equipment, or planning process",
+        visual: "Candid photos and timelapse clips showing thoughtful preparation and equipment arrangement process",
         proposedCaption: "Behind the scenes today! Setting up for a group session and thought I'd give you a peek at what goes into making your workouts effective. Every detail matters! Follow along for more behind-the-scenes content and fitness tips you can actually use. #BehindTheScenes #FitnessCoach"
       }
     ]
@@ -50,32 +50,32 @@ const mockContent = [
     posts: [
       { 
         type: "Transformation", 
-        topic: "Before & after of a client", 
-        audience: "Results-focused individuals",
-        cta: "Book a consultation (link in bio)",
+        topic: "Remarkable 6-month transformation journey showcasing sustainable methods and holistic well-being improvements", 
+        audience: "Results-focused individuals who are skeptical about fitness transformations but desperately want to achieve their own. They're tired of false promises and want proof that your methods deliver sustainable, realistic results for ordinary people.",
+        cta: "Book your personalized consultation through the link in my bio to begin your transformation today",
         principle: "Social Proof",
         principleExplanation: "Showing real results creates social proof, demonstrating that your methods work for others and can work for the viewer too.",
-        visual: "Side-by-side comparison photos with consistent lighting and angles to highlight genuine progress",
+        visual: "Side-by-side comparison photos with consistent lighting and measurement tracking charts showing progressive improvements",
         proposedCaption: "Meet Sarah who came to me 6 months ago with a goal to gain strength and energy. The transformation goes beyond what you see in the photos—she's now sleeping better, has more energy throughout the day, and feels confident in her skin! This didn't happen overnight, but with consistent work and a sustainable approach. Want to start your journey? Book a consultation through the link in my bio. #TransformationTuesday #RealResults"
       },
       { 
         type: "Testimonial", 
-        topic: "Client interview about their journey", 
-        audience: "People on the fence about committing",
-        cta: "Comment if you relate to their story",
+        topic: "Heartfelt client interview revealing the emotional and physical breakthroughs that changed their relationship with fitness", 
+        audience: "People on the fence about committing who need emotional reassurance more than logical arguments. They identify with the struggles shown and need to see someone like them overcome similar obstacles to believe it's possible for themselves.",
+        cta: "Comment below with which part of this journey resonates most with your personal experience",
         principle: "Liking & Social Proof",
         principleExplanation: "Personal stories create emotional connections and relatability, while positive outcomes reinforce social proof.",
-        visual: "Video interview with client in a comfortable setting with good lighting and clear audio",
+        visual: "Intimate interview setting with soft lighting, authentic reactions, and supportive body language",
         proposedCaption: "\"I never thought I could stick with a fitness routine until I found this approach.\" Hear John's story about how he went from fitness-avoider to consistent gym-goer. What part of his journey resonates with you? Comment below if you've experienced similar challenges! #ClientStory #FitnessJourney"
       },
       { 
         type: "Carousel", 
-        topic: "3 key habits that lead to success", 
-        audience: "Committed fitness enthusiasts",
-        cta: "Share this with someone who needs it",
+        topic: "The 3 non-negotiable daily habits that separate successful clients from those who struggle to see results", 
+        audience: "Committed fitness enthusiasts who are already exercising regularly but not seeing the results they expect. They're disciplined and dedicated but need to understand the subtle habit adjustments that create breakthrough progress.",
+        cta: "Share these game-changing habits with a friend who needs this information to transform their results",
         principle: "Commitment & Consistency",
         principleExplanation: "Highlighting successful habits encourages viewers to commit to small actions, which builds momentum through consistency.",
-        visual: "Clean, minimalist graphics with icons representing each habit and short explanatory text",
+        visual: "Clean, minimalist graphics with powerful habit illustrations and before/after outcome comparisons",
         proposedCaption: "The difference between those who see results and those who don't often comes down to these 3 key habits. They're not complicated, but they require consistency! Swipe through to learn what my most successful clients all have in common. Know someone who needs this reminder? Tag them in the comments! #HealthyHabits #FitnessSuccess"
       }
     ]
@@ -86,32 +86,32 @@ const mockContent = [
     posts: [
       { 
         type: "Carousel", 
-        topic: "The science behind your methods", 
-        audience: "Data-driven, analytical followers",
-        cta: "Save this to reference during workouts",
+        topic: "The scientific principles behind our training methodology that explain why conventional approaches often fail", 
+        audience: "Data-driven, analytical followers who need to understand the 'why' behind your methods. They have technical knowledge and appreciate evidence-based information that validates your approach compared to alternatives they've tried.",
+        cta: "Save this comprehensive reference guide to review during your workouts for optimal technique application",
         principle: "Authority",
         principleExplanation: "Sharing research-backed information positions you as an expert and authority in your field, building credibility and trust.",
-        visual: "Simple diagrams with scientific concepts visualized in an accessible way with your branding",
+        visual: "Simple scientific diagrams with annotated exercise illustrations and physiological effect explanations",
         proposedCaption: "Ever wonder WHY certain exercises are more effective than others? It's not magic—it's science! In this carousel, I break down the physiological principles behind the methods we use. Save this post to reference during your next workout. #ExerciseScience #EvidenceBased"
       },
       { 
         type: "Video", 
-        topic: "Common form mistakes to avoid", 
-        audience: "Intermediate fitness enthusiasts",
-        cta: "Tag a friend who needs to see this",
+        topic: "The 5 most dangerous form mistakes that can sabotage your progress and lead to preventable injuries", 
+        audience: "Intermediate fitness enthusiasts who have experience but may have developed bad habits over time. They're performing exercises regularly but experiencing plateaus or minor pain that signals technique issues requiring correction.",
+        cta: "Tag a workout partner who needs to see these critical form corrections to improve safely",
         principle: "Loss Aversion",
         principleExplanation: "Highlighting mistakes taps into loss aversion - people's desire to avoid negative outcomes like injury or wasted effort.",
-        visual: "Split-screen demonstrations showing incorrect form (with caution indicator) vs. correct form (with checkmark)",
+        visual: "Split-screen demonstrations highlighting incorrect form with red indicators versus correct technique with green checkmarks",
         proposedCaption: "These form mistakes might be sabotaging your progress (and risking injury)! Watch for the correct technique demonstration so you can make every rep count. Know someone who might benefit from these tips? Tag them below so they can avoid these common pitfalls! #ProperForm #ExerciseTips"
       },
       { 
         type: "Reel", 
-        topic: "Quick tips for better results", 
-        audience: "Busy professionals with limited time",
-        cta: "Try this in your next workout",
+        topic: "3 time-saving workout modifications that deliver maximum results for busy professionals with limited schedules", 
+        audience: "Busy professionals with demanding careers who struggle to maintain consistency due to time constraints. They're motivated but pragmatic, prioritizing efficiency and measurable outcomes that fit their compressed availability.",
+        cta: "Try implementing these time-efficient techniques in your next workout and report your experience",
         principle: "Simplicity & Scarcity",
         principleExplanation: "Quick, actionable tips are perceived as valuable because they save time (scarcity) and are easy to implement (simplicity).",
-        visual: "Fast-paced video with on-screen text highlighting key points and demonstrating quick techniques",
+        visual: "Fast-paced demonstration with on-screen time savings and efficiency metrics highlighting benefits",
         proposedCaption: "No time? No problem! These 30-second tweaks can dramatically improve your workout efficiency. Even the busiest professionals can implement these tips. Try one in your next workout and let me know which one made the biggest difference for you! #QuickTips #EfficientWorkout"
       }
     ]

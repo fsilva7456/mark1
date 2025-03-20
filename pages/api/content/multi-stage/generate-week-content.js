@@ -72,12 +72,12 @@ export default async function handler(req, res) {
       
       Each post must have:
       - type (choose from: Carousel, Video, Reel, Story, Image)
-      - topic (DETAILED: 8-12 words describing the specific objective of the post. Be specific about what the post will achieve and why it matters)
-      - audience (DETAILED: 2-3 sentences describing a specific segment of the target audience, their pain points, desires, and why this content will resonate with them)
-      - cta (call to action, under 10 words)
+      - topic (DETAILED: 12-20 words describing the specific objective of the post with a compelling title. Be specific and descriptive about what the post will achieve, why it matters, and use powerful language that attracts attention)
+      - audience (DETAILED: 3-4 sentences describing a specific segment of the target audience, their pain points, desires, demographic details, and why this content will strongly resonate with them)
+      - cta (call to action, 10-15 words that clearly direct the audience on what specific action to take next)
       - principle (one persuasion principle)
       - principleExplanation (1 short sentence only)
-      - visual (2-3 words description)
+      - visual (5-10 words detailed description of visual concept)
       - proposedCaption (75-100 words with hashtags at the end)
       
       ${aesthetic ? `Make sure all posts align with the specified aesthetic/style: "${aesthetic}". The visual concepts and caption tone should reflect this aesthetic.` : ''}
@@ -188,12 +188,12 @@ export default async function handler(req, res) {
         while (jsonData.posts.length < 3) {
           jsonData.posts.push({
             type: ["Carousel", "Video", "Reel"][jsonData.posts.length % 3],
-            topic: `${weekTheme} content ${jsonData.posts.length + 1}`,
-            audience: strategy.target_audience[jsonData.posts.length % strategy.target_audience.length],
-            cta: "Contact us for more information",
+            topic: `${weekTheme} comprehensive guide to transform your fitness routine with expert insights`,
+            audience: `${strategy.target_audience[jsonData.posts.length % strategy.target_audience.length]} who struggle with consistency and need structured guidance. They're motivated but overwhelmed by conflicting information, seeking proven methods that fit their lifestyle.`,
+            cta: "Save this guide and tag a friend who needs these proven strategies",
             principle: "Social Proof",
             principleExplanation: "People tend to follow what others are doing.",
-            visual: "Fitness demonstration",
+            visual: "Professionally designed infographics with step-by-step demonstrations",
             proposedCaption: `Week ${weekNumber} content for your fitness journey. This post helps you achieve your fitness goals with our expert guidance. #Fitness #HealthyLiving`
           });
         }
@@ -224,32 +224,32 @@ export default async function handler(req, res) {
         posts: [
           { 
             type: "Carousel", 
-            topic: `${weekTheme} introduction`, 
-            audience: strategy.target_audience[0] || "Fitness enthusiasts",
-            cta: "Save this post for reference",
+            topic: `${weekTheme} comprehensive guide to transform your understanding and implement effective techniques`, 
+            audience: `${strategy.target_audience[0] || "Fitness enthusiasts"} who are committed to their health journey but feel stuck on a plateau. They have basic knowledge but crave deeper insights and scientific understanding of their body's responses.`,
+            cta: "Save this essential guide and revisit it during your next workout planning session",
             principle: "Authority",
             principleExplanation: "Expert information establishes credibility.",
-            visual: "Infographic carousel",
+            visual: "Clean minimalist infographics with anatomical illustrations and data visualizations",
             proposedCaption: `Learn more about ${weekTheme} in this helpful guide. Save this post to reference later! #Fitness #HealthTips`
           },
           { 
             type: "Video", 
-            topic: `${weekTheme} demonstration`, 
-            audience: strategy.target_audience[1] || "Active adults",
-            cta: "Try this in your next workout",
+            topic: `${weekTheme} in-depth demonstration and common mistakes to avoid for optimal results`, 
+            audience: `${strategy.target_audience[1] || "Active adults"} who work out regularly but have been experiencing minor injuries or suboptimal results. They're detail-oriented and appreciate technique refinement to maximize their efforts.`,
+            cta: "Try these precise techniques in your next workout and comment with your experience",
             principle: "Social Proof",
             principleExplanation: "Showing others succeeding motivates viewers.",
-            visual: "Demonstration video",
+            visual: "Split-screen comparison of correct vs incorrect form with highlights",
             proposedCaption: `Watch how to properly execute this ${weekTheme} technique. Let me know if you try it in your next workout! #FitnessTips #WorkoutWednesday`
           },
           { 
             type: "Image", 
-            topic: `${weekTheme} success story`, 
-            audience: strategy.target_audience[2] || "Beginners",
-            cta: "Comment with your questions",
+            topic: `${weekTheme} transformational success story that proves consistency beats intensity every time`, 
+            audience: `${strategy.target_audience[2] || "Beginners"} who feel intimidated by fitness culture and doubt their ability to see results. They need reassurance and realistic expectations about the transformation journey.`,
+            cta: "Comment with your biggest question about starting your own transformation journey",
             principle: "Reciprocity",
             principleExplanation: "Sharing valuable information creates goodwill.",
-            visual: "Before/after comparison",
+            visual: "Authentic before/after photos with timeline milestones and key habit changes",
             proposedCaption: `Real results from our ${weekTheme} approach. Have questions? Drop them in the comments below and I'll answer! #FitnessJourney #Results`
           }
         ]
@@ -269,32 +269,32 @@ export default async function handler(req, res) {
         posts: [
           { 
             type: "Carousel", 
-            topic: "Fitness tips collection", 
-            audience: "Fitness enthusiasts",
-            cta: "Save for later",
+            topic: "Essential fitness tips collection to revolutionize your workout effectiveness and recovery", 
+            audience: "Fitness enthusiasts who have been working out consistently for 6-12 months but have hit a plateau. They're motivated but frustrated by their lack of continued progress despite putting in regular effort.",
+            cta: "Save this comprehensive guide and implement one new tip in your routine this week",
             principle: "Authority",
             principleExplanation: "Expert information builds trust and credibility.",
-            visual: "Tip graphics",
+            visual: "Progressive tip graphics with before/after demonstrations and anatomical details",
             proposedCaption: "Essential fitness tips to improve your workout routine. Save this post for your next gym session! #FitnessTips #WorkoutAdvice"
           },
           { 
             type: "Video", 
-            topic: "Workout demonstration", 
-            audience: "Active adults",
-            cta: "Try this exercise",
+            topic: "Detailed workout demonstration of the most effective yet overlooked exercises for full-body conditioning", 
+            audience: "Active adults aged 30-45 with busy professional lives who want to maximize their limited workout time. They have some experience but need more efficient routines for their schedule constraints.",
+            cta: "Try this scientifically-proven exercise sequence in your next workout and tag us",
             principle: "Social Proof",
             principleExplanation: "Showing successful examples motivates others.",
-            visual: "Exercise demo",
+            visual: "Professional multi-angle demonstration with technique cues and modifications",
             proposedCaption: "Check out this effective exercise that's perfect for busy schedules. Let me know if you try it! #QuickWorkout #FitnessDemo"
           },
           { 
             type: "Image", 
-            topic: "Motivational content", 
-            audience: "Beginners",
-            cta: "Share your journey",
+            topic: "Powerful motivational content that addresses the mental barriers to consistent fitness practice", 
+            audience: "Beginners who have tried and failed at fitness routines multiple times. They struggle with self-doubt and need mental frameworks as much as physical guidance to break through their limiting beliefs.",
+            cta: "Share your biggest mental barrier in the comments and join our supportive community",
             principle: "Consistency",
             principleExplanation: "Small consistent efforts lead to big results.",
-            visual: "Motivational quote",
+            visual: "Inspirational typography on gradient background with real testimonial quote",
             proposedCaption: "Remember: consistency beats perfection every time. Share your fitness journey in the comments! #FitnessMotivation #ConsistencyWins"
           }
         ]
