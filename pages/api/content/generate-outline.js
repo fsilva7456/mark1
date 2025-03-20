@@ -26,10 +26,10 @@ export default async function handler(req, res) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
-    // Create a simplified prompt that should work better
+    // Create a highly optimized prompt to reduce API errors
     const prompt = `
-      Create a focused 3-week social media content plan for a fitness business.
-      
+      Create a fitness social media content plan (9 posts total).
+
       BUSINESS: "${strategy.business_description || 'Fitness business'}"
       
       TARGET AUDIENCE:
@@ -41,38 +41,18 @@ export default async function handler(req, res) {
       KEY MESSAGES:
       ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
-      Create 3 social media posts per week (9 total posts). Each post must include:
-      - Type (Carousel/Video/Reel/Story/Image)
-      - Topic
-      - Audience (use exact language from target audience list)
-      - CTA (call to action)
-      - Principle (persuasion principle)
-      - Visual recommendation (brief)
-      - Proposed caption (100-150 words max)
+      FORMAT: 3 weeks, 3 posts per week. Each post must have:
+      - type (Carousel/Video/Reel/Story/Image)
+      - topic
+      - audience
+      - cta
+      - principle
+      - principleExplanation (1 sentence only)
+      - visual (2-3 words)
+      - proposedCaption (50-75 words max)
       
-      Format as clean JSON:
-      {
-        "campaigns": [
-          {
-            "week": 1,
-            "theme": "Theme based on key message 1",
-            "posts": [
-              {
-                "type": "Post type",
-                "topic": "Topic",
-                "audience": "Target audience",
-                "cta": "Call to action",
-                "principle": "Principle",
-                "principleExplanation": "Brief explanation",
-                "visual": "Visual recommendation",
-                "proposedCaption": "Caption text"
-              }
-            ]
-          }
-        ]
-      }
-      
-      IMPORTANT: Provide ONLY the JSON object, nothing else.
+      RETURN ONLY THIS JSON STRUCTURE:
+      {"campaigns":[{"week":1,"theme":"Theme1","posts":[{"type":"","topic":"","audience":"","cta":"","principle":"","principleExplanation":"","visual":"","proposedCaption":""}]}]}
     `;
     
     console.log("Sending prompt to Gemini API...");
@@ -88,8 +68,9 @@ export default async function handler(req, res) {
         result = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
+            temperature: 0.5,  // Lower temperature for more consistent output
+            maxOutputTokens: 1500,  // Reduce token limit to prevent timeout
+            responseFormat: { type: "json" }, // Force JSON response format
           },
         });
         
@@ -112,37 +93,42 @@ export default async function handler(req, res) {
     }
     
     const response = result.response;
-    const text = response.text();
     
     // Process the response to extract clean JSON
     let jsonData;
     try {
-      // First, try to directly parse the text as JSON
+      // Get the text response and log a preview
+      const text = response.text();
+      console.log("API response preview:", text.substring(0, 100) + "...");
+      
+      // Try direct parsing first with error handling
       try {
-        jsonData = JSON.parse(text);
-      } catch (directParseError) {
-        console.log("Direct JSON parsing failed, trying to extract JSON from text");
-        
-        // Try to find JSON in the response with various patterns
-        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || 
-                          text.match(/```\n([\s\S]*?)\n```/) || 
-                          text.match(/({[\s\S]*?})/);
-        
-        if (jsonMatch) {
-          // Clean up the JSON string
-          const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '').trim();
-          console.log("Extracted JSON string:", jsonString.substring(0, 100) + "...");
+        // Basic cleanup: remove any markdown formatting and leading/trailing whitespace
+        const cleanedText = text
+          .replace(/```json\s*/g, '')
+          .replace(/```\s*/g, '')
+          .replace(/^\s+|\s+$/g, '');
           
-          // Try parsing the extracted JSON
-          try {
-            jsonData = JSON.parse(jsonString);
-          } catch (extractedParseError) {
-            console.error("Error parsing extracted JSON:", extractedParseError);
-            throw new Error("Failed to parse extracted JSON content");
+        jsonData = JSON.parse(cleanedText);
+        console.log("JSON parsed successfully");
+      } catch (parseError) {
+        console.error("Error parsing JSON response:", parseError.message);
+        
+        // Fallback extraction if needed
+        try {
+          // Look for any JSON-like structure
+          const jsonPattern = /(\{[\s\S]*\})/g;
+          const matches = text.match(jsonPattern);
+          
+          if (matches && matches.length > 0) {
+            console.log("Found JSON pattern in response, attempting extraction");
+            jsonData = JSON.parse(matches[0]);
+          } else {
+            throw new Error("No valid JSON found in response");
           }
-        } else {
-          console.error("No JSON pattern found in response");
-          throw new Error("No valid JSON found in the response");
+        } catch (fallbackError) {
+          console.error("Fallback parsing also failed:", fallbackError.message);
+          throw new Error("Unable to extract valid JSON from response: " + fallbackError.message);
         }
       }
       

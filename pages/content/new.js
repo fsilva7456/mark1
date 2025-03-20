@@ -311,9 +311,11 @@ export default function NewContent() {
       
       // After setting content, generate daily engagement content
       try {
-        console.log("Generating daily engagement content...");
+        console.log("Daily engagement content generation skipped temporarily");
         setIsDailyEngagementLoading(true);
         
+        // Skip the daily engagement API call for now to reduce API load
+        /*
         // Create a properly formatted strategy matrix from the Supabase data
         const formattedStrategy = {
           targetAudience: strategyData.target_audience || [],
@@ -349,6 +351,11 @@ export default function NewContent() {
         
         console.log("Daily engagement content generated successfully");
         setDailyEngagement(dailyEngagementData.dailyEngagement);
+        */
+        
+        // Set empty daily engagement data for now
+        setDailyEngagement([]);
+        
       } catch (dailyError) {
         console.error('Error generating daily engagement:', dailyError.message, dailyError.stack);
         // Don't block the overall flow if daily engagement fails
