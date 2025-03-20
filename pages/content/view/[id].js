@@ -1,3 +1,5 @@
+import styles from '../../../styles/Content.module.css';
+
 <div className={styles.contentDetails}>
   {/* Existing content */}
   <div className={styles.contentVisual}>

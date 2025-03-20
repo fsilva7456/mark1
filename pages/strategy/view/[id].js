@@ -15,6 +15,10 @@ export default function ViewStrategy() {
   const [strategy, setStrategy] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [aestheticModal, setAestheticModal] = useState({
+    visible: false,
+    value: ''
+  });
   
   useEffect(() => {
     // Redirect if not logged in
@@ -85,6 +89,26 @@ export default function ViewStrategy() {
       console.error("Error preparing content generation:", error);
       toast.error("Failed to prepare content generation. Please try again.");
     }
+  };
+  
+  const handleAestheticChange = (e) => {
+    setAestheticModal({
+      ...aestheticModal,
+      value: e.target.value
+    });
+  };
+
+  const handleAestheticSubmit = () => {
+    if (!aestheticModal.value.trim()) return;
+    
+    // Navigate with the aesthetic parameter
+    router.push(`/content/new?strategy=${id}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+    
+    // Close the modal
+    setAestheticModal({
+      visible: false,
+      value: ''
+    });
   };
   
   return (
@@ -165,8 +189,15 @@ export default function ViewStrategy() {
                   )}
                   
                   <button
-                    onClick={handleGenerateContent}
+                    onClick={() => {
+                      // Show the aesthetic modal instead of directly navigating
+                      setAestheticModal({
+                        visible: true,
+                        value: ''
+                      });
+                    }}
                     className={styles.outlineButton}
+                    disabled={isLoading}
                   >
                     Generate Content Outline
                   </button>
@@ -183,6 +214,42 @@ export default function ViewStrategy() {
           )}
         </div>
       </main>
+
+      {aestheticModal.visible && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.feedbackModal}>
+            <div className={styles.modalHeader}>
+              <h3>Describe Your Content Style</h3>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setAestheticModal({...aestheticModal, visible: false})}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.feedbackInputContainer}>
+                <label htmlFor="aesthetic">What's the aesthetic or vibe you want for your content?</label>
+                <textarea
+                  id="aesthetic"
+                  value={aestheticModal.value}
+                  onChange={handleAestheticChange}
+                  placeholder="For example: professional and educational, friendly and motivational, bold and high-energy, calm and supportive..."
+                  className={styles.feedbackTextarea}
+                />
+                <button 
+                  onClick={handleAestheticSubmit}
+                  className={styles.saveButton}
+                  disabled={!aestheticModal.value.trim()}
+                >
+                  Generate Content
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
