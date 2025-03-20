@@ -52,12 +52,63 @@ export default async function handler(req, res) {
     });
     
     // Check if we have the enhanced strategy data
-    const hasEnhancedData = strategy.enhancedStrategy && strategy.enhancedStrategy.audiences;
+    const hasEnhancedData = strategy.enhancedStrategy && 
+                            strategy.enhancedStrategy.audiences && 
+                            Array.isArray(strategy.enhancedStrategy.audiences) &&
+                            strategy.enhancedStrategy.audiences.length > 0;
 
     // Create a more detailed prompt using the enhanced data if available
     let prompt;
 
     if (hasEnhancedData) {
+      // Safely access audience data with fallbacks
+      const audienceSegments = strategy.enhancedStrategy.audiences.map((audience, i) => {
+        // Ensure all expected properties exist with fallbacks
+        const painPoints = audience.painPoints && Array.isArray(audience.painPoints) 
+          ? audience.painPoints.join(', ') 
+          : 'Pain points not specified';
+          
+        const goals = audience.goals && Array.isArray(audience.goals) 
+          ? audience.goals.join(', ') 
+          : 'Goals not specified';
+          
+        const channels = audience.channels && Array.isArray(audience.channels) 
+          ? audience.channels.join(', ') 
+          : 'Channels not specified';
+          
+        const decisionFactors = audience.decisionFactors && Array.isArray(audience.decisionFactors) 
+          ? audience.decisionFactors.join(', ') 
+          : 'Decision factors not specified';
+          
+        return `${i+1}. ${audience.segment || `Audience Segment ${i+1}`}
+           - Pain Points: ${painPoints}
+           - Goals: ${goals}
+           - Preferred Channels: ${channels}
+           - Decision Factors: ${decisionFactors}`;
+      }).join('\n\n');
+      
+      // Safely access content strategy data with fallbacks
+      const contentTone = strategy.enhancedStrategy.contentStrategy?.tone || 'Professional and approachable';
+      const brandValues = Array.isArray(strategy.enhancedStrategy.contentStrategy?.brandValues) 
+        ? strategy.enhancedStrategy.contentStrategy.brandValues.join(', ')
+        : 'Trust, expertise, results';
+      const campaignGoals = Array.isArray(strategy.enhancedStrategy.contentStrategy?.campaignGoals)
+        ? strategy.enhancedStrategy.contentStrategy.campaignGoals.join(', ')
+        : 'Increase awareness, build credibility, drive conversions';
+        
+      // Safely access competitive gaps data with fallbacks
+      const competitiveGapsContent = strategy.enhancedStrategy.competitiveGaps?.identifiedGaps && 
+                                   Array.isArray(strategy.enhancedStrategy.competitiveGaps.identifiedGaps)
+        ? strategy.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, i) => {
+            const strategy = Array.isArray(strategy.enhancedStrategy.competitiveGaps.exploitationStrategies) && 
+                          strategy.enhancedStrategy.competitiveGaps.exploitationStrategies[i]
+              ? strategy.enhancedStrategy.competitiveGaps.exploitationStrategies[i]
+              : 'Highlight this gap';
+            
+            return `- ${gap}: ${strategy}`;
+          }).join('\n')
+        : '- Personalized approach: Highlight personal attention in all content\n- Community focus: Showcase supportive community aspects';
+      
       prompt = `
         You are a fitness content strategy expert. Create a strategic 3-week content plan with themes that target specific audience segments.
         
@@ -65,23 +116,15 @@ export default async function handler(req, res) {
         "${strategy.business_description || 'Fitness business'}"
         
         AUDIENCE SEGMENTS (3):
-        ${strategy.enhancedStrategy.audiences.map((audience, i) => 
-          `${i+1}. ${audience.segment}
-           - Pain Points: ${audience.painPoints.join(', ')}
-           - Goals: ${audience.goals.join(', ')}
-           - Preferred Channels: ${audience.channels.join(', ')}
-           - Decision Factors: ${audience.decisionFactors.join(', ')}`
-        ).join('\n\n')}
+        ${audienceSegments}
         
         CONTENT STRATEGY GUIDELINES:
-        - Tone of Voice: ${strategy.enhancedStrategy.contentStrategy.tone}
-        - Brand Values: ${strategy.enhancedStrategy.contentStrategy.brandValues.join(', ')}
-        - Campaign Goals: ${strategy.enhancedStrategy.contentStrategy.campaignGoals.join(', ')}
+        - Tone of Voice: ${contentTone}
+        - Brand Values: ${brandValues}
+        - Campaign Goals: ${campaignGoals}
         
         COMPETITIVE GAPS TO EXPLOIT:
-        ${strategy.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, i) => 
-          `- ${gap}: ${strategy.enhancedStrategy.competitiveGaps.exploitationStrategies[i] || 'Highlight this gap'}`
-        ).join('\n')}
+        ${competitiveGapsContent}
         
         IMPLEMENTATION TIMELINE - 3 WEEK CAMPAIGN:
         Phase 1 (Week 1): Awareness - Introduce value proposition and build brand recognition
@@ -294,7 +337,8 @@ export default async function handler(req, res) {
               }
             }
             
-            return res.status(200).json(validThemes);
+            // FIX: Use consistent response format with weeklyThemes array
+            return res.status(200).json({ weeklyThemes: validThemes });
           }
         } catch (extractError) {
           console.error("Error during theme extraction:", extractError);
@@ -401,7 +445,8 @@ export default async function handler(req, res) {
         }
       }
       
-      return res.status(200).json(validThemes);
+      // FIX: Use consistent response format with weeklyThemes array
+      return res.status(200).json({ weeklyThemes: validThemes });
     } catch (parseError) {
       console.error("Error parsing Gemini response:", parseError);
       
@@ -414,10 +459,19 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Error generating themes:', error);
     
-    // Return error status and message instead of fallback content
+    // Add more detailed error logging to help diagnose issues
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      responseFormat: error.responseFormat || 'not available',
+      apiError: error.apiError || 'not available'
+    });
+    
+    // Return error status and message with more details
     return res.status(500).json({ 
       error: `Failed to generate content themes: ${error.message}`,
-      details: "Please try again later or check API key configuration."
+      details: "Please try again later or check API key configuration.",
+      errorSource: error.stack ? error.stack.split('\n')[1] : 'unknown source'
     });
   }
 }

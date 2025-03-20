@@ -299,169 +299,203 @@ export default function NewContent() {
       console.log("Step 1: Generating weekly themes...");
       setThemesLoading(true);
       
-      try {
-        const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            strategy: {
-              name: strategyData.name,
-              business_description: strategyData.business_description,
-              target_audience: strategyData.target_audience,
-              objectives: strategyData.objectives,
-              key_messages: strategyData.key_messages
+      // Add retry mechanism for theme generation
+      const maxRetries = 3;
+      let retryCount = 0;
+      let themesData = null;
+      
+      while (retryCount < maxRetries && !themesData) {
+        try {
+          if (retryCount > 0) {
+            console.log(`Retrying theme generation - Attempt ${retryCount + 1} of ${maxRetries}`);
+          }
+          
+          const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-            aesthetic: aesthetic
-          }),
+            body: JSON.stringify({
+              strategy: {
+                name: strategyData.name,
+                business_description: strategyData.business_description,
+                target_audience: strategyData.target_audience,
+                objectives: strategyData.objectives,
+                key_messages: strategyData.key_messages,
+                // Include enhanced strategy data if available
+                enhancedStrategy: strategyData.enhancedStrategy || null
+              },
+              aesthetic: aesthetic
+            }),
+          });
+          
+          if (!themesResponse.ok) {
+            const errorData = await themesResponse.json();
+            const errorText = errorData.error || `Status code: ${themesResponse.status}`;
+            console.error("Themes API error:", errorData);
+            
+            // Add more detailed logging of the error response
+            console.error("Theme generation failed with details:", {
+              status: themesResponse.status,
+              statusText: themesResponse.statusText,
+              error: errorData.error,
+              details: errorData.details || 'No additional details',
+              errorSource: errorData.errorSource || 'Unknown source'
+            });
+            
+            throw new Error(`Failed to generate themes: ${errorText}\n${errorData.details || ''}`);
+          }
+          
+          themesData = await themesResponse.json();
+          
+          // Debug log the raw response from the API
+          console.log("Raw themes API response:", JSON.stringify(themesData));
+          
+          if (!themesData || !themesData.weeklyThemes || !Array.isArray(themesData.weeklyThemes)) {
+            console.error("Invalid themes response format:", themesData);
+            throw new Error('Invalid themes response format. Please try again later.');
+          }
+          
+          // If we got here, we have valid data
+          break;
+        } catch (error) {
+          retryCount++;
+          console.error(`Theme generation attempt ${retryCount} failed:`, error);
+          
+          if (retryCount >= maxRetries) {
+            throw new Error(`Failed to generate themes after ${maxRetries} attempts: ${error.message}`);
+          }
+          
+          // Wait a bit before retrying (exponential backoff)
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
+          console.log(`Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+      
+      console.log("Successfully generated themes:", themesData.weeklyThemes);
+      setThemes(themesData.weeklyThemes);
+      
+      // Update the content outline with theme information
+      setContentOutline(prev => {
+        const updated = [...prev];
+        themesData.weeklyThemes.forEach(theme => {
+          const index = theme.week - 1;
+          if (index >= 0 && index < updated.length) {
+            updated[index] = {
+              ...updated[index],
+              theme: theme.theme,
+              objective: theme.objective,
+              targetSegment: theme.targetSegment || "", // Add target segment
+              phase: theme.phase || ""                  // Add phase
+            };
+          }
         });
+        return updated;
+      });
+      
+      setThemesLoading(false);
+      
+      // Step 2: Generate content for each week one by one for better UX
+      console.log("Step 2: Generating content for each week sequentially...");
+      
+      for (const weekTheme of themesData.weeklyThemes) {
+        // Update loading state for this specific week
+        setWeekLoadingStates(prev => ({
+          ...prev,
+          [weekTheme.week]: { loading: true, error: null }
+        }));
         
-        if (!themesResponse.ok) {
-          const errorData = await themesResponse.json();
-          const errorText = errorData.error || `Status code: ${themesResponse.status}`;
-          console.error("Themes API error:", errorData);
-          throw new Error(`Failed to generate themes: ${errorText}`);
-        }
-        
-        const themesData = await themesResponse.json();
-        
-        if (!themesData || !themesData.weeklyThemes) {
-          throw new Error('Invalid themes response format');
-        }
-        
-        console.log("Successfully generated themes:", themesData.weeklyThemes);
-        setThemes(themesData.weeklyThemes);
-        
-        // Update the content outline with theme information
-        setContentOutline(prev => {
-          const updated = [...prev];
-          themesData.weeklyThemes.forEach(theme => {
-            const index = theme.week - 1;
+        try {
+          console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
+          
+          const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              strategy: {
+                name: strategyData.name,
+                business_description: strategyData.business_description,
+                target_audience: strategyData.target_audience,
+                objectives: strategyData.objectives,
+                key_messages: strategyData.key_messages
+              },
+              weekNumber: weekTheme.week,
+              weekTheme: weekTheme.theme,
+              weekObjective: weekTheme.objective,
+              allThemes: themesData.weeklyThemes,
+              aesthetic: aesthetic
+            }),
+          });
+          
+          if (!weekResponse.ok) {
+            const errorData = await weekResponse.json();
+            const errorText = errorData.error || `Status code: ${weekResponse.status}`;
+            console.error(`Week ${weekTheme.week} API error:`, errorData);
+            throw new Error(`Week ${weekTheme.week} API error: ${errorText}`);
+          }
+          
+          const weekData = await weekResponse.json();
+          
+          if (!weekData || !weekData.weekContent) {
+            throw new Error(`Invalid week ${weekTheme.week} response format`);
+          }
+          
+          console.log(`Successfully generated content for Week ${weekTheme.week}`);
+          
+          // Add this week's content to the list
+          generatedWeeks.push(weekData.weekContent);
+          
+          // Also update the UI immediately with this week's content
+          setContentOutline(prev => {
+            const updated = [...prev];
+            const index = weekTheme.week - 1;
+            if (index >= 0 && index < updated.length) {
+              updated[index] = {
+                ...weekData.weekContent,
+                loading: false, // Mark as loaded
+                objective: weekTheme.objective
+              };
+            }
+            return updated;
+          });
+          
+          // Update loading state for this week
+          setWeekLoadingStates(prev => ({
+            ...prev,
+            [weekTheme.week]: { loading: false, error: null }
+          }));
+          
+        } catch (weekError) {
+          console.error(`Error generating Week ${weekTheme.week} content:`, weekError);
+          
+          // Update error state for this week
+          setWeekLoadingStates(prev => ({
+            ...prev,
+            [weekTheme.week]: { loading: false, error: weekError.message }
+          }));
+          
+          // Still show the partial content with an error indicator
+          setContentOutline(prev => {
+            const updated = [...prev];
+            const index = weekTheme.week - 1;
             if (index >= 0 && index < updated.length) {
               updated[index] = {
                 ...updated[index],
-                theme: theme.theme,
-                objective: theme.objective
+                loading: false,
+                error: weekError.message,
+                posts: [], // No posts for this week
+                objective: weekTheme.objective
               };
             }
+            return updated;
           });
-          return updated;
-        });
-        
-        setThemesLoading(false);
-        
-        // Step 2: Generate content for each week one by one for better UX
-        console.log("Step 2: Generating content for each week sequentially...");
-        
-        for (const weekTheme of themesData.weeklyThemes) {
-          // Update loading state for this specific week
-          setWeekLoadingStates(prev => ({
-            ...prev,
-            [weekTheme.week]: { loading: true, error: null }
-          }));
-          
-          try {
-            console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
-            
-            const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                strategy: {
-                  name: strategyData.name,
-                  business_description: strategyData.business_description,
-                  target_audience: strategyData.target_audience,
-                  objectives: strategyData.objectives,
-                  key_messages: strategyData.key_messages
-                },
-                weekNumber: weekTheme.week,
-                weekTheme: weekTheme.theme,
-                weekObjective: weekTheme.objective,
-                allThemes: themesData.weeklyThemes,
-                aesthetic: aesthetic
-              }),
-            });
-            
-            if (!weekResponse.ok) {
-              const errorData = await weekResponse.json();
-              const errorText = errorData.error || `Status code: ${weekResponse.status}`;
-              console.error(`Week ${weekTheme.week} API error:`, errorData);
-              throw new Error(`Week ${weekTheme.week} API error: ${errorText}`);
-            }
-            
-            const weekData = await weekResponse.json();
-            
-            if (!weekData || !weekData.weekContent) {
-              throw new Error(`Invalid week ${weekTheme.week} response format`);
-            }
-            
-            console.log(`Successfully generated content for Week ${weekTheme.week}`);
-            
-            // Add this week's content to the list
-            generatedWeeks.push(weekData.weekContent);
-            
-            // Also update the UI immediately with this week's content
-            setContentOutline(prev => {
-              const updated = [...prev];
-              const index = weekTheme.week - 1;
-              if (index >= 0 && index < updated.length) {
-                updated[index] = {
-                  ...weekData.weekContent,
-                  loading: false, // Mark as loaded
-                  objective: weekTheme.objective
-                };
-              }
-              return updated;
-            });
-            
-            // Update loading state for this week
-            setWeekLoadingStates(prev => ({
-              ...prev,
-              [weekTheme.week]: { loading: false, error: null }
-            }));
-            
-          } catch (weekError) {
-            console.error(`Error generating Week ${weekTheme.week} content:`, weekError);
-            
-            // Update error state for this week
-            setWeekLoadingStates(prev => ({
-              ...prev,
-              [weekTheme.week]: { loading: false, error: weekError.message }
-            }));
-            
-            // Still show the partial content with an error indicator
-            setContentOutline(prev => {
-              const updated = [...prev];
-              const index = weekTheme.week - 1;
-              if (index >= 0 && index < updated.length) {
-                updated[index] = {
-                  ...updated[index],
-                  loading: false,
-                  error: weekError.message,
-                  posts: [], // No posts for this week
-                  objective: weekTheme.objective
-                };
-              }
-              return updated;
-            });
-          }
         }
-        
-        console.log("All weeks generated successfully:", generatedWeeks.length);
-      } catch (themesError) {
-        console.error('Themes generation failed:', themesError);
-        setThemesLoading(false);
-        setError(`Failed to generate content themes: ${themesError.message}. Please try again later.`);
       }
       
-      // Set empty daily engagement data (daily engagement API is disabled for now)
-      setDailyEngagement([]);
-      setIsDailyEngagementLoading(false);
-      
-      setIsLoading(false);
+      console.log("All weeks generated successfully:", generatedWeeks.length);
     } catch (error) {
       console.error('Error in multi-stage content generation:', error);
       setError(`Content generation failed: ${error.message}. Please try again later.`);
