@@ -49,12 +49,17 @@ export default function NewStrategy() {
   // Track current question in a different way
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
-  // Function to scroll to bottom of chat
+  // Improve the scrollToBottom function to be more reliable
   const scrollToBottom = () => {
-    // Add a small delay to ensure DOM has updated
+    // Increase the delay to give DOM more time to update
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end',
+        });
+      }
+    }, 300); // Increased from 100ms to 300ms for more reliable scrolling
   };
   
   // Initial setup - show first AI message
