@@ -136,41 +136,132 @@ export default async function handler(req, res) {
       // Get the text response and log a preview
       const text = response.text();
       console.log("API response preview:", text.substring(0, 100) + "...");
+      console.log("API full response:", text); // Log full response for debugging
+      
+      // Enhanced JSON cleaning
+      let cleanedText = text
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^\s+|\s+$/g, '')
+        .replace(/\\n/g, ' ')  // Replace newlines with spaces
+        .replace(/\\"/g, '"'); // Fix escaped quotes
+      
+      // Additional cleanup to fix common JSON syntax issues
+      cleanedText = cleanedText
+        .replace(/,\s*}/g, '}')       // Remove trailing commas in objects
+        .replace(/,\s*\]/g, ']')      // Remove trailing commas in arrays
+        .replace(/(['"])\s*:\s*/g, '$1:'); // Normalize spacing around colons
       
       // Try direct parsing first with error handling
       try {
-        // Basic cleanup: remove any markdown formatting and leading/trailing whitespace
-        const cleanedText = text
-          .replace(/```json\s*/g, '')
-          .replace(/```\s*/g, '')
-          .replace(/^\s+|\s+$/g, '');
-          
         jsonData = JSON.parse(cleanedText);
         console.log("JSON parsed successfully");
       } catch (parseError) {
         console.error("Error parsing JSON response:", parseError.message);
+        console.error(`Position: ${parseError.message.match(/position (\d+)/)?.[1] || 'unknown'}`);
         
-        // Fallback extraction if needed
+        // More aggressive cleanup for malformed JSON
+        console.log("Attempting more aggressive JSON cleanup...");
+        
         try {
-          // Look for any JSON-like structure
-          const jsonPattern = /(\{[\s\S]*\})/g;
-          const matches = text.match(jsonPattern);
+          // Try to extract just the weeklyThemes array if the full JSON is malformed
+          const themesPattern = /"weeklyThemes"\s*:\s*\[([\s\S]*?)\]/g;
+          const themesMatch = themesPattern.exec(cleanedText);
           
-          if (matches && matches.length > 0) {
-            console.log("Found JSON pattern in response, attempting extraction");
-            jsonData = JSON.parse(matches[0]);
+          if (themesMatch && themesMatch[1]) {
+            // Try to parse just the themes array
+            const themesContent = themesMatch[1].trim();
+            
+            // Build theme objects individually
+            const themeObjects = [];
+            const themeBlocks = themesContent.split(/},{/);
+            
+            for (let i = 0; i < themeBlocks.length; i++) {
+              let themeBlock = themeBlocks[i];
+              // Add the missing braces for all but first and last
+              if (i > 0) themeBlock = '{' + themeBlock;
+              if (i < themeBlocks.length - 1) themeBlock = themeBlock + '}';
+              
+              try {
+                // Fix common issues in each theme object
+                themeBlock = themeBlock
+                  .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
+                  .replace(/:\s*'([^']*)'/g, ':"$1"');                // Replace single quotes with double quotes
+                
+                const themeObj = JSON.parse(themeBlock);
+                themeObjects.push(themeObj);
+              } catch (themeError) {
+                console.error(`Error parsing theme ${i+1}:`, themeError.message);
+                console.error(`Theme block: ${themeBlock}`);
+                // Add a placeholder theme if parsing fails
+                themeObjects.push({
+                  week: i + 1,
+                  theme: strategy.key_messages[i] ? 
+                    `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
+                    `Week ${i + 1}: Fitness Content`
+                });
+              }
+            }
+            
+            // Create the proper structure
+            jsonData = {
+              weeklyThemes: themeObjects.slice(0, 3) // Ensure we only have 3 themes
+            };
+            
+            console.log("Successfully extracted themes array through manual parsing");
           } else {
-            throw new Error("No valid JSON found in response");
+            // If we can't extract themes pattern, try extracting any JSON object
+            const jsonPattern = /\{[\s\S]*?\}/g;
+            const matches = cleanedText.match(jsonPattern);
+            
+            if (matches && matches.length > 0) {
+              console.log("Found JSON object in response, attempting to extract structure");
+              
+              // Try each potential JSON object until we find a valid one
+              for (const match of matches) {
+                try {
+                  const potentialJson = JSON.parse(match);
+                  if (potentialJson.weeklyThemes) {
+                    jsonData = potentialJson;
+                    console.log("Found valid weeklyThemes structure in JSON object");
+                    break;
+                  }
+                } catch (err) {
+                  // Continue to next match
+                }
+              }
+              
+              if (!jsonData) {
+                throw new Error("No valid weeklyThemes structure found in JSON objects");
+              }
+            } else {
+              throw new Error("Could not find weeklyThemes array or any JSON object in response");
+            }
           }
-        } catch (fallbackError) {
-          console.error("Fallback parsing also failed:", fallbackError.message);
-          throw new Error("Unable to extract valid JSON from response: " + fallbackError.message);
+        } catch (extractError) {
+          console.error("Advanced parsing also failed:", extractError.message);
+          
+          // Last resort: create default themes based on key messages
+          console.log("Creating default themes from key messages");
+          const defaultThemes = [];
+          for (let i = 0; i < 3; i++) {
+            defaultThemes.push({
+              week: i + 1,
+              theme: strategy.key_messages[i] ? 
+                `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
+                `Week ${i + 1}: Fitness Content`
+            });
+          }
+          
+          jsonData = { weeklyThemes: defaultThemes };
+          throw new Error("Unable to extract valid JSON: " + parseError.message + ". Created default themes.");
         }
       }
       
       // Verify we have the right structure
       if (!jsonData.weeklyThemes) {
-        throw new Error("Response missing 'weeklyThemes' property");
+        console.warn("Response missing 'weeklyThemes' property, creating it");
+        jsonData.weeklyThemes = [];
       }
       
       // Check that we have 3 themes
@@ -188,8 +279,32 @@ export default async function handler(req, res) {
           });
         }
         
-        jsonData.weeklyThemes = defaultThemes;
+        // If we have themes but not 3, preserve what we have and fill the rest
+        if (Array.isArray(jsonData.weeklyThemes) && jsonData.weeklyThemes.length > 0) {
+          while (jsonData.weeklyThemes.length < 3) {
+            const index = jsonData.weeklyThemes.length;
+            jsonData.weeklyThemes.push(defaultThemes[index]);
+          }
+          
+          // If we have more than 3, trim
+          if (jsonData.weeklyThemes.length > 3) {
+            jsonData.weeklyThemes = jsonData.weeklyThemes.slice(0, 3);
+          }
+        } else {
+          jsonData.weeklyThemes = defaultThemes;
+        }
       }
+      
+      // Validate and sanitize each theme object to ensure all fields exist
+      jsonData.weeklyThemes = jsonData.weeklyThemes.map((theme, index) => {
+        // Create a valid theme object with defaults for any missing fields
+        return {
+          week: theme.week || index + 1,
+          theme: theme.theme || (strategy.key_messages[index] ? 
+            `Week ${index + 1}: ${strategy.key_messages[index].substring(0, 30)}...` : 
+            `Week ${index + 1}: Fitness Content`)
+        };
+      });
       
       console.log("Successfully parsed themes JSON");
       

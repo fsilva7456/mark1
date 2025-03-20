@@ -154,41 +154,96 @@ export default async function handler(req, res) {
       // Get the text response and log a preview
       const text = response.text();
       console.log(`Week ${weekNumber} response preview:`, text.substring(0, 100) + "...");
+      console.log(`Week ${weekNumber} full response:`, text); // Log full response for debugging
+      
+      // Enhanced JSON cleaning
+      let cleanedText = text
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .replace(/^\s+|\s+$/g, '')
+        .replace(/\\n/g, ' ')  // Replace newlines with spaces
+        .replace(/\\"/g, '"'); // Fix escaped quotes
+      
+      // Additional cleanup to fix common JSON syntax issues
+      cleanedText = cleanedText
+        .replace(/,\s*}/g, '}')       // Remove trailing commas in objects
+        .replace(/,\s*\]/g, ']')      // Remove trailing commas in arrays
+        .replace(/(['"])\s*:\s*/g, '$1:'); // Normalize spacing around colons
       
       // Try direct parsing first with error handling
       try {
-        // Basic cleanup: remove any markdown formatting and leading/trailing whitespace
-        const cleanedText = text
-          .replace(/```json\s*/g, '')
-          .replace(/```\s*/g, '')
-          .replace(/^\s+|\s+$/g, '');
-          
         jsonData = JSON.parse(cleanedText);
         console.log(`Week ${weekNumber} JSON parsed successfully`);
       } catch (parseError) {
         console.error(`Error parsing Week ${weekNumber} JSON:`, parseError.message);
+        console.error(`Position: ${parseError.message.match(/position (\d+)/)?.[1] || 'unknown'}`);
         
-        // Fallback extraction if needed
+        // More aggressive cleanup for malformed JSON
+        console.log("Attempting more aggressive JSON cleanup...");
+        
+        // Try to extract just the posts array if the full JSON is malformed
         try {
-          // Look for any JSON-like structure
-          const jsonPattern = /(\{[\s\S]*\})/g;
-          const matches = text.match(jsonPattern);
+          const postsPattern = /"posts"\s*:\s*\[([\s\S]*?)\]/g;
+          const postsMatch = postsPattern.exec(cleanedText);
           
-          if (matches && matches.length > 0) {
-            console.log("Found JSON pattern in response, attempting extraction");
-            jsonData = JSON.parse(matches[0]);
+          if (postsMatch && postsMatch[1]) {
+            // Try to parse just the posts array
+            const postsContent = postsMatch[1].trim();
+            
+            // Build posts objects individually
+            const postObjects = [];
+            const postBlocks = postsContent.split(/},{/);
+            
+            for (let i = 0; i < postBlocks.length; i++) {
+              let postBlock = postBlocks[i];
+              // Add the missing braces for all but first and last
+              if (i > 0) postBlock = '{' + postBlock;
+              if (i < postBlocks.length - 1) postBlock = postBlock + '}';
+              
+              try {
+                // Fix common issues in each post object
+                postBlock = postBlock
+                  .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
+                  .replace(/:\s*'([^']*)'/g, ':"$1"');                // Replace single quotes with double quotes
+                
+                const postObj = JSON.parse(postBlock);
+                postObjects.push(postObj);
+              } catch (postError) {
+                console.error(`Error parsing post ${i+1}:`, postError.message);
+                console.error(`Post block: ${postBlock}`);
+                // Add a placeholder post if parsing fails
+                postObjects.push({
+                  type: "Image",
+                  topic: `${weekTheme} tips (placeholder due to parsing error)`,
+                  audience: "Fitness enthusiasts looking to improve their routines",
+                  cta: "Follow for more fitness tips",
+                  principle: "Authority",
+                  principleExplanation: "People trust expert advice",
+                  visual: "Professional fitness demonstration",
+                  proposedCaption: `Week ${weekNumber} fitness content. #Fitness #Wellness`
+                });
+              }
+            }
+            
+            // Create the proper structure
+            jsonData = {
+              posts: postObjects.slice(0, 3) // Ensure we only have 3 posts
+            };
+            
+            console.log("Successfully extracted posts array through manual parsing");
           } else {
-            throw new Error("No valid JSON found in response");
+            throw new Error("Could not find posts array in response");
           }
-        } catch (fallbackError) {
-          console.error("Fallback parsing also failed:", fallbackError.message);
-          throw new Error("Unable to extract valid JSON from response: " + fallbackError.message);
+        } catch (extractError) {
+          console.error("Advanced parsing also failed:", extractError.message);
+          throw new Error("Unable to extract valid JSON structure: " + parseError.message);
         }
       }
       
       // Verify we have the right structure and posts array
       if (!jsonData.posts || !Array.isArray(jsonData.posts)) {
-        throw new Error("Response missing 'posts' array property");
+        console.warn("Response missing 'posts' array, creating empty posts array");
+        jsonData.posts = [];
       }
       
       // Ensure we have exactly 3 posts
@@ -200,7 +255,7 @@ export default async function handler(req, res) {
           jsonData.posts.push({
             type: ["Carousel", "Video", "Reel"][jsonData.posts.length % 3],
             topic: `${weekTheme} comprehensive guide to transform your fitness routine with expert insights`,
-            audience: `${strategy.target_audience[jsonData.posts.length % strategy.target_audience.length]} who struggle with consistency and need structured guidance. They're motivated but overwhelmed by conflicting information, seeking proven methods that fit their lifestyle.`,
+            audience: `${strategy.target_audience[jsonData.posts.length % strategy.target_audience.length] || "Fitness enthusiasts"} who struggle with consistency and need structured guidance. They're motivated but overwhelmed by conflicting information, seeking proven methods that fit their lifestyle.`,
             cta: "Save this guide and tag a friend who needs these proven strategies",
             principle: "Social Proof",
             principleExplanation: "People tend to follow what others are doing.",
@@ -214,6 +269,21 @@ export default async function handler(req, res) {
           jsonData.posts = jsonData.posts.slice(0, 3);
         }
       }
+      
+      // Validate and sanitize each post object to ensure all fields exist
+      jsonData.posts = jsonData.posts.map((post, index) => {
+        // Create a valid post object with defaults for any missing fields
+        return {
+          type: post.type || ["Carousel", "Video", "Reel"][index % 3],
+          topic: post.topic || `${weekTheme} fitness content (part ${index + 1})`,
+          audience: post.audience || "Fitness enthusiasts looking to improve their routines",
+          cta: post.cta || "Follow for more fitness tips",
+          principle: post.principle || "Authority",
+          principleExplanation: post.principleExplanation || "People trust expert advice",
+          visual: post.visual || "Professional fitness demonstration",
+          proposedCaption: post.proposedCaption || `Week ${weekNumber} fitness content. #Fitness #Wellness`
+        };
+      });
       
       // Add the week data to the response
       const weekContent = {
