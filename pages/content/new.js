@@ -317,8 +317,10 @@ export default function NewContent() {
         });
         
         if (!themesResponse.ok) {
-          const errorText = await themesResponse.text();
-          throw new Error(`Themes API error: ${themesResponse.status} - ${errorText}`);
+          const errorData = await themesResponse.json();
+          const errorText = errorData.error || `Status code: ${themesResponse.status}`;
+          console.error("Themes API error:", errorData);
+          throw new Error(`Failed to generate themes: ${errorText}`);
         }
         
         const themesData = await themesResponse.json();
@@ -381,8 +383,10 @@ export default function NewContent() {
             });
             
             if (!weekResponse.ok) {
-              const errorText = await weekResponse.text();
-              throw new Error(`Week ${weekTheme.week} API error: ${weekResponse.status} - ${errorText}`);
+              const errorData = await weekResponse.json();
+              const errorText = errorData.error || `Status code: ${weekResponse.status}`;
+              console.error(`Week ${weekTheme.week} API error:`, errorData);
+              throw new Error(`Week ${weekTheme.week} API error: ${errorText}`);
             }
             
             const weekData = await weekResponse.json();
@@ -445,8 +449,6 @@ export default function NewContent() {
       } catch (themesError) {
         console.error('Themes generation failed:', themesError);
         setThemesLoading(false);
-        
-        // Show error but don't fall back to mock data
         setError(`Failed to generate content themes: ${themesError.message}. Please try again later.`);
       }
       
@@ -460,70 +462,6 @@ export default function NewContent() {
       setError(`Content generation failed: ${error.message}. Please try again later.`);
       setIsLoading(false);
     }
-  };
-  
-  // Helper function to create mock content that uses the strategy elements
-  const createCustomizedMockContent = (strategyData) => {
-    // Create a deep copy of mock content
-    const customContent = JSON.parse(JSON.stringify(mockContent));
-    
-    // Customize week themes based on key messages
-    if (strategyData.key_messages && strategyData.key_messages.length >= 3) {
-      customContent[0].theme = `Introducing: ${strategyData.key_messages[0]}`;
-      customContent[1].theme = `Focusing on: ${strategyData.key_messages[1]}`;
-      customContent[2].theme = `Highlighting: ${strategyData.key_messages[2]}`;
-    }
-    
-    // Customize audience targeting
-    if (strategyData.target_audience && strategyData.target_audience.length > 0) {
-      // Distribute target audiences across the posts
-      let audienceIndex = 0;
-      customContent.forEach(week => {
-        week.posts.forEach(post => {
-          post.audience = strategyData.target_audience[audienceIndex % strategyData.target_audience.length];
-          audienceIndex++;
-        });
-      });
-    }
-    
-    // Use the business description in at least one post
-    if (strategyData.business_description) {
-      const shortDesc = strategyData.business_description.length > 50 
-        ? strategyData.business_description.substring(0, 50) + "..." 
-        : strategyData.business_description;
-        
-      customContent[0].posts[0].topic = `How ${shortDesc} can transform your fitness journey`;
-      
-      // Customize caption with business description
-      customContent[0].posts[0].proposedCaption = `Discover how ${shortDesc} can completely transform your fitness journey! Swipe to learn more about our unique approach and why it works. Save this post for reference! #FitnessJourney #TransformYourLife`;
-    }
-    
-    // Use objectives in some posts
-    if (strategyData.objectives && strategyData.objectives.length > 0) {
-      // Use objective in the second week's first post
-      if (customContent[1].posts[0]) {
-        customContent[1].posts[0].topic = strategyData.objectives[0];
-        
-        // Add caption that incorporates this objective
-        customContent[1].posts[0].proposedCaption = `Our focus on "${strategyData.objectives[0]}" has helped clients achieve amazing results. Swipe to see the transformation! Want to experience similar results? Book a consultation through the link in my bio. #FitnessGoals #RealResults`;
-      }
-      
-      // Use another objective if available
-      if (strategyData.objectives.length > 1 && customContent[2].posts[0]) {
-        customContent[2].posts[0].proposedCaption = `Let me show you the science behind how we achieve "${strategyData.objectives[1]}" with our clients. These principles are what make our approach so effective! Save this post to reference during your next workout. #FitnessFacts #EvidenceBased`;
-      }
-    }
-    
-    // Ensure all posts have captions
-    customContent.forEach(week => {
-      week.posts.forEach(post => {
-        if (!post.proposedCaption) {
-          post.proposedCaption = `Check out this ${post.type} about ${post.topic}! Designed specifically for ${post.audience}. ${post.cta} #Fitness #HealthyLifestyle`;
-        }
-      });
-    });
-    
-    return customContent;
   };
   
   const handleSaveCalendar = async () => {
@@ -724,8 +662,123 @@ export default function NewContent() {
                         <button 
                           className={styles.retryButton} 
                           onClick={() => {
-                            // If we have themes, we could implement a retry just for this week
-                            alert("Retry functionality not yet implemented");
+                            // Implement retry functionality for just this week
+                            if (!themes) {
+                              setError("Cannot retry without theme information. Please refresh the page and try again.");
+                              return;
+                            }
+                            
+                            const retryWeek = async () => {
+                              try {
+                                // Set loading state for this week
+                                setWeekLoadingStates(prev => ({
+                                  ...prev,
+                                  [week.week]: { loading: true, error: null }
+                                }));
+                                
+                                // Update UI to show loading
+                                setContentOutline(prev => {
+                                  const updated = [...prev];
+                                  const index = week.week - 1;
+                                  if (index >= 0 && index < updated.length) {
+                                    updated[index] = {
+                                      ...updated[index],
+                                      loading: true,
+                                      error: null
+                                    };
+                                  }
+                                  return updated;
+                                });
+                                
+                                // Get the aesthetic from URL
+                                const aesthetic = router.query.aesthetic || '';
+                                
+                                // Make API call to generate content for just this week
+                                const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    strategy: {
+                                      name: selectedStrategy.name,
+                                      business_description: selectedStrategy.business_description,
+                                      target_audience: selectedStrategy.target_audience,
+                                      objectives: selectedStrategy.objectives,
+                                      key_messages: selectedStrategy.key_messages
+                                    },
+                                    weekNumber: week.week,
+                                    weekTheme: week.theme,
+                                    allThemes: themes,
+                                    aesthetic: aesthetic
+                                  }),
+                                });
+                                
+                                if (!weekResponse.ok) {
+                                  const errorData = await weekResponse.json();
+                                  const errorText = errorData.error || `Status code: ${weekResponse.status}`;
+                                  console.error(`Week ${week.week} retry API error:`, errorData);
+                                  throw new Error(`Week ${week.week} API error: ${errorText}`);
+                                }
+                                
+                                const weekData = await weekResponse.json();
+                                
+                                if (!weekData || !weekData.weekContent) {
+                                  throw new Error(`Invalid week ${week.week} response format`);
+                                }
+                                
+                                console.log(`Successfully regenerated content for Week ${week.week}`);
+                                
+                                // Update the UI with this week's content
+                                setContentOutline(prev => {
+                                  const updated = [...prev];
+                                  const index = week.week - 1;
+                                  if (index >= 0 && index < updated.length) {
+                                    updated[index] = {
+                                      ...weekData.weekContent,
+                                      loading: false // Mark as loaded
+                                    };
+                                  }
+                                  return updated;
+                                });
+                                
+                                // Update loading state for this week
+                                setWeekLoadingStates(prev => ({
+                                  ...prev,
+                                  [week.week]: { loading: false, error: null }
+                                }));
+                                
+                                toast.success(`Week ${week.week} content regenerated successfully!`);
+                                
+                              } catch (retryError) {
+                                console.error(`Error retrying Week ${week.week} content:`, retryError);
+                                
+                                // Update error state for this week
+                                setWeekLoadingStates(prev => ({
+                                  ...prev,
+                                  [week.week]: { loading: false, error: retryError.message }
+                                }));
+                                
+                                // Update UI with error
+                                setContentOutline(prev => {
+                                  const updated = [...prev];
+                                  const index = week.week - 1;
+                                  if (index >= 0 && index < updated.length) {
+                                    updated[index] = {
+                                      ...updated[index],
+                                      loading: false,
+                                      error: retryError.message,
+                                      posts: [] // No posts for this week
+                                    };
+                                  }
+                                  return updated;
+                                });
+                                
+                                toast.error(`Failed to regenerate content for Week ${week.week}. Please try again.`);
+                              }
+                            };
+                            
+                            retryWeek();
                           }}
                         >
                           Retry this week

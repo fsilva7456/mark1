@@ -217,90 +217,19 @@ export default async function handler(req, res) {
     } catch (parseError) {
       console.error(`Error processing Week ${weekNumber} response:`, parseError);
       
-      // Create fallback content for this week
-      const fallbackWeekContent = {
-        week: weekNumber,
-        theme: weekTheme,
-        posts: [
-          { 
-            type: "Carousel", 
-            topic: `${weekTheme} comprehensive guide to transform your understanding and implement effective techniques`, 
-            audience: `${strategy.target_audience[0] || "Fitness enthusiasts"} who are committed to their health journey but feel stuck on a plateau. They have basic knowledge but crave deeper insights and scientific understanding of their body's responses.`,
-            cta: "Save this essential guide and revisit it during your next workout planning session",
-            principle: "Authority",
-            principleExplanation: "Expert information establishes credibility.",
-            visual: "Clean minimalist infographics with anatomical illustrations and data visualizations",
-            proposedCaption: `Learn more about ${weekTheme} in this helpful guide. Save this post to reference later! #Fitness #HealthTips`
-          },
-          { 
-            type: "Video", 
-            topic: `${weekTheme} in-depth demonstration and common mistakes to avoid for optimal results`, 
-            audience: `${strategy.target_audience[1] || "Active adults"} who work out regularly but have been experiencing minor injuries or suboptimal results. They're detail-oriented and appreciate technique refinement to maximize their efforts.`,
-            cta: "Try these precise techniques in your next workout and comment with your experience",
-            principle: "Social Proof",
-            principleExplanation: "Showing others succeeding motivates viewers.",
-            visual: "Split-screen comparison of correct vs incorrect form with highlights",
-            proposedCaption: `Watch how to properly execute this ${weekTheme} technique. Let me know if you try it in your next workout! #FitnessTips #WorkoutWednesday`
-          },
-          { 
-            type: "Image", 
-            topic: `${weekTheme} transformational success story that proves consistency beats intensity every time`, 
-            audience: `${strategy.target_audience[2] || "Beginners"} who feel intimidated by fitness culture and doubt their ability to see results. They need reassurance and realistic expectations about the transformation journey.`,
-            cta: "Comment with your biggest question about starting your own transformation journey",
-            principle: "Reciprocity",
-            principleExplanation: "Sharing valuable information creates goodwill.",
-            visual: "Authentic before/after photos with timeline milestones and key habit changes",
-            proposedCaption: `Real results from our ${weekTheme} approach. Have questions? Drop them in the comments below and I'll answer! #FitnessJourney #Results`
-          }
-        ]
-      };
-      
-      console.log(`Using fallback content for Week ${weekNumber} due to parsing error`);
-      return res.status(200).json({ weekContent: fallbackWeekContent });
+      // Return error instead of fallback content
+      return res.status(500).json({ 
+        error: `Failed to parse Week ${weekNumber} response: ${parseError.message}`,
+        details: "The API response could not be properly parsed as JSON."
+      });
     }
   } catch (error) {
     console.error('Error generating week content:', error);
     
-    // Create generic fallback response
-    const fallbackResponse = {
-      weekContent: {
-        week: req.body.weekNumber || 1,
-        theme: req.body.weekTheme || "Fitness Content",
-        posts: [
-          { 
-            type: "Carousel", 
-            topic: "Essential fitness tips collection to revolutionize your workout effectiveness and recovery", 
-            audience: "Fitness enthusiasts who have been working out consistently for 6-12 months but have hit a plateau. They're motivated but frustrated by their lack of continued progress despite putting in regular effort.",
-            cta: "Save this comprehensive guide and implement one new tip in your routine this week",
-            principle: "Authority",
-            principleExplanation: "Expert information builds trust and credibility.",
-            visual: "Progressive tip graphics with before/after demonstrations and anatomical details",
-            proposedCaption: "Essential fitness tips to improve your workout routine. Save this post for your next gym session! #FitnessTips #WorkoutAdvice"
-          },
-          { 
-            type: "Video", 
-            topic: "Detailed workout demonstration of the most effective yet overlooked exercises for full-body conditioning", 
-            audience: "Active adults aged 30-45 with busy professional lives who want to maximize their limited workout time. They have some experience but need more efficient routines for their schedule constraints.",
-            cta: "Try this scientifically-proven exercise sequence in your next workout and tag us",
-            principle: "Social Proof",
-            principleExplanation: "Showing successful examples motivates others.",
-            visual: "Professional multi-angle demonstration with technique cues and modifications",
-            proposedCaption: "Check out this effective exercise that's perfect for busy schedules. Let me know if you try it! #QuickWorkout #FitnessDemo"
-          },
-          { 
-            type: "Image", 
-            topic: "Powerful motivational content that addresses the mental barriers to consistent fitness practice", 
-            audience: "Beginners who have tried and failed at fitness routines multiple times. They struggle with self-doubt and need mental frameworks as much as physical guidance to break through their limiting beliefs.",
-            cta: "Share your biggest mental barrier in the comments and join our supportive community",
-            principle: "Consistency",
-            principleExplanation: "Small consistent efforts lead to big results.",
-            visual: "Inspirational typography on gradient background with real testimonial quote",
-            proposedCaption: "Remember: consistency beats perfection every time. Share your fitness journey in the comments! #FitnessMotivation #ConsistencyWins"
-          }
-        ]
-      }
-    };
-    
-    return res.status(200).json(fallbackResponse);
+    // Return error status and message instead of fallback content
+    return res.status(500).json({ 
+      error: `Failed to generate week ${req.body.weekNumber} content: ${error.message}`,
+      details: "Please try again later or check API key configuration."
+    });
   }
 } 

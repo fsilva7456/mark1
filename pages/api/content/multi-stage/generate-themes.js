@@ -186,28 +186,19 @@ export default async function handler(req, res) {
     } catch (parseError) {
       console.error("Error parsing Gemini response:", parseError);
       
-      // Create fallback themes in case of parsing error
-      const fallbackThemes = {
-        weeklyThemes: [
-          { week: 1, theme: "Introduction to Your Fitness Approach" },
-          { week: 2, theme: "Client Success Stories" },
-          { week: 3, theme: "Educational Fitness Content" }
-        ]
-      };
-      
-      console.log("Using fallback themes due to parsing error");
-      return res.status(200).json(fallbackThemes);
+      // Return error instead of fallback themes
+      return res.status(500).json({ 
+        error: `Failed to parse Gemini API response: ${parseError.message}`,
+        details: "The API response could not be properly interpreted as JSON."
+      });
     }
   } catch (error) {
     console.error('Error generating themes:', error);
     
-    // Even if everything fails, return some usable fallback
-    return res.status(200).json({ 
-      weeklyThemes: [
-        { week: 1, theme: "Introduction to Your Fitness Approach" },
-        { week: 2, theme: "Client Success Stories" },
-        { week: 3, theme: "Educational Fitness Content" }
-      ]
+    // Return error status and message instead of fallback content
+    return res.status(500).json({ 
+      error: `Failed to generate content themes: ${error.message}`,
+      details: "Please try again later or check API key configuration."
     });
   }
 } 
