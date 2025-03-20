@@ -30,14 +30,25 @@ export default async function handler(req, res) {
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Try a more stable model - gemini-2.0-flash might not be available
+    
+    // Define model configuration explicitly for better control
+    const modelName = "gemini-2.0-flash";
+    const generationConfig = {
+      temperature: 0.4,
+      maxOutputTokens: 300,
+    };
+    
+    // Update to use the 2.0 model and fix responseFormat configuration
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.4,
-        maxOutputTokens: 300,
-        responseFormat: { type: "json" },
-      }
+      model: modelName,
+      generationConfig: generationConfig
+    });
+    
+    // Log model configuration for debugging
+    console.log("Using model configuration:", {
+      model: modelName,
+      generationConfig: generationConfig,
+      apiKeyLength: apiKey ? apiKey.length : 0
     });
     
     // Create a very focused prompt just for theme generation
@@ -67,7 +78,7 @@ export default async function handler(req, res) {
       3. Clearly state the benefit to the audience
       4. Make it memorable and engaging
       
-      RETURN ONLY THIS JSON STRUCTURE:
+      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
       {"weeklyThemes":[{"week":1,"theme":"Theme for Week 1"},{"week":2,"theme":"Theme for Week 2"},{"week":3,"theme":"Theme for Week 3"}]}
     `;
     
@@ -84,7 +95,7 @@ export default async function handler(req, res) {
         
         // Extra debug info
         console.log("API key exists:", !!apiKey);
-        console.log("Model being used:", "gemini-1.5-flash");
+        console.log("Model being used:", modelName);
         console.log("Strategy data preview:", JSON.stringify({
           has_business_desc: !!strategy.business_description,
           target_audience_count: strategy.target_audience?.length || 0,

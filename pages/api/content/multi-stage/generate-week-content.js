@@ -35,14 +35,25 @@ export default async function handler(req, res) {
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
-    // Use the more stable model
+    
+    // Define model configuration explicitly for better control
+    const modelName = "gemini-2.0-flash";
+    const generationConfig = {
+      temperature: 0.5,
+      maxOutputTokens: 800,
+    };
+    
+    // Update to use the 2.0 model
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.5,
-        maxOutputTokens: 800,
-        responseFormat: { type: "json" },
-      }
+      model: modelName,
+      generationConfig: generationConfig
+    });
+    
+    // Log model configuration for debugging
+    console.log("Using model configuration:", {
+      model: modelName,
+      generationConfig: generationConfig,
+      apiKeyLength: apiKey ? apiKey.length : 0
     });
     
     // Construct a prompt for just this week's content
@@ -84,7 +95,7 @@ export default async function handler(req, res) {
       
       Make each post highly specific and actionable with a clear purpose aligned with the objectives.
       
-      RETURN ONLY THIS JSON FORMAT:
+      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
       {"posts":[{"type":"","topic":"","audience":"","cta":"","principle":"","principleExplanation":"","visual":"","proposedCaption":""}]}
     `;
     
@@ -101,7 +112,7 @@ export default async function handler(req, res) {
         
         // Extra debug info
         console.log("API key exists:", !!apiKey);
-        console.log("Model being used:", "gemini-1.5-flash");
+        console.log("Model being used:", modelName);
         console.log("Week data:", JSON.stringify({
           weekNumber,
           weekTheme,
