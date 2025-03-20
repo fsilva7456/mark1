@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { strategy } = req.body;
+    const { strategy, aesthetic } = req.body;
     
     if (!strategy || !strategy.target_audience || !strategy.objectives || !strategy.key_messages) {
       return res.status(400).json({ 
@@ -26,6 +26,7 @@ export default async function handler(req, res) {
     // Extra debug info about the key
     console.log("API key exists:", !!apiKey);
     console.log("API key length:", apiKey ? apiKey.length : 0);
+    console.log("Aesthetic value provided:", aesthetic || "None provided");
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -54,7 +55,11 @@ export default async function handler(req, res) {
       KEY MESSAGES:
       ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
+      ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
+      
       Make each week's theme match one of the key messages. Each theme should be specific (8-12 words) and clearly communicate the core value proposition for that week.
+      
+      ${aesthetic ? `Ensure that all themes align with the specified aesthetic/style: "${aesthetic}"` : ''}
       
       For each theme:
       1. Focus on ONE specific key message
@@ -84,7 +89,8 @@ export default async function handler(req, res) {
           has_business_desc: !!strategy.business_description,
           target_audience_count: strategy.target_audience?.length || 0,
           objectives_count: strategy.objectives?.length || 0,
-          key_messages_count: strategy.key_messages?.length || 0
+          key_messages_count: strategy.key_messages?.length || 0,
+          aesthetic_provided: !!aesthetic
         }));
         
         result = await model.generateContent({

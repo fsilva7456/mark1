@@ -6,12 +6,12 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { strategy, weekNumber, weekTheme, allThemes } = req.body;
+    const { strategy, weekNumber, weekTheme, allThemes, aesthetic } = req.body;
     
     if (!strategy || !weekNumber || !weekTheme) {
       return res.status(400).json({ 
         error: 'Missing required parameters',
-        received: JSON.stringify({ strategy: !!strategy, weekNumber, weekTheme, allThemes: !!allThemes })
+        received: JSON.stringify({ strategy: !!strategy, weekNumber, weekTheme, allThemes: !!allThemes, aesthetic: !!aesthetic })
       });
     }
     
@@ -31,6 +31,7 @@ export default async function handler(req, res) {
     // Extra debug info about the key
     console.log("API key exists:", !!apiKey);
     console.log("API key length:", apiKey ? apiKey.length : 0);
+    console.log("Aesthetic value provided:", aesthetic || "None provided");
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -61,6 +62,8 @@ export default async function handler(req, res) {
       KEY MESSAGES:
       ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
+      ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
+      
       ${allThemes ? `CONTENT PLAN CONTEXT:
       Week 1: "${allThemes[0].theme}"
       Week 2: "${allThemes[1].theme}"
@@ -76,6 +79,8 @@ export default async function handler(req, res) {
       - principleExplanation (1 short sentence only)
       - visual (2-3 words description)
       - proposedCaption (75-100 words with hashtags at the end)
+      
+      ${aesthetic ? `Make sure all posts align with the specified aesthetic/style: "${aesthetic}". The visual concepts and caption tone should reflect this aesthetic.` : ''}
       
       Make each post highly specific and actionable with a clear purpose aligned with the objectives.
       
@@ -102,7 +107,8 @@ export default async function handler(req, res) {
           weekTheme,
           has_allThemes: !!allThemes,
           has_business_desc: !!strategy.business_description,
-          target_audience_count: strategy.target_audience?.length || 0
+          target_audience_count: strategy.target_audience?.length || 0,
+          aesthetic_provided: !!aesthetic
         }));
         
         result = await model.generateContent({

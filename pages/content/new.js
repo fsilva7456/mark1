@@ -272,6 +272,10 @@ export default function NewContent() {
       // Reset any previous errors
       setError('');
       
+      // Get aesthetic from URL if available
+      const aesthetic = router.query.aesthetic || '';
+      console.log("Aesthetic from URL:", aesthetic);
+      
       // Validate that we have the required strategy data
       if (!strategyData || !strategyData.target_audience || !strategyData.objectives || !strategyData.key_messages) {
         console.error("Invalid strategy data format:", strategyData);
@@ -307,7 +311,8 @@ export default function NewContent() {
               target_audience: strategyData.target_audience,
               objectives: strategyData.objectives,
               key_messages: strategyData.key_messages
-            }
+            },
+            aesthetic: aesthetic
           }),
         });
         
@@ -370,7 +375,8 @@ export default function NewContent() {
                 },
                 weekNumber: weekTheme.week,
                 weekTheme: weekTheme.theme,
-                allThemes: themesData.weeklyThemes
+                allThemes: themesData.weeklyThemes,
+                aesthetic: aesthetic
               }),
             });
             
