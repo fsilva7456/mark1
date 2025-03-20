@@ -730,6 +730,12 @@ export default function NewContent() {
                   <div key={weekIndex} className={styles.weekSection}>
                     <h2>Week {week.week}: {week.theme}</h2>
                     
+                    {week.objective && (
+                      <div className={styles.weekObjective}>
+                        <span className={styles.objectiveLabel}>Objective:</span> {week.objective}
+                      </div>
+                    )}
+                    
                     {week.loading || weekLoadingStates[week.week]?.loading ? (
                       <div className={styles.loadingSection}>
                         <div className={styles.spinnerSmall}></div>

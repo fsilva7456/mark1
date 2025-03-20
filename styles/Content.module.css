@@ -582,4 +582,21 @@
 
 .retryButton:hover {
   background-color: #fff2f0;
+}
+
+/* Add these new classes for week objectives */
+.weekObjective {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #4a5568;
+  background-color: #f7fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #3454D1;
+}
+
+.objectiveLabel {
+  font-weight: 600;
+  color: #2d3748;
 } 
