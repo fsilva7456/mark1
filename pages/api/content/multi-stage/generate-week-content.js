@@ -15,6 +15,14 @@ export default async function handler(req, res) {
       });
     }
     
+    // Extract the week's objective - it could come from the allThemes or as a separate parameter
+    const weekObjective = (allThemes && allThemes[weekNumber-1] && allThemes[weekNumber-1].objective) || 
+                          req.body.weekObjective || 
+                          (strategy.objectives && strategy.objectives[(weekNumber-1) % strategy.objectives.length]) ||
+                          `Engage audience with valuable fitness content`;
+    
+    console.log(`Week ${weekNumber} objective:`, weekObjective);
+    
     // Check weekNumber is valid
     if (weekNumber < 1 || weekNumber > 3) {
       return res.status(400).json({ error: 'Week number must be between 1 and 3' });
@@ -62,6 +70,8 @@ export default async function handler(req, res) {
 
       WEEK THEME: "${weekTheme}"
       
+      WEEK OBJECTIVE: "${weekObjective}"
+      
       BUSINESS: "${strategy.business_description || 'Fitness business'}"
       
       TARGET AUDIENCE:
@@ -76,10 +86,12 @@ export default async function handler(req, res) {
       ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
       
       ${allThemes ? `CONTENT PLAN CONTEXT:
-      Week 1: "${allThemes[0].theme}"
-      Week 2: "${allThemes[1].theme}"
-      Week 3: "${allThemes[2].theme}"
+      Week 1: "${allThemes[0].theme}" - Objective: "${allThemes[0].objective || 'Engage audience'}"
+      Week 2: "${allThemes[1].theme}" - Objective: "${allThemes[1].objective || 'Provide value'}"
+      Week 3: "${allThemes[2].theme}" - Objective: "${allThemes[2].objective || 'Drive action'}"
       ` : ''}
+      
+      Focus all posts on achieving this week's specific objective. Make sure each post contributes directly to the week's objective.
       
       Each post must include these fields:
       - type (choose from: Carousel, Video, Reel, Story, Image)
@@ -322,6 +334,7 @@ export default async function handler(req, res) {
       const weekContent = {
         week: weekNumber,
         theme: weekTheme,
+        objective: weekObjective,
         posts: jsonData.posts
       };
       

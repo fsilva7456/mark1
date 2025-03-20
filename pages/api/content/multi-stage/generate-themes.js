@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     
     // Simplify the prompt to reduce chances of malformed JSON
     const prompt = `
-      Create 3 weekly content themes for a fitness social media campaign.
+      Create 3 weekly content themes for a fitness social media campaign, each with a specific objective.
 
       BUSINESS: "${strategy.business_description || 'Fitness business'}"
       
@@ -68,12 +68,21 @@ export default async function handler(req, res) {
       
       ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
       
-      Make each week's theme match one of the key messages. Each theme should be specific (8-12 words) and communicate the core value proposition.
+      For each week:
+      1. Create a theme that matches one of the key messages (8-12 words)
+      2. Assign a specific, focused objective for that week's content
       
-      IMPORTANT: Avoid using quotes or special characters in your response that could break JSON syntax.
+      IMPORTANT: 
+      - Avoid using quotes or special characters in your response that could break JSON syntax
+      - Each week should have a different objective focusing on a specific aspect of the business
+      - Make the objectives actionable and measurable
       
       RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
-      {"weeklyThemes":[{"week":1,"theme":"Theme for Week 1"},{"week":2,"theme":"Theme for Week 2"},{"week":3,"theme":"Theme for Week 3"}]}
+      {"weeklyThemes":[
+        {"week":1,"theme":"Theme for Week 1","objective":"Specific objective for Week 1"},
+        {"week":2,"theme":"Theme for Week 2","objective":"Specific objective for Week 2"},
+        {"week":3,"theme":"Theme for Week 3","objective":"Specific objective for Week 3"}
+      ]}
     `;
     
     console.log("Sending theme generation prompt to Gemini API...");
@@ -208,7 +217,9 @@ export default async function handler(req, res) {
                     week: i + 1,
                     theme: strategy.key_messages[i] ? 
                       `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-                      `Week ${i + 1}: Fitness Content`
+                      `Week ${i + 1}: Fitness Content`,
+                    objective: strategy.objectives[i % strategy.objectives.length] || 
+                      `Increase engagement through focused content for week ${i+1}`
                   });
                 }
               }
@@ -260,7 +271,9 @@ export default async function handler(req, res) {
               week: i + 1,
               theme: strategy.key_messages[i] ? 
                 `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-                `Week ${i + 1}: Fitness Content`
+                `Week ${i + 1}: Fitness Content`,
+              objective: strategy.objectives[i % strategy.objectives.length] || 
+                `Increase engagement through focused content for week ${i+1}`
             });
           }
           
@@ -286,7 +299,9 @@ export default async function handler(req, res) {
             week: i + 1,
             theme: strategy.key_messages[i] ? 
               `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-              `Week ${i + 1}: Fitness Content`
+              `Week ${i + 1}: Fitness Content`,
+            objective: strategy.objectives[i % strategy.objectives.length] || 
+              `Increase engagement through focused content for week ${i+1}`
           });
         }
         
@@ -308,12 +323,16 @@ export default async function handler(req, res) {
       
       // Validate and sanitize each theme object to ensure all fields exist
       jsonData.weeklyThemes = jsonData.weeklyThemes.map((theme, index) => {
+        const objectiveDefault = strategy.objectives[index % strategy.objectives.length] || 
+          `Increase engagement through ${strategy.key_messages[index % strategy.key_messages.length] || 'fitness content'}`;
+        
         // Create a valid theme object with defaults for any missing fields
         return {
           week: theme.week || index + 1,
           theme: theme.theme || (strategy.key_messages[index] ? 
             `Week ${index + 1}: ${strategy.key_messages[index].substring(0, 30)}...` : 
-            `Week ${index + 1}: Fitness Content`)
+            `Week ${index + 1}: Fitness Content`),
+          objective: theme.objective || objectiveDefault
         };
       });
       
@@ -362,13 +381,14 @@ function fixUnterminatedStrings(jsonText) {
 function extractThemesFromText(text) {
   const themes = [];
   
-  // Look for week numbers and themes in the text using various patterns
+  // Look for week numbers, themes, and objectives in the text using various patterns
   const weekMatches = text.match(/week"?\s*:\s*(\d+)/g) || [];
   const themeMatches = text.match(/theme"?\s*:\s*"([^"]+)"/g) || [];
+  const objectiveMatches = text.match(/objective"?\s*:\s*"([^"]+)"/g) || [];
   
   // If we have both week numbers and themes
   if (weekMatches.length > 0 && themeMatches.length > 0) {
-    // Use the smaller count to determine how many themes we can extract
+    // Use the smallest count to determine how many themes we can extract
     const count = Math.min(weekMatches.length, themeMatches.length);
     
     for (let i = 0; i < count; i++) {
@@ -380,7 +400,12 @@ function extractThemesFromText(text) {
       const themeMatch = themeMatches[i].match(/:\s*"([^"]*)"/);
       const theme = themeMatch ? themeMatch[1] : `Fitness Content for Week ${i + 1}`;
       
-      themes.push({ week, theme });
+      // Extract the objective or use default
+      const objectiveMatch = i < objectiveMatches.length ? objectiveMatches[i].match(/:\s*"([^"]*)"/): null;
+      const objective = objectiveMatch ? objectiveMatch[1] : 
+        strategy.objectives[i % strategy.objectives.length] || `Increase engagement through focused content`;
+      
+      themes.push({ week, theme, objective });
     }
   } else {
     // Fallback - look for any week-like patterns in the text
@@ -393,7 +418,10 @@ function extractThemesFromText(text) {
       
       // Only add if we have both week number and theme text
       if (week && theme) {
-        themes.push({ week, theme });
+        const objective = strategy.objectives[(week-1) % strategy.objectives.length] || 
+          `Increase engagement through focused content for week ${week}`;
+        
+        themes.push({ week, theme, objective });
       }
     }
   }
@@ -410,7 +438,9 @@ function extractThemesFromText(text) {
         week,
         theme: strategy.key_messages[week - 1] ? 
           `${strategy.key_messages[week - 1].substring(0, 30)}...` : 
-          `Fitness Content for Week ${week}`
+          `Fitness Content for Week ${week}`,
+        objective: strategy.objectives[(week-1) % strategy.objectives.length] || 
+          `Increase engagement through focused content for week ${week}`
       });
     }
     

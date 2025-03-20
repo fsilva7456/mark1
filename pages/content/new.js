@@ -6,6 +6,7 @@ import styles from '../../styles/Content.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { RefreshIcon } from '@heroicons/react/24/outline';
 
 const mockContent = [
   {
@@ -340,7 +341,8 @@ export default function NewContent() {
             if (index >= 0 && index < updated.length) {
               updated[index] = {
                 ...updated[index],
-                theme: theme.theme
+                theme: theme.theme,
+                objective: theme.objective
               };
             }
           });
@@ -377,6 +379,7 @@ export default function NewContent() {
                 },
                 weekNumber: weekTheme.week,
                 weekTheme: weekTheme.theme,
+                weekObjective: weekTheme.objective,
                 allThemes: themesData.weeklyThemes,
                 aesthetic: aesthetic
               }),
@@ -407,7 +410,8 @@ export default function NewContent() {
               if (index >= 0 && index < updated.length) {
                 updated[index] = {
                   ...weekData.weekContent,
-                  loading: false // Mark as loaded
+                  loading: false, // Mark as loaded
+                  objective: weekTheme.objective
                 };
               }
               return updated;
@@ -437,7 +441,8 @@ export default function NewContent() {
                   ...updated[index],
                   loading: false,
                   error: weekError.message,
-                  posts: [] // No posts for this week
+                  posts: [], // No posts for this week
+                  objective: weekTheme.objective
                 };
               }
               return updated;
@@ -581,7 +586,8 @@ export default function NewContent() {
                 principle_explanation: post.principleExplanation,
                 visual: post.visual,
                 proposed_caption: post.proposedCaption
-              }))
+              })),
+              objective: post.objective
             })),
             daily_engagement: dailyEngagement
           }
@@ -601,6 +607,79 @@ export default function NewContent() {
       toast.dismiss();
       console.error("Error saving content plan:", error);
       toast.error("Failed to save content plan");
+    }
+  };
+
+  const handleRetryWeek = async (weekNumber) => {
+    if (!contentOutline.some(week => week.week === weekNumber && week.loading)) {
+      setError("No content to retry for this week.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const weekToRetry = contentOutline.find(week => week.week === weekNumber);
+      if (!weekToRetry) {
+        throw new Error("Week not found in content outline.");
+      }
+
+      const aesthetic = router.query.aesthetic || '';
+
+      const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          strategy: {
+            name: selectedStrategy.name,
+            business_description: selectedStrategy.business_description,
+            target_audience: selectedStrategy.target_audience,
+            objectives: selectedStrategy.objectives,
+            key_messages: selectedStrategy.key_messages
+          },
+          weekNumber: weekNumber,
+          weekTheme: weekToRetry.theme,
+          weekObjective: weekToRetry.objective,
+          allThemes: contentOutline,
+          aesthetic: aesthetic
+        }),
+      });
+
+      if (!weekResponse.ok) {
+        const errorData = await weekResponse.json();
+        throw new Error(errorData.error || `Status code: ${weekResponse.status}`);
+      }
+
+      const weekData = await weekResponse.json();
+
+      if (!weekData || !weekData.weekContent) {
+        throw new Error('Invalid week response format');
+      }
+
+      console.log(`Successfully regenerated content for Week ${weekNumber}`);
+
+      setContentOutline(prev => {
+        const updated = [...prev];
+        const index = updated.findIndex(w => w.week === weekNumber);
+        if (index !== -1) {
+          updated[index] = {
+            ...weekData.weekContent,
+            loading: false,
+            objective: weekToRetry.objective
+          };
+        }
+        return updated;
+      });
+
+      toast.success(`Week ${weekNumber} content regenerated successfully!`);
+    } catch (error) {
+      console.error(`Error retrying Week ${weekNumber}:`, error);
+      setError(`Failed to regenerate content for Week ${weekNumber}: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -661,125 +740,8 @@ export default function NewContent() {
                         <p>Error generating content for this week: {week.error || weekLoadingStates[week.week]?.error}</p>
                         <button 
                           className={styles.retryButton} 
-                          onClick={() => {
-                            // Implement retry functionality for just this week
-                            if (!themes) {
-                              setError("Cannot retry without theme information. Please refresh the page and try again.");
-                              return;
-                            }
-                            
-                            const retryWeek = async () => {
-                              try {
-                                // Set loading state for this week
-                                setWeekLoadingStates(prev => ({
-                                  ...prev,
-                                  [week.week]: { loading: true, error: null }
-                                }));
-                                
-                                // Update UI to show loading
-                                setContentOutline(prev => {
-                                  const updated = [...prev];
-                                  const index = week.week - 1;
-                                  if (index >= 0 && index < updated.length) {
-                                    updated[index] = {
-                                      ...updated[index],
-                                      loading: true,
-                                      error: null
-                                    };
-                                  }
-                                  return updated;
-                                });
-                                
-                                // Get the aesthetic from URL
-                                const aesthetic = router.query.aesthetic || '';
-                                
-                                // Make API call to generate content for just this week
-                                const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  body: JSON.stringify({
-                                    strategy: {
-                                      name: selectedStrategy.name,
-                                      business_description: selectedStrategy.business_description,
-                                      target_audience: selectedStrategy.target_audience,
-                                      objectives: selectedStrategy.objectives,
-                                      key_messages: selectedStrategy.key_messages
-                                    },
-                                    weekNumber: week.week,
-                                    weekTheme: week.theme,
-                                    allThemes: themes,
-                                    aesthetic: aesthetic
-                                  }),
-                                });
-                                
-                                if (!weekResponse.ok) {
-                                  const errorData = await weekResponse.json();
-                                  const errorText = errorData.error || `Status code: ${weekResponse.status}`;
-                                  console.error(`Week ${week.week} retry API error:`, errorData);
-                                  throw new Error(`Week ${week.week} API error: ${errorText}`);
-                                }
-                                
-                                const weekData = await weekResponse.json();
-                                
-                                if (!weekData || !weekData.weekContent) {
-                                  throw new Error(`Invalid week ${week.week} response format`);
-                                }
-                                
-                                console.log(`Successfully regenerated content for Week ${week.week}`);
-                                
-                                // Update the UI with this week's content
-                                setContentOutline(prev => {
-                                  const updated = [...prev];
-                                  const index = week.week - 1;
-                                  if (index >= 0 && index < updated.length) {
-                                    updated[index] = {
-                                      ...weekData.weekContent,
-                                      loading: false // Mark as loaded
-                                    };
-                                  }
-                                  return updated;
-                                });
-                                
-                                // Update loading state for this week
-                                setWeekLoadingStates(prev => ({
-                                  ...prev,
-                                  [week.week]: { loading: false, error: null }
-                                }));
-                                
-                                toast.success(`Week ${week.week} content regenerated successfully!`);
-                                
-                              } catch (retryError) {
-                                console.error(`Error retrying Week ${week.week} content:`, retryError);
-                                
-                                // Update error state for this week
-                                setWeekLoadingStates(prev => ({
-                                  ...prev,
-                                  [week.week]: { loading: false, error: retryError.message }
-                                }));
-                                
-                                // Update UI with error
-                                setContentOutline(prev => {
-                                  const updated = [...prev];
-                                  const index = week.week - 1;
-                                  if (index >= 0 && index < updated.length) {
-                                    updated[index] = {
-                                      ...updated[index],
-                                      loading: false,
-                                      error: retryError.message,
-                                      posts: [] // No posts for this week
-                                    };
-                                  }
-                                  return updated;
-                                });
-                                
-                                toast.error(`Failed to regenerate content for Week ${week.week}. Please try again.`);
-                              }
-                            };
-                            
-                            retryWeek();
-                          }}
+                          onClick={() => handleRetryWeek(week.week)}
+                          disabled={contentOutline.some(w => w.loading)}
                         >
                           Retry this week
                         </button>
