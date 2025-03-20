@@ -70,18 +70,20 @@ export default async function handler(req, res) {
       
       For each week:
       1. Create a theme that matches one of the key messages (8-12 words)
-      2. Assign a specific, focused objective for that week's content
+      2. Assign a specific, focused objective for that week's content that describes EXACTLY what you want customers to DO
       
       IMPORTANT: 
       - Avoid using quotes or special characters in your response that could break JSON syntax
-      - Each week should have a different objective focusing on a specific aspect of the business
-      - Make the objectives actionable and measurable
+      - Each week should have a different objective focusing on specific customer ACTIONS or BEHAVIORS
+      - Make the objectives clear, actionable, and measurable - what should customers DO after seeing this content?
+      - Objectives should start with action verbs (Book, Download, Try, Sign up, Share, Tag, etc.)
+      - Examples: "Sign up for a free trial class", "Download our workout guide", "Tag a friend in comments", "Book a consultation"
       
       RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
       {"weeklyThemes":[
-        {"week":1,"theme":"Theme for Week 1","objective":"Specific objective for Week 1"},
-        {"week":2,"theme":"Theme for Week 2","objective":"Specific objective for Week 2"},
-        {"week":3,"theme":"Theme for Week 3","objective":"Specific objective for Week 3"}
+        {"week":1,"theme":"Theme for Week 1","objective":"Specific customer action for Week 1"},
+        {"week":2,"theme":"Theme for Week 2","objective":"Specific customer action for Week 2"},
+        {"week":3,"theme":"Theme for Week 3","objective":"Specific customer action for Week 3"}
       ]}
     `;
     
@@ -403,7 +405,7 @@ function extractThemesFromText(text) {
       // Extract the objective or use default
       const objectiveMatch = i < objectiveMatches.length ? objectiveMatches[i].match(/:\s*"([^"]*)"/): null;
       const objective = objectiveMatch ? objectiveMatch[1] : 
-        strategy.objectives[i % strategy.objectives.length] || `Increase engagement through focused content`;
+        `${getActionVerb()} ${getCustomerAction(i, strategy)}`;
       
       themes.push({ week, theme, objective });
     }
@@ -418,8 +420,7 @@ function extractThemesFromText(text) {
       
       // Only add if we have both week number and theme text
       if (week && theme) {
-        const objective = strategy.objectives[(week-1) % strategy.objectives.length] || 
-          `Increase engagement through focused content for week ${week}`;
+        const objective = `${getActionVerb()} ${getCustomerAction(week-1, strategy)}`;
         
         themes.push({ week, theme, objective });
       }
@@ -451,4 +452,67 @@ function extractThemesFromText(text) {
   }
   
   return themes;
+}
+
+// Add these new utility functions to improve the fallback objectives
+function getActionVerb() {
+  const verbs = [
+    "Book", "Schedule", "Sign up for", "Register for", "Join", "Attend", 
+    "Download", "Try", "Start", "Implement", "Follow", "Share", "Tag", 
+    "Comment on", "Save", "Like", "Subscribe to", "Contact us about"
+  ];
+  return verbs[Math.floor(Math.random() * verbs.length)];
+}
+
+function getCustomerAction(index, strategy) {
+  // Create specific customer actions based on the strategy
+  const actions = [
+    "a free consultation to discuss fitness goals",
+    "our beginner-friendly fitness class",
+    "the 7-day meal plan",
+    "workout routines with a friend",
+    "our fitness challenge",
+    "a personal training session",
+    "our workout guide PDF",
+    "implementing one new healthy habit",
+    "our fitness app",
+    "a friend who would enjoy our content",
+    "with your own fitness journey story",
+    "this post for future reference",
+    "us for daily motivation",
+    "your fitness questions in the comments"
+  ];
+  
+  // Use key messages or objectives if available to make actions more specific
+  if (strategy.key_messages && strategy.key_messages.length > 0) {
+    const message = strategy.key_messages[index % strategy.key_messages.length];
+    return extractActionFromMessage(message, actions[index % actions.length]);
+  }
+  
+  return actions[index % actions.length];
+}
+
+function extractActionFromMessage(message, fallback) {
+  // Try to generate a more targeted action based on the message
+  if (!message) return fallback;
+  
+  const messageLower = message.toLowerCase();
+  
+  if (messageLower.includes("class") || messageLower.includes("session")) {
+    return "a fitness class to experience our approach firsthand";
+  } else if (messageLower.includes("meal") || messageLower.includes("nutrition") || messageLower.includes("diet")) {
+    return "our customized meal planning service";
+  } else if (messageLower.includes("consult") || messageLower.includes("advice")) {
+    return "a free consultation with our fitness experts";
+  } else if (messageLower.includes("plan") || messageLower.includes("program")) {
+    return "our structured fitness program";
+  } else if (messageLower.includes("community") || messageLower.includes("group")) {
+    return "our fitness community and attend a group session";
+  } else if (messageLower.includes("transform") || messageLower.includes("change")) {
+    return "our transformation challenge and track your progress";
+  } else if (messageLower.includes("guide") || messageLower.includes("resource")) {
+    return "our fitness resource guide and implement one tip";
+  }
+  
+  return fallback;
 } 

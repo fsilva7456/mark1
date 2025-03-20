@@ -91,13 +91,17 @@ export default async function handler(req, res) {
       Week 3: "${allThemes[2].theme}" - Objective: "${allThemes[2].objective || 'Drive action'}"
       ` : ''}
       
-      Focus all posts on achieving this week's specific objective. Make sure each post contributes directly to the week's objective.
+      IMPORTANT CUSTOMER ACTION INSTRUCTIONS:
+      - All 3 posts must focus on getting customers to take the specific action in the WEEK OBJECTIVE
+      - Design each post to directly encourage and facilitate this customer action
+      - Use persuasive techniques and clear CTAs that drive toward the specific objective
+      - Create posts that work together toward the same customer action goal but through different approaches
       
       Each post must include these fields:
       - type (choose from: Carousel, Video, Reel, Story, Image)
-      - topic (12-20 words describing the specific objective of the post)
+      - topic (12-20 words describing how this post supports the customer action objective)
       - audience (2-3 sentences describing the target audience)
-      - cta (call to action, 10-15 words)
+      - cta (call to action that explicitly supports the week's objective, 10-15 words)
       - principle (one persuasion principle)
       - principleExplanation (1 short sentence only)
       - visual (5-8 words description)
@@ -318,15 +322,19 @@ export default async function handler(req, res) {
       // Validate and sanitize each post object to ensure all fields exist
       jsonData.posts = jsonData.posts.map((post, index) => {
         // Create a valid post object with defaults for any missing fields
+        // Extract the action verb from the objective if possible
+        const objectiveParts = weekObjective ? weekObjective.split(' ') : [];
+        const actionVerb = objectiveParts.length > 0 ? objectiveParts[0] : "Try";
+        
         return {
           type: post.type || ["Carousel", "Video", "Reel"][index % 3],
-          topic: post.topic || `${weekTheme} fitness content (part ${index + 1})`,
+          topic: post.topic || `How to ${weekObjective.toLowerCase()} with our proven approach (part ${index + 1})`,
           audience: post.audience || "Fitness enthusiasts looking to improve their routines",
-          cta: post.cta || "Follow for more fitness tips",
-          principle: post.principle || "Authority",
-          principleExplanation: post.principleExplanation || "People trust expert advice",
-          visual: post.visual || "Professional fitness demonstration",
-          proposedCaption: post.proposedCaption || `Week ${weekNumber} fitness content. #Fitness #Wellness`
+          cta: post.cta || weekObjective || "Follow for more fitness tips",
+          principle: post.principle || ["Social Proof", "Authority", "Scarcity"][index % 3],
+          principleExplanation: post.principleExplanation || "People are more likely to take action when they see others doing it",
+          visual: post.visual || "Professional demonstration of the recommended approach",
+          proposedCaption: post.proposedCaption || `Ready to take your fitness to the next level? This post will show you exactly how to ${weekObjective.toLowerCase()}. #Fitness #${actionVerb.replace(/\s+/g, '')}Today`
         };
       });
       
