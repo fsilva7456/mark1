@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
     
     // Check for API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
     if (!apiKey) {
       console.error('Missing Gemini API key');
       return res.status(500).json({ error: 'Server configuration error: Missing API key' });
