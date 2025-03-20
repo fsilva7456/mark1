@@ -121,7 +121,12 @@ export default function NewStrategy() {
         return `Great! Now let's focus on your marketing objectives. What specific actions do you want your target audience to take? For example, are you looking to get them to sign up for classes, follow your social media, or schedule consultations?`;
       }
       
-      // Fifth message - after user describes unique approach
+      // Fifth message - after user describes objectives
+      if (messages.length === 7) {
+        return `Thanks for sharing your objectives. Now, what makes your fitness approach unique compared to others in your area? What's your unique selling proposition or competitive advantage?`;
+      }
+      
+      // Sixth message - after user describes unique approach
       if (messages.length === 9) {
         return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? For example, videos, photos, written posts, social media stories, etc.`;
       }
