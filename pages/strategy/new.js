@@ -884,7 +884,10 @@ export default function NewStrategy() {
                   }
                 </div>
                 
-                {aiSuggestions.length > 0 && currentQuestionIndex > 0 && (
+                {aiSuggestions.length > 0 && 
+                 currentQuestionIndex > 0 && 
+                 !messages[messages.length-1]?.text.includes("building your marketing strategy") &&
+                 !messages[messages.length-1]?.text.includes("enough information to create a marketing strategy matrix") && (
                   <div className={styles.aiSuggestionsContainer}>
                     {isLoadingSuggestions ? (
                       <div className={styles.loadingSpinner}></div>
