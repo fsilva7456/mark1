@@ -51,41 +51,115 @@ export default async function handler(req, res) {
       apiKeyLength: apiKey ? apiKey.length : 0
     });
     
-    // Simplify the prompt to reduce chances of malformed JSON
-    const prompt = `
-      Create 3 weekly content themes for a fitness social media campaign, each with a specific objective.
+    // Check if we have the enhanced strategy data
+    const hasEnhancedData = strategy.enhancedStrategy && strategy.enhancedStrategy.audiences;
 
-      BUSINESS: "${strategy.business_description || 'Fitness business'}"
-      
-      TARGET AUDIENCE:
-      ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
-      
-      OBJECTIVES:
-      ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
-      
-      KEY MESSAGES:
-      ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
-      
-      ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
-      
-      For each week:
-      1. Create a theme that matches one of the key messages (8-12 words)
-      2. Assign a specific, focused objective for that week's content that describes EXACTLY what you want customers to DO
-      
-      IMPORTANT: 
-      - Avoid using quotes or special characters in your response that could break JSON syntax
-      - Each week should have a different objective focusing on specific customer ACTIONS or BEHAVIORS
-      - Make the objectives clear, actionable, and measurable - what should customers DO after seeing this content?
-      - Objectives should start with action verbs (Book, Download, Try, Sign up, Share, Tag, etc.)
-      - Examples: "Sign up for a free trial class", "Download our workout guide", "Tag a friend in comments", "Book a consultation"
-      
-      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
-      {"weeklyThemes":[
-        {"week":1,"theme":"Theme for Week 1","objective":"Specific customer action for Week 1"},
-        {"week":2,"theme":"Theme for Week 2","objective":"Specific customer action for Week 2"},
-        {"week":3,"theme":"Theme for Week 3","objective":"Specific customer action for Week 3"}
-      ]}
-    `;
+    // Create a more detailed prompt using the enhanced data if available
+    let prompt;
+
+    if (hasEnhancedData) {
+      prompt = `
+        You are a fitness content strategy expert. Create a strategic 3-week content plan with themes that target specific audience segments.
+        
+        BUSINESS DETAILS:
+        "${strategy.business_description || 'Fitness business'}"
+        
+        AUDIENCE SEGMENTS (3):
+        ${strategy.enhancedStrategy.audiences.map((audience, i) => 
+          `${i+1}. ${audience.segment}
+           - Pain Points: ${audience.painPoints.join(', ')}
+           - Goals: ${audience.goals.join(', ')}
+           - Preferred Channels: ${audience.channels.join(', ')}
+           - Decision Factors: ${audience.decisionFactors.join(', ')}`
+        ).join('\n\n')}
+        
+        CONTENT STRATEGY GUIDELINES:
+        - Tone of Voice: ${strategy.enhancedStrategy.contentStrategy.tone}
+        - Brand Values: ${strategy.enhancedStrategy.contentStrategy.brandValues.join(', ')}
+        - Campaign Goals: ${strategy.enhancedStrategy.contentStrategy.campaignGoals.join(', ')}
+        
+        COMPETITIVE GAPS TO EXPLOIT:
+        ${strategy.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, i) => 
+          `- ${gap}: ${strategy.enhancedStrategy.competitiveGaps.exploitationStrategies[i] || 'Highlight this gap'}`
+        ).join('\n')}
+        
+        IMPLEMENTATION TIMELINE - 3 WEEK CAMPAIGN:
+        Phase 1 (Week 1): Awareness - Introduce value proposition and build brand recognition
+        Phase 2 (Week 2): Consideration - Demonstrate expertise and address objections
+        Phase 3 (Week 3): Conversion - Drive specific actions and provide clear next steps
+        
+        TASK:
+        Create 3 weekly content themes where:
+        1. Each week targets a different audience segment (assign Week 1 to audience segment 1, Week 2 to segment 2, Week 3 to segment 3)
+        2. Each theme aligns with the appropriate timeline phase (awareness, consideration, conversion)
+        3. Each theme includes a specific, actionable objective that provides a clear metric for success
+        4. Themes should leverage the competitive gaps identified
+        
+        For each week, provide:
+        1. A specific theme title (8-12 words that captures the essence of content focus)
+        2. A specific objective for that week (should be actionable and measurable)
+        3. The target audience segment (specify which of the 3 segments this week focuses on)
+        
+        RESPOND WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
+        {
+          "weeklyThemes": [
+            {
+              "week": 1,
+              "theme": "Theme title focusing on awareness for segment 1",
+              "objective": "Specific measurable objective for Week 1",
+              "targetSegment": "Name of audience segment 1",
+              "phase": "Awareness"
+            },
+            {
+              "week": 2,
+              "theme": "Theme title focusing on consideration for segment 2",
+              "objective": "Specific measurable objective for Week 2",
+              "targetSegment": "Name of audience segment 2",
+              "phase": "Consideration"
+            },
+            {
+              "week": 3,
+              "theme": "Theme title focusing on conversion for segment 3",
+              "objective": "Specific measurable objective for Week 3",
+              "targetSegment": "Name of audience segment 3",
+              "phase": "Conversion"
+            }
+          ]
+        }
+      `;
+    } else {
+      // Use the original prompt if enhanced data isn't available
+      prompt = `
+        Generate three weekly content themes for a fitness business social media campaign.
+        
+        BUSINESS: "${strategy.business_description || 'Fitness business'}"
+        
+        TARGET AUDIENCE:
+        ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
+        
+        OBJECTIVES:
+        ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
+        
+        KEY MESSAGES:
+        ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
+        
+        IMPLEMENTATION TIMELINE - 3 WEEK CAMPAIGN:
+        Phase 1 (Week 1): Awareness - Introduce value proposition and build brand recognition
+        Phase 2 (Week 2): Consideration - Demonstrate expertise and address objections
+        Phase 3 (Week 3): Conversion - Drive specific actions and provide clear next steps
+        
+        For each week, provide:
+        1. A specific theme that matches one of the key messages and aligns with the week's phase
+        2. A specific objective for the week that supports the business goals and is actionable/measurable
+        
+        Respond with a JSON object in this exact format:
+        {"weeklyThemes":[
+          {"week":1,"theme":"Theme for Week 1","objective":"Specific objective for Week 1", "phase":"Awareness"},
+          {"week":2,"theme":"Theme for Week 2","objective":"Specific objective for Week 2", "phase":"Consideration"},
+          {"week":3,"theme":"Theme for Week 3","objective":"Specific objective for Week 3", "phase":"Conversion"}
+        ]}
+      `;
+    }
     
     console.log("Sending theme generation prompt to Gemini API...");
     
@@ -174,113 +248,56 @@ export default async function handler(req, res) {
         console.log("Attempting more aggressive JSON cleanup...");
         
         try {
-          // Raw text extraction approach - extract anything that looks like a theme
-          const extractedThemes = extractThemesFromText(text);
+          console.log("Attempting to extract themes directly from response text");
+          let extractedThemes = extractThemesFromText(text);
           
-          if (extractedThemes && extractedThemes.length > 0) {
-            jsonData = { weeklyThemes: extractedThemes };
-            console.log(`Successfully extracted ${extractedThemes.length} themes through text pattern matching`);
-          } else {
-            // Try to extract just the weeklyThemes array if the full JSON is malformed
-            const themesPattern = /"weeklyThemes"\s*:\s*\[([\s\S]*?)\]/g;
-            const themesMatch = themesPattern.exec(cleanedText);
+          if (extractedThemes.length > 0) {
+            console.log(`Successfully extracted ${extractedThemes.length} themes from text`);
             
-            if (themesMatch && themesMatch[1]) {
-              // Try to parse just the themes array
-              const themesContent = themesMatch[1].trim();
+            // Process themes to ensure consistent structure
+            const finalThemes = extractedThemes.map((theme, index) => {
+              // Default phases if not specified
+              const defaultPhases = ["Awareness", "Consideration", "Conversion"];
               
-              // Build theme objects individually
-              const themeObjects = [];
-              const themeBlocks = themesContent.split(/},{/);
-              
-              for (let i = 0; i < themeBlocks.length; i++) {
-                let themeBlock = themeBlocks[i];
-                // Add the missing braces for all but first and last
-                if (i > 0) themeBlock = '{' + themeBlock;
-                if (i < themeBlocks.length - 1) themeBlock = themeBlock + '}';
-                
-                try {
-                  // Fix common issues in each theme object
-                  themeBlock = themeBlock
-                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
-                    .replace(/:\s*'([^']*)'/g, ':"$1"')                 // Replace single quotes with double quotes
-                    .replace(/([^\\])"([^"]*?)([^\\])"/g, '$1"$2$3"');  // Fix nested quotes
-                  
-                  // Try to balance quotes in the theme block
-                  themeBlock = fixUnterminatedStrings(themeBlock);
-                  
-                  const themeObj = JSON.parse(themeBlock);
-                  themeObjects.push(themeObj);
-                } catch (themeError) {
-                  console.error(`Error parsing theme ${i+1}:`, themeError.message);
-                  console.error(`Theme block: ${themeBlock}`);
-                  // Add a placeholder theme if parsing fails
-                  themeObjects.push({
-                    week: i + 1,
-                    theme: strategy.key_messages[i] ? 
-                      `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-                      `Week ${i + 1}: Fitness Content`,
-                    objective: strategy.objectives[i % strategy.objectives.length] || 
-                      `Increase engagement through focused content for week ${i+1}`
-                  });
-                }
-              }
-              
-              // Create the proper structure
-              jsonData = {
-                weeklyThemes: themeObjects.slice(0, 3) // Ensure we only have 3 themes
+              return {
+                week: theme.week || index + 1,
+                theme: theme.theme || `Theme for Week ${index + 1}`,
+                objective: theme.objective || getCustomerAction(index, strategy),
+                targetSegment: theme.targetSegment || (
+                  hasEnhancedData && strategy.enhancedStrategy.audiences[index] ? 
+                  strategy.enhancedStrategy.audiences[index].segment : ""
+                ),
+                phase: theme.phase || defaultPhases[index] || ""
               };
-              
-              console.log("Successfully extracted themes array through manual parsing");
-            } else {
-              // If we can't extract themes pattern, try extracting any JSON object
-              const jsonPattern = /\{[\s\S]*?\}/g;
-              const matches = cleanedText.match(jsonPattern);
-              
-              if (matches && matches.length > 0) {
-                console.log("Found JSON object in response, attempting to extract structure");
-                
-                // Try each potential JSON object until we find a valid one
-                for (const match of matches) {
-                  try {
-                    const potentialJson = JSON.parse(match);
-                    if (potentialJson.weeklyThemes) {
-                      jsonData = potentialJson;
-                      console.log("Found valid weeklyThemes structure in JSON object");
-                      break;
-                    }
-                  } catch (err) {
-                    // Continue to next match
-                  }
-                }
-                
-                if (!jsonData) {
-                  throw new Error("No valid weeklyThemes structure found in JSON objects");
-                }
+            });
+
+            // Sort by week number to ensure correct order
+            const sortedThemes = finalThemes.sort((a, b) => a.week - b.week);
+
+            // Return exactly 3 themes, adding defaults if needed
+            const validThemes = [];
+            for (let i = 0; i < 3; i++) {
+              if (sortedThemes[i]) {
+                validThemes.push(sortedThemes[i]);
               } else {
-                throw new Error("Could not find weeklyThemes array or any JSON object in response");
+                // Default phases
+                const defaultPhases = ["Awareness", "Consideration", "Conversion"];
+                
+                validThemes.push({
+                  week: i + 1,
+                  theme: `Theme for Week ${i + 1}`,
+                  objective: getCustomerAction(i, strategy),
+                  targetSegment: hasEnhancedData && strategy.enhancedStrategy.audiences[i] ? 
+                                strategy.enhancedStrategy.audiences[i].segment : "",
+                  phase: defaultPhases[i] || ""
+                });
               }
             }
+            
+            return res.status(200).json(validThemes);
           }
         } catch (extractError) {
-          console.error("Advanced parsing also failed:", extractError.message);
-          
-          // Last resort: create default themes based on key messages
-          console.log("Creating default themes from key messages");
-          const defaultThemes = [];
-          for (let i = 0; i < 3; i++) {
-            defaultThemes.push({
-              week: i + 1,
-              theme: strategy.key_messages[i] ? 
-                `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-                `Week ${i + 1}: Fitness Content`,
-              objective: strategy.objectives[i % strategy.objectives.length] || 
-                `Increase engagement through focused content for week ${i+1}`
-            });
-          }
-          
-          jsonData = { weeklyThemes: defaultThemes };
-          console.log("Created default themes due to parsing failure");
+          console.error("Error during theme extraction:", extractError);
         }
       }
       
@@ -294,16 +311,23 @@ export default async function handler(req, res) {
       if (!Array.isArray(jsonData.weeklyThemes) || jsonData.weeklyThemes.length !== 3) {
         console.warn("Invalid themes count, adjusting structure...");
         
-        // Create default themes based on key messages if available
+        // Last resort: create default themes
+        console.log("Creating default themes from key messages");
         const defaultThemes = [];
         for (let i = 0; i < 3; i++) {
+          // Default phases
+          const defaultPhases = ["Awareness", "Consideration", "Conversion"];
+          
           defaultThemes.push({
             week: i + 1,
             theme: strategy.key_messages[i] ? 
-              `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-              `Week ${i + 1}: Fitness Content`,
+              `${strategy.key_messages[i].substring(0, 30)}...` : 
+              `Fitness Content for Week ${i + 1}`,
             objective: strategy.objectives[i % strategy.objectives.length] || 
-              `Increase engagement through focused content for week ${i+1}`
+              `Increase engagement through focused content for week ${i+1}`,
+            targetSegment: hasEnhancedData && strategy.enhancedStrategy.audiences[i] ? 
+              strategy.enhancedStrategy.audiences[i].segment : "",
+            phase: defaultPhases[i] || ""
           });
         }
         
@@ -340,7 +364,44 @@ export default async function handler(req, res) {
       
       console.log("Successfully parsed themes JSON");
       
-      return res.status(200).json(jsonData);
+      // Before returning the final result, make sure we have the expected structure
+      const finalThemes = jsonData.weeklyThemes.map((theme, index) => {
+        // Default phases if not specified
+        const defaultPhases = ["Awareness", "Consideration", "Conversion"];
+        
+        return {
+          week: theme.week || index + 1,
+          theme: theme.theme || `Theme for Week ${index + 1}`,
+          objective: theme.objective || getCustomerAction(index, strategy),
+          targetSegment: theme.targetSegment || "", // Include targetSegment
+          phase: theme.phase || defaultPhases[index] || "" // Include phase
+        };
+      });
+
+      // Sort by week number to ensure correct order
+      const sortedThemes = finalThemes.sort((a, b) => a.week - b.week);
+
+      // Return exactly 3 themes, adding defaults if needed
+      const validThemes = [];
+      for (let i = 0; i < 3; i++) {
+        if (sortedThemes[i]) {
+          validThemes.push(sortedThemes[i]);
+        } else {
+          // Default phases
+          const defaultPhases = ["Awareness", "Consideration", "Conversion"];
+          
+          validThemes.push({
+            week: i + 1,
+            theme: `Theme for Week ${i + 1}`,
+            objective: getCustomerAction(i, strategy),
+            targetSegment: hasEnhancedData && strategy.enhancedStrategy.audiences[i] ? 
+                          strategy.enhancedStrategy.audiences[i].segment : "",
+            phase: defaultPhases[i] || ""
+          });
+        }
+      }
+      
+      return res.status(200).json(validThemes);
     } catch (parseError) {
       console.error("Error parsing Gemini response:", parseError);
       
@@ -381,77 +442,105 @@ function fixUnterminatedStrings(jsonText) {
 
 // Extract themes from text using pattern matching when JSON parsing fails completely
 function extractThemesFromText(text) {
-  const themes = [];
+  console.log("Attempting to extract themes from text...");
   
-  // Look for week numbers, themes, and objectives in the text using various patterns
-  const weekMatches = text.match(/week"?\s*:\s*(\d+)/g) || [];
-  const themeMatches = text.match(/theme"?\s*:\s*"([^"]+)"/g) || [];
-  const objectiveMatches = text.match(/objective"?\s*:\s*"([^"]+)"/g) || [];
-  
-  // If we have both week numbers and themes
-  if (weekMatches.length > 0 && themeMatches.length > 0) {
-    // Use the smallest count to determine how many themes we can extract
-    const count = Math.min(weekMatches.length, themeMatches.length);
+  // First, try to find a complete weeklyThemes array
+  const arrayMatch = text.match(/\{\s*"weeklyThemes"\s*:\s*\[([\s\S]*?)\]\s*\}/i);
+  if (arrayMatch && arrayMatch[1]) {
+    console.log("Found weeklyThemes array structure");
     
-    for (let i = 0; i < count; i++) {
-      // Extract the week number
-      const weekMatch = weekMatches[i].match(/(\d+)/);
-      const week = weekMatch ? parseInt(weekMatch[1]) : i + 1;
-      
-      // Extract the theme
-      const themeMatch = themeMatches[i].match(/:\s*"([^"]*)"/);
-      const theme = themeMatch ? themeMatch[1] : `Fitness Content for Week ${i + 1}`;
-      
-      // Extract the objective or use default
-      const objectiveMatch = i < objectiveMatches.length ? objectiveMatches[i].match(/:\s*"([^"]*)"/): null;
-      const objective = objectiveMatch ? objectiveMatch[1] : 
-        `${getActionVerb()} ${getCustomerAction(i, strategy)}`;
-      
-      themes.push({ week, theme, objective });
-    }
-  } else {
-    // Fallback - look for any week-like patterns in the text
-    const weekTextPattern = /Week\s+(\d+)[\s:]+([^\.]+)/gi;
-    let match;
+    const itemsText = arrayMatch[1];
+    // Find individual theme objects
+    const themeMatches = [...itemsText.matchAll(/\{\s*"week"\s*:\s*(\d+)\s*,\s*"theme"\s*:\s*"([^"]+)"\s*,\s*"objective"\s*:\s*"([^"]+)"(?:\s*,\s*"targetSegment"\s*:\s*"([^"]+)")?(?:\s*,\s*"phase"\s*:\s*"([^"]+)")?\s*\}/gi)];
     
-    while ((match = weekTextPattern.exec(text)) !== null) {
-      const week = parseInt(match[1]);
-      const theme = match[2].trim();
+    if (themeMatches.length > 0) {
+      console.log(`Found ${themeMatches.length} theme objects in array`);
       
-      // Only add if we have both week number and theme text
-      if (week && theme) {
-        const objective = `${getActionVerb()} ${getCustomerAction(week-1, strategy)}`;
-        
-        themes.push({ week, theme, objective });
-      }
+      return themeMatches.map(match => {
+        return {
+          week: parseInt(match[1]),
+          theme: match[2],
+          objective: match[3],
+          targetSegment: match[4] || "",  // Extract targetSegment if present
+          phase: match[5] || ""           // Extract phase if present
+        };
+      }).sort((a, b) => a.week - b.week);
     }
   }
   
-  // If we have found any themes, ensure they're ordered correctly
-  if (themes.length > 0) {
-    // Sort by week number
-    themes.sort((a, b) => a.week - b.week);
+  // If we couldn't find a structured array, try to find individual week objects
+  console.log("Attempting to find individual week objects...");
+  const weekMatches = [
+    ...text.matchAll(/week\s*:?\s*(\d+)[^\n]*?theme\s*:?\s*["']([^"']+)["'][^\n]*?objective\s*:?\s*["']([^"']+)["'](?:[^\n]*?targetSegment\s*:?\s*["']([^"']+)["'])?(?:[^\n]*?phase\s*:?\s*["']([^"']+)["'])?/gi),
+  ];
+  
+  if (weekMatches.length > 0) {
+    console.log(`Found ${weekMatches.length} individual week patterns`);
     
-    // Ensure we have exactly 3 themes
-    while (themes.length < 3) {
-      const week = themes.length + 1;
-      themes.push({
-        week,
-        theme: strategy.key_messages[week - 1] ? 
-          `${strategy.key_messages[week - 1].substring(0, 30)}...` : 
-          `Fitness Content for Week ${week}`,
-        objective: strategy.objectives[(week-1) % strategy.objectives.length] || 
-          `Increase engagement through focused content for week ${week}`
-      });
-    }
-    
-    // If we have more than 3, keep only the first 3
-    if (themes.length > 3) {
-      themes.splice(3);
-    }
+    return weekMatches.map(match => {
+      return {
+        week: parseInt(match[1]),
+        theme: match[2],
+        objective: match[3],
+        targetSegment: match[4] || "",  // Extract targetSegment if present
+        phase: match[5] || ""           // Extract phase if present
+      };
+    }).sort((a, b) => a.week - b.week);
   }
   
-  return themes;
+  // If still nothing, look for more loosely formatted week content
+  console.log("Attempting to find loosely formatted week content...");
+  const looseWeekMatches = [
+    ...text.matchAll(/Week\s*(\d+)\s*(?:[-:])?\s*(?:Theme\s*(?:[-:])?\s*)?["']?([^"'\n,]+(?:[^"\n,]+[^"'\n,]+)*)["']?\s*(?:[-:])?\s*(?:Objective\s*(?:[-:])?\s*)?["']?([^"'\n,]+(?:[^"\n,]+[^"'\n,]+)*)["']?/gi),
+  ];
+  
+  if (looseWeekMatches.length > 0) {
+    console.log(`Found ${looseWeekMatches.length} loose week patterns`);
+    
+    // Also look for target segments if mentioned separately
+    const segmentMatches = [
+      ...text.matchAll(/Week\s*(\d+)[^\n]*?(?:Target|Audience|Segment)\s*(?:[-:])?\s*["']?([^"'\n,]+(?:[^"\n,]+[^"'\n,]+)*)["']?/gi),
+    ];
+    
+    // Create a map of week number to segment
+    const segmentMap = {};
+    segmentMatches.forEach(match => {
+      segmentMap[parseInt(match[1])] = match[2].trim();
+    });
+    
+    // Also look for phases if mentioned separately
+    const phaseMatches = [
+      ...text.matchAll(/Week\s*(\d+)[^\n]*?(?:Phase)\s*(?:[-:])?\s*["']?([^"'\n,]+(?:[^"\n,]+[^"'\n,]+)*)["']?/gi),
+    ];
+    
+    // Create a map of week number to phase
+    const phaseMap = {};
+    phaseMatches.forEach(match => {
+      phaseMap[parseInt(match[1])] = match[2].trim();
+    });
+    
+    // Map the standard phases to week numbers if not found
+    if (Object.keys(phaseMap).length === 0) {
+      phaseMap[1] = "Awareness";
+      phaseMap[2] = "Consideration";
+      phaseMap[3] = "Conversion";
+    }
+    
+    return looseWeekMatches.map(match => {
+      const weekNum = parseInt(match[1]);
+      return {
+        week: weekNum,
+        theme: match[2].trim(),
+        objective: match[3].trim(),
+        targetSegment: segmentMap[weekNum] || "",
+        phase: phaseMap[weekNum] || ""
+      };
+    }).sort((a, b) => a.week - b.week);
+  }
+  
+  // Return empty array if nothing was found
+  console.log("Could not extract themes, returning empty array");
+  return [];
 }
 
 // Add these new utility functions to improve the fallback objectives

@@ -601,6 +601,39 @@
   color: #2d3748;
 }
 
+/* New styles for audience segment and phase */
+.weekSegment {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #4a5568;
+  background-color: #f0fff4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #34D399;
+}
+
+.segmentLabel {
+  font-weight: 600;
+  color: #065F46;
+}
+
+.weekPhase {
+  margin-top: -5px;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #4a5568;
+  background-color: #fffbeb;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #F59E0B;
+}
+
+.phaseLabel {
+  font-weight: 600;
+  color: #92400E;
+}
+
 /* New styles for objective explanation */
 .objectiveExplanation {
   margin-top: 8px;

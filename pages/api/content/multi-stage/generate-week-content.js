@@ -64,54 +64,256 @@ export default async function handler(req, res) {
       apiKeyLength: apiKey ? apiKey.length : 0
     });
     
-    // Simplify the prompt to reduce chances of malformed JSON
-    const prompt = `
-      Create 3 social media posts for Week ${weekNumber} of a fitness content plan.
+    // Check if we have the enhanced strategy data and a target segment for the week
+    const hasEnhancedData = strategy.enhancedStrategy && strategy.enhancedStrategy.audiences;
+    const targetSegment = allThemes && allThemes.find(t => t.week === weekNumber)?.targetSegment;
 
-      WEEK THEME: "${weekTheme}"
+    // Create a more detailed prompt using the enhanced data if available
+    let prompt;
+
+    if (hasEnhancedData && targetSegment) {
+      // Find the audience segment data that matches the target segment
+      const targetAudienceData = strategy.enhancedStrategy.audiences.find(a => 
+        a.segment.includes(targetSegment) || targetSegment.includes(a.segment)
+      );
       
-      WEEK OBJECTIVE: "${weekObjective}"
-      
-      BUSINESS: "${strategy.business_description || 'Fitness business'}"
-      
-      TARGET AUDIENCE:
-      ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
-      
-      OBJECTIVES:
-      ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
-      
-      KEY MESSAGES:
-      ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
-      
-      ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
-      
-      ${allThemes ? `CONTENT PLAN CONTEXT:
-      Week 1: "${allThemes[0].theme}" - Objective: "${allThemes[0].objective || 'Engage audience'}"
-      Week 2: "${allThemes[1].theme}" - Objective: "${allThemes[1].objective || 'Provide value'}"
-      Week 3: "${allThemes[2].theme}" - Objective: "${allThemes[2].objective || 'Drive action'}"
-      ` : ''}
-      
-      IMPORTANT CUSTOMER ACTION INSTRUCTIONS:
-      - All 3 posts must focus on getting customers to take the specific action in the WEEK OBJECTIVE
-      - Design each post to directly encourage and facilitate this customer action
-      - Use persuasive techniques and clear CTAs that drive toward the specific objective
-      - Create posts that work together toward the same customer action goal but through different approaches
-      
-      Each post must include these fields:
-      - type (choose from: Carousel, Video, Reel, Story, Image)
-      - topic (12-20 words describing how this post supports the customer action objective)
-      - audience (2-3 sentences describing the target audience)
-      - cta (call to action that explicitly supports the week's objective, 10-15 words)
-      - principle (one persuasion principle)
-      - principleExplanation (1 short sentence only)
-      - visual (5-8 words description)
-      - proposedCaption (50-75 words with hashtags)
-      
-      IMPORTANT: Avoid using quotes or special characters in your response that could break JSON syntax.
-      
-      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
-      {"posts":[{"type":"","topic":"","audience":"","cta":"","principle":"","principleExplanation":"","visual":"","proposedCaption":""}]}
-    `;
+      // If we found matching audience data, create a highly targeted prompt
+      if (targetAudienceData) {
+        prompt = `
+          You are a fitness content marketing expert. Create three highly engaging social media posts specifically for the audience segment and theme below.
+          
+          BUSINESS: "${strategy.business_description || 'Fitness business'}"
+          
+          TARGET AUDIENCE SEGMENT:
+          ${targetAudienceData.segment}
+          
+          AUDIENCE-SPECIFIC OBJECTIVES:
+          ${targetAudienceData.objectives.map((obj, i) => 
+            `${i+1}. "${obj.objective}" - Success metric: ${obj.successMetrics}`
+          ).join('\n')}
+          
+          AUDIENCE-SPECIFIC KEY MESSAGES:
+          ${targetAudienceData.keyMessages.map((msg, i) => `${i+1}. "${msg}"`).join('\n')}
+          
+          PRIMARY CHANNELS:
+          ${targetAudienceData.channels.join(', ')}
+          
+          RECOMMENDED CONTENT TYPES:
+          ${targetAudienceData.objectives.flatMap(obj => obj.contentTypes).join(', ')}
+          
+          WEEK THEME: "${weekTheme}"
+          WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
+          ${aesthetic ? `CONTENT STYLE: "${aesthetic}"` : ''}
+          
+          CONTENT STRATEGY GUIDELINES:
+          - Tone of Voice: ${strategy.enhancedStrategy.contentStrategy.tone}
+          - Posting Frequency: ${strategy.enhancedStrategy.contentStrategy.frequencyRecommendation}
+          - Effective CTAs to Use: ${strategy.enhancedStrategy.contentStrategy.callToActionLibrary.join(', ')}
+          
+          COMPETITIVE ADVANTAGES TO HIGHLIGHT:
+          ${strategy.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, i) => 
+            `- ${gap}: ${strategy.enhancedStrategy.competitiveGaps.exploitationStrategies[i] || 'Highlight this gap'}`
+          ).join('\n')}
+          
+          CREATE 3 UNIQUE CONTENT IDEAS FOR THIS WEEK:
+          For each post, include:
+          1. Content type (Choose from the recommended content types for this audience)
+          2. Specific topic and angle that aligns with the theme and objective
+          3. Detailed target audience description (be specific about this segment's pain points and goals)
+          4. Clear call-to-action (CTA) selected from the effective CTAs list
+          5. Persuasion principle used (e.g., Social Proof, Scarcity, Authority, Reciprocity, Liking, Commitment/Consistency)
+          6. Brief explanation of why this principle works for this specific audience
+          7. Visual concept (describe what the post should look like, matching the aesthetic)
+          8. Proposed caption (include emojis and hashtags where appropriate)
+          
+          RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
+          {
+            "weekContent": {
+              "week": ${weekNumber},
+              "theme": "${weekTheme}",
+              "objective": "${weekObjective || 'Engage with the content'}",
+              "targetSegment": "${targetAudienceData.segment}",
+              "posts": [
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                },
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                },
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                }
+              ]
+            }
+          }
+        `;
+      } else {
+        // Use a generic enhanced prompt if we can't find the specific audience segment
+        prompt = `
+          You are a fitness content marketing expert. Create three highly engaging social media posts based on the comprehensive strategy and theme below.
+          
+          BUSINESS: "${strategy.business_description || 'Fitness business'}"
+          
+          AUDIENCE SEGMENTS OVERVIEW:
+          ${strategy.enhancedStrategy.audiences.map((audience, i) => 
+            `${i+1}. ${audience.segment} - Primary channels: ${audience.channels.join(', ')}`
+          ).join('\n')}
+          
+          CONTENT STRATEGY GUIDELINES:
+          - Tone of Voice: ${strategy.enhancedStrategy.contentStrategy.tone}
+          - Posting Frequency: ${strategy.enhancedStrategy.contentStrategy.frequencyRecommendation}
+          - Effective CTAs to Use: ${strategy.enhancedStrategy.contentStrategy.callToActionLibrary.join(', ')}
+          
+          WEEK THEME: "${weekTheme}"
+          WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
+          ${aesthetic ? `CONTENT STYLE: "${aesthetic}"` : ''}
+          
+          CREATE 3 UNIQUE CONTENT IDEAS FOR THIS WEEK:
+          For each post, include:
+          1. Content type (Carousel, Video, Reel, Transformation Post, etc.)
+          2. Specific topic and angle that aligns with the theme and objective
+          3. Target audience segment with detailed persona description (select from the audience segments above)
+          4. Clear call-to-action (CTA) selected from the effective CTAs list
+          5. Persuasion principle used (e.g., Social Proof, Scarcity, Authority)
+          6. Brief explanation of why this principle works here
+          7. Visual concept (describe what the post should look like, matching the aesthetic)
+          8. Proposed caption (include emojis and hashtags where appropriate)
+          
+          RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
+          {
+            "weekContent": {
+              "week": ${weekNumber},
+              "theme": "${weekTheme}",
+              "objective": "${weekObjective || 'Engage with the content'}",
+              "posts": [
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                },
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                },
+                {
+                  "type": "Content type",
+                  "topic": "Specific topic with angle",
+                  "audience": "Detailed target audience description",
+                  "cta": "Clear call-to-action",
+                  "principle": "Persuasion principle used",
+                  "principleExplanation": "Brief explanation of why this principle works",
+                  "visual": "Visual concept description",
+                  "proposedCaption": "Full caption with emojis and hashtags"
+                }
+              ]
+            }
+          }
+        `;
+      }
+    } else {
+      // Fallback to the original prompt if enhanced data isn't available
+      prompt = `
+        You are a fitness content marketing expert. Create three highly engaging social media posts based on the theme below.
+        
+        BUSINESS: "${strategy.business_description || 'Fitness business'}"
+        
+        TARGET AUDIENCE:
+        ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
+        
+        OBJECTIVES:
+        ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
+        
+        KEY MESSAGES:
+        ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
+        
+        WEEK THEME: "${weekTheme}"
+        WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
+        ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
+        
+        CREATE 3 UNIQUE CONTENT IDEAS FOR THIS WEEK:
+        For each post, include:
+        1. Content type (Carousel, Video, Reel, Transformation Post, etc.)
+        2. Specific topic and angle
+        3. Target audience segment with detailed persona description
+        4. Clear call-to-action (CTA)
+        5. Persuasion principle used (e.g., Social Proof, Scarcity, Authority)
+        6. Brief explanation of why this principle works here
+        7. Visual concept (describe what the post should look like)
+        8. Proposed caption (include emojis and hashtags where appropriate)
+        
+        RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
+        {
+          "weekContent": {
+            "week": ${weekNumber},
+            "theme": "${weekTheme}",
+            "posts": [
+              {
+                "type": "Content type",
+                "topic": "Specific topic with angle",
+                "audience": "Detailed target audience description",
+                "cta": "Clear call-to-action",
+                "principle": "Persuasion principle used",
+                "principleExplanation": "Brief explanation of why this principle works",
+                "visual": "Visual concept description",
+                "proposedCaption": "Full caption with emojis and hashtags"
+              },
+              {
+                "type": "Content type",
+                "topic": "Specific topic with angle",
+                "audience": "Detailed target audience description",
+                "cta": "Clear call-to-action",
+                "principle": "Persuasion principle used",
+                "principleExplanation": "Brief explanation of why this principle works",
+                "visual": "Visual concept description",
+                "proposedCaption": "Full caption with emojis and hashtags"
+              },
+              {
+                "type": "Content type",
+                "topic": "Specific topic with angle",
+                "audience": "Detailed target audience description",
+                "cta": "Clear call-to-action",
+                "principle": "Persuasion principle used",
+                "principleExplanation": "Brief explanation of why this principle works",
+                "visual": "Visual concept description",
+                "proposedCaption": "Full caption with emojis and hashtags"
+              }
+            ]
+          }
+        }
+      `;
+    }
     
     console.log(`Generating content for Week ${weekNumber}: ${weekTheme}`);
     

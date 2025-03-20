@@ -770,16 +770,33 @@ export default function NewContent() {
               ) : (
                 contentOutline.map((week, weekIndex) => (
                   <div key={weekIndex} className={styles.weekSection}>
-                    <h2>Week {week.week}: {week.theme}</h2>
-                    
-                    {week.objective && (
-                      <div className={styles.weekObjective}>
-                        <span className={styles.objectiveLabel}>Objective:</span> {week.objective}
-                        <div className={styles.objectiveExplanation}>
-                          <p><span className={styles.objectiveWhyLabel}>Why it's effective:</span> {getObjectiveExplanation(week.objective, week.theme)}</p>
+                    <div className={styles.weekHeading}>
+                      <h2>{`Week ${week.week}: ${week.theme}`}</h2>
+                      
+                      {/* Display segment information if available */}
+                      {week.targetSegment && (
+                        <div className={styles.weekSegment}>
+                          <span className={styles.segmentLabel}>Target Audience:</span>
+                          <p>{week.targetSegment}</p>
                         </div>
+                      )}
+                      
+                      {/* Display phase information if available */}
+                      {week.phase && (
+                        <div className={styles.weekPhase}>
+                          <span className={styles.phaseLabel}>Campaign Phase:</span>
+                          <p>{week.phase}</p>
+                        </div>
+                      )}
+                      
+                      <div className={styles.weekObjective}>
+                        <span className={styles.objectiveLabel}>Objective:</span>
+                        <p>{week.objective}</p>
+                        <p className={styles.objectiveExplanation}>
+                          {getObjectiveExplanation(week.objective, week.theme)}
+                        </p>
                       </div>
-                    )}
+                    </div>
                     
                     {week.loading || weekLoadingStates[week.week]?.loading ? (
                       <div className={styles.loadingSection}>
