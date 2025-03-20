@@ -28,10 +28,9 @@ export default async function handler(req, res) {
     
     // Create a simplified prompt that should work better
     const prompt = `
-      Create a highly specific 3-week content marketing campaign for this fitness business:
+      Create a focused 3-week social media content plan for a fitness business.
       
-      BUSINESS DESCRIPTION:
-      "${strategy.business_description || 'Fitness business'}"
+      BUSINESS: "${strategy.business_description || 'Fitness business'}"
       
       TARGET AUDIENCE:
       ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
@@ -42,47 +41,75 @@ export default async function handler(req, res) {
       KEY MESSAGES:
       ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
       
-      Instructions:
-      1. Create a detailed social media content plan with 3 weeks of content
-      2. For each week, provide a clear theme based on one of the key messages
-      3. For each week, create 3 posts with detailed topics
-      4. Each post must include: content type, topic, target audience, CTA, principle, explanation, visual recommendation, and proposed caption/text
-      5. Use exact language from the key messages and target the specific audiences listed
+      Create 3 social media posts per week (9 total posts). Each post must include:
+      - Type (Carousel/Video/Reel/Story/Image)
+      - Topic
+      - Audience (use exact language from target audience list)
+      - CTA (call to action)
+      - Principle (persuasion principle)
+      - Visual recommendation (brief)
+      - Proposed caption (100-150 words max)
       
-      Format your response as a clean JSON object like this (no explanation, just the JSON):
-      
+      Format as clean JSON:
       {
         "campaigns": [
           {
             "week": 1,
-            "theme": "Theme from key message 1",
+            "theme": "Theme based on key message 1",
             "posts": [
               {
-                "type": "Carousel/Video/Reel/Story/Image",
-                "topic": "Detailed post topic",
-                "audience": "One of the target audiences listed above",
+                "type": "Post type",
+                "topic": "Topic",
+                "audience": "Target audience",
                 "cta": "Call to action",
-                "principle": "Persuasion principle",
+                "principle": "Principle",
                 "principleExplanation": "Brief explanation",
                 "visual": "Visual recommendation",
-                "proposedCaption": "Suggested text/caption for the post that incorporates the key message and calls to action"
-              },
-              // More posts for week 1
+                "proposedCaption": "Caption text"
+              }
             ]
-          },
-          // Week 2 and 3 with same structure
+          }
         ]
       }
+      
+      IMPORTANT: Provide ONLY the JSON object, nothing else.
     `;
     
     console.log("Sending prompt to Gemini API...");
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048,
-      },
-    });
+    
+    // Add retry logic for API calls
+    const maxRetries = 3;
+    let attempt = 0;
+    let result;
+    
+    while (attempt < maxRetries) {
+      try {
+        console.log(`API attempt ${attempt + 1} of ${maxRetries}...`);
+        result = await model.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+          },
+        });
+        
+        // If we get here, the call succeeded
+        break;
+      } catch (apiError) {
+        attempt++;
+        console.error(`API attempt ${attempt} failed:`, apiError.message);
+        
+        if (attempt >= maxRetries) {
+          console.error("All API retry attempts failed");
+          throw apiError;
+        }
+        
+        // Exponential backoff with jitter
+        const delay = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 1000, 10000);
+        console.log(`Retrying in ${Math.round(delay/1000)} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
     
     const response = result.response;
     const text = response.text();
@@ -90,24 +117,49 @@ export default async function handler(req, res) {
     // Process the response to extract clean JSON
     let jsonData;
     try {
-      // Try to find JSON in the response first
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || 
-                        text.match(/```\n([\s\S]*?)\n```/) || 
-                        text.match(/{[\s\S]*?}/);
-      
-      if (jsonMatch) {
-        // Clean up the JSON string
-        const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '');
-        jsonData = JSON.parse(jsonString);
-      } else {
-        // Direct parse if no markdown code blocks
+      // First, try to directly parse the text as JSON
+      try {
         jsonData = JSON.parse(text);
+      } catch (directParseError) {
+        console.log("Direct JSON parsing failed, trying to extract JSON from text");
+        
+        // Try to find JSON in the response with various patterns
+        const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || 
+                          text.match(/```\n([\s\S]*?)\n```/) || 
+                          text.match(/({[\s\S]*?})/);
+        
+        if (jsonMatch) {
+          // Clean up the JSON string
+          const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '').trim();
+          console.log("Extracted JSON string:", jsonString.substring(0, 100) + "...");
+          
+          // Try parsing the extracted JSON
+          try {
+            jsonData = JSON.parse(jsonString);
+          } catch (extractedParseError) {
+            console.error("Error parsing extracted JSON:", extractedParseError);
+            throw new Error("Failed to parse extracted JSON content");
+          }
+        } else {
+          console.error("No JSON pattern found in response");
+          throw new Error("No valid JSON found in the response");
+        }
       }
       
       // Verify we have the right structure
       if (!jsonData.campaigns) {
-        throw new Error("Response missing 'campaigns' property");
+        // If we're missing the campaigns property but have other data, try to fix it
+        if (jsonData.length > 0 && Array.isArray(jsonData)) {
+          // The model might have returned an array of weeks directly
+          jsonData = { campaigns: jsonData };
+          console.log("Restructured array response into proper format");
+        } else {
+          throw new Error("Response missing 'campaigns' property and couldn't be restructured");
+        }
       }
+      
+      console.log("Successfully parsed JSON response with", 
+                 jsonData.campaigns.length, "campaign weeks");
       
       return res.status(200).json(jsonData);
     } catch (parseError) {
