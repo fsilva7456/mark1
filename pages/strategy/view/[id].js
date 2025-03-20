@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 import Link from 'next/link';
-import Navbar from '../../../components/Navbar';
+import Layout from '../../../components/Layout';
 import { useAuth } from '../../../contexts/AuthContext';
 import { supabase } from '../../../utils/supabaseClient';
 import styles from '../../../styles/Strategy.module.css';
@@ -112,144 +111,139 @@ export default function ViewStrategy() {
   };
   
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>View Strategy | Mark1</title>
-        <meta name="description" content="View your marketing strategy" />
-      </Head>
-
-      <Navbar />
-
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1>{strategy?.name || 'Marketing Strategy'}</h1>
-            <p>Review your strategy and create content based on it.</p>
+    <Layout title="View Strategy | Mark1">
+      <div className={styles.container}>
+        <main className={styles.main}>
+          <div className={styles.header}>
+            <div className={styles.headerContent}>
+              <h1>{strategy?.name || 'Marketing Strategy'}</h1>
+              <p>Review your strategy and create content based on it.</p>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.content}>
-          {isLoading ? (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Loading your strategy...</p>
-            </div>
-          ) : error ? (
-            <div className={styles.errorContainer}>
-              <div className={styles.errorIcon}>⚠️</div>
-              <h3>Error</h3>
-              <p>{error}</p>
-              <button 
-                onClick={() => router.push('/dashboard')} 
-                className={styles.returnButton}
-              >
-                Return to Dashboard
-              </button>
-            </div>
-          ) : (
-            <div className={styles.matrixLayout}>
-              <div className={styles.matrixContainer}>
-                <h2>Your Marketing Strategy</h2>
-                <div className={styles.matrix}>
-                  <div className={styles.matrixSection}>
-                    <h3>Target Audience</h3>
-                    <ul>
-                      {strategy.target_audience?.map((audience, index) => (
-                        <li key={index}>{audience}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className={styles.matrixSection}>
-                    <h3>Objectives</h3>
-                    <ul>
-                      {strategy.objectives?.map((objective, index) => (
-                        <li key={index}>{objective}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className={styles.matrixSection}>
-                    <h3>Key Messages</h3>
-                    <ul>
-                      {strategy.key_messages?.map((message, index) => (
-                        <li key={index}>{message}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                
-                <div className={styles.matrixActions}>
-                  {/* Debug output */}
-                  {process.env.NODE_ENV !== 'production' && (
-                    <div style={{marginBottom: '10px', fontSize: '12px', color: '#666'}}>
-                      <p>Strategy ID: {strategy.id}</p>
-                      <p>Strategy ID Type: {typeof strategy.id}</p>
-                    </div>
-                  )}
-                  
-                  <button
-                    onClick={() => {
-                      // Show the aesthetic modal instead of directly navigating
-                      setAestheticModal({
-                        visible: true,
-                        value: ''
-                      });
-                    }}
-                    className={styles.outlineButton}
-                    disabled={isLoading}
-                  >
-                    Generate Content Outline
-                  </button>
-                  
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className={styles.cancelButton}
-                  >
-                    Back to Dashboard
-                  </button>
-                </div>
+          <div className={styles.content}>
+            {isLoading ? (
+              <div className={styles.loading}>
+                <div className={styles.spinner}></div>
+                <p>Loading your strategy...</p>
               </div>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {aestheticModal.visible && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.feedbackModal}>
-            <div className={styles.modalHeader}>
-              <h3>Describe Your Content Style</h3>
-              <button 
-                className={styles.closeButton}
-                onClick={() => setAestheticModal({...aestheticModal, visible: false})}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.feedbackInputContainer}>
-                <label htmlFor="aesthetic">What's the aesthetic or vibe you want for your content?</label>
-                <textarea
-                  id="aesthetic"
-                  value={aestheticModal.value}
-                  onChange={handleAestheticChange}
-                  placeholder="For example: professional and educational, friendly and motivational, bold and high-energy, calm and supportive..."
-                  className={styles.feedbackTextarea}
-                />
+            ) : error ? (
+              <div className={styles.errorContainer}>
+                <div className={styles.errorIcon}>⚠️</div>
+                <h3>Error</h3>
+                <p>{error}</p>
                 <button 
-                  onClick={handleAestheticSubmit}
-                  className={styles.saveButton}
-                  disabled={!aestheticModal.value.trim()}
+                  onClick={() => router.push('/dashboard')} 
+                  className={styles.returnButton}
                 >
-                  Generate Content
+                  Return to Dashboard
                 </button>
               </div>
+            ) : (
+              <div className={styles.matrixLayout}>
+                <div className={styles.matrixContainer}>
+                  <h2>Your Marketing Strategy</h2>
+                  <div className={styles.matrix}>
+                    <div className={styles.matrixSection}>
+                      <h3>Target Audience</h3>
+                      <ul>
+                        {strategy.target_audience?.map((audience, index) => (
+                          <li key={index}>{audience}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className={styles.matrixSection}>
+                      <h3>Objectives</h3>
+                      <ul>
+                        {strategy.objectives?.map((objective, index) => (
+                          <li key={index}>{objective}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className={styles.matrixSection}>
+                      <h3>Key Messages</h3>
+                      <ul>
+                        {strategy.key_messages?.map((message, index) => (
+                          <li key={index}>{message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.matrixActions}>
+                    {/* Debug output */}
+                    {process.env.NODE_ENV !== 'production' && (
+                      <div style={{marginBottom: '10px', fontSize: '12px', color: '#666'}}>
+                        <p>Strategy ID: {strategy.id}</p>
+                        <p>Strategy ID Type: {typeof strategy.id}</p>
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={() => {
+                        // Show the aesthetic modal instead of directly navigating
+                        setAestheticModal({
+                          visible: true,
+                          value: ''
+                        });
+                      }}
+                      className={styles.outlineButton}
+                      disabled={isLoading}
+                    >
+                      Generate Content Outline
+                    </button>
+                    
+                    <button
+                      onClick={() => router.push('/dashboard')}
+                      className={styles.cancelButton}
+                    >
+                      Back to Dashboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+
+        {aestheticModal.visible && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.feedbackModal}>
+              <div className={styles.modalHeader}>
+                <h3>Describe Your Content Style</h3>
+                <button 
+                  className={styles.closeButton}
+                  onClick={() => setAestheticModal({...aestheticModal, visible: false})}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className={styles.modalBody}>
+                <div className={styles.feedbackInputContainer}>
+                  <label htmlFor="aesthetic">What's the aesthetic or vibe you want for your content?</label>
+                  <textarea
+                    id="aesthetic"
+                    value={aestheticModal.value}
+                    onChange={handleAestheticChange}
+                    placeholder="For example: professional and educational, friendly and motivational, bold and high-energy, calm and supportive..."
+                    className={styles.feedbackTextarea}
+                  />
+                  <button 
+                    onClick={handleAestheticSubmit}
+                    className={styles.saveButton}
+                    disabled={!aestheticModal.value.trim()}
+                  >
+                    Generate Content
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Layout>
   );
 } 
