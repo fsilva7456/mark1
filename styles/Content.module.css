@@ -279,19 +279,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 2rem;
-  background-color: #F8FAFC;
-  border-radius: 12px;
+  background-color: #f7f9fc;
+  border-radius: 8px;
+  margin-bottom: 2rem;
 }
 
 .spinnerSmall {
   width: 30px;
   height: 30px;
+  border: 3px solid rgba(52, 84, 209, 0.2);
+  border-top: 3px solid #3454D1;
   border-radius: 50%;
-  border: 2px solid #E2E8F0;
-  border-top-color: #3454D1;
   animation: spin 1s linear infinite;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 /* Daily Engagement Styles */
@@ -556,4 +558,28 @@
   line-height: 1.5;
   word-break: normal;
   overflow-wrap: break-word;
+}
+
+.weekError {
+  background-color: #fff1f0;
+  border: 1px solid #ffccc7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: #cf1322;
+}
+
+.retryButton {
+  background-color: #fff;
+  border: 1px solid #cf1322;
+  color: #cf1322;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.retryButton:hover {
+  background-color: #fff2f0;
 } 

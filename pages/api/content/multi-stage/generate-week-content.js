@@ -29,7 +29,15 @@ export default async function handler(req, res) {
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Use the more stable model
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.5,
+        maxOutputTokens: 800,
+        responseFormat: { type: "json" },
+      }
+    });
     
     // Construct a prompt for just this week's content
     const prompt = `
@@ -78,24 +86,33 @@ export default async function handler(req, res) {
     while (attempt < maxRetries) {
       try {
         console.log(`API attempt ${attempt + 1} of ${maxRetries}...`);
+        
+        // Extra debug info
+        console.log("API key exists:", !!apiKey);
+        console.log("Model being used:", "gemini-1.5-flash");
+        console.log("Week data:", JSON.stringify({
+          weekNumber,
+          weekTheme,
+          has_allThemes: !!allThemes,
+          has_business_desc: !!strategy.business_description,
+          target_audience_count: strategy.target_audience?.length || 0
+        }));
+        
         result = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 800,  // Lower token limit for just one week
-            responseFormat: { type: "json" }, // Force JSON response format
-          },
         });
         
         // If we get here, the call succeeded
         break;
       } catch (apiError) {
         attempt++;
+        // Enhanced error logging
         console.error(`API attempt ${attempt} failed:`, apiError.message);
+        console.error("Error details:", JSON.stringify(apiError));
         
         if (attempt >= maxRetries) {
           console.error("All API retry attempts failed");
-          throw apiError;
+          throw new Error(`Gemini API error for week ${weekNumber}: ${apiError.message}`);
         }
         
         // Exponential backoff with jitter

@@ -140,6 +140,15 @@ export default function NewContent() {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [selectedStrategy, setSelectedStrategy] = useState(null);
   const [error, setError] = useState('');
+  // Add states for individual week loading
+  const [weekLoadingStates, setWeekLoadingStates] = useState({
+    1: { loading: false, error: null },
+    2: { loading: false, error: null },
+    3: { loading: false, error: null }
+  });
+  // Track theme loading separately
+  const [themesLoading, setThemesLoading] = useState(false);
+  const [themes, setThemes] = useState(null);
   
   useEffect(() => {
     // Redirect if not logged in
@@ -260,6 +269,9 @@ export default function NewContent() {
     try {
       console.log("Generating content with strategy data using multi-stage approach...");
       
+      // Reset any previous errors
+      setError('');
+      
       // Validate that we have the required strategy data
       if (!strategyData || !strategyData.target_audience || !strategyData.objectives || !strategyData.key_messages) {
         console.error("Invalid strategy data format:", strategyData);
@@ -268,11 +280,19 @@ export default function NewContent() {
         return;
       }
       
+      // Initialize an empty content outline with placeholder weeks
+      setContentOutline([
+        { week: 1, theme: "Loading...", posts: [], loading: true },
+        { week: 2, theme: "Loading...", posts: [], loading: true },
+        { week: 3, theme: "Loading...", posts: [], loading: true }
+      ]);
+      
       // Store all generated weeks here
       let generatedWeeks = [];
       
       // Step 1: Generate weekly themes
       console.log("Step 1: Generating weekly themes...");
+      setThemesLoading(true);
       
       try {
         const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
@@ -292,7 +312,8 @@ export default function NewContent() {
         });
         
         if (!themesResponse.ok) {
-          throw new Error(`Themes API error: ${themesResponse.status}`);
+          const errorText = await themesResponse.text();
+          throw new Error(`Themes API error: ${themesResponse.status} - ${errorText}`);
         }
         
         const themesData = await themesResponse.json();
@@ -302,11 +323,35 @@ export default function NewContent() {
         }
         
         console.log("Successfully generated themes:", themesData.weeklyThemes);
+        setThemes(themesData.weeklyThemes);
         
-        // Step 2: Generate content for each week in parallel
-        console.log("Step 2: Generating content for each week...");
+        // Update the content outline with theme information
+        setContentOutline(prev => {
+          const updated = [...prev];
+          themesData.weeklyThemes.forEach(theme => {
+            const index = theme.week - 1;
+            if (index >= 0 && index < updated.length) {
+              updated[index] = {
+                ...updated[index],
+                theme: theme.theme
+              };
+            }
+          });
+          return updated;
+        });
         
-        const weekPromises = themesData.weeklyThemes.map(async (weekTheme) => {
+        setThemesLoading(false);
+        
+        // Step 2: Generate content for each week one by one for better UX
+        console.log("Step 2: Generating content for each week sequentially...");
+        
+        for (const weekTheme of themesData.weeklyThemes) {
+          // Update loading state for this specific week
+          setWeekLoadingStates(prev => ({
+            ...prev,
+            [weekTheme.week]: { loading: true, error: null }
+          }));
+          
           try {
             console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
             
@@ -330,7 +375,8 @@ export default function NewContent() {
             });
             
             if (!weekResponse.ok) {
-              throw new Error(`Week ${weekTheme.week} API error: ${weekResponse.status}`);
+              const errorText = await weekResponse.text();
+              throw new Error(`Week ${weekTheme.week} API error: ${weekResponse.status} - ${errorText}`);
             }
             
             const weekData = await weekResponse.json();
@@ -340,64 +386,62 @@ export default function NewContent() {
             }
             
             console.log(`Successfully generated content for Week ${weekTheme.week}`);
-            return weekData.weekContent;
+            
+            // Add this week's content to the list
+            generatedWeeks.push(weekData.weekContent);
+            
+            // Also update the UI immediately with this week's content
+            setContentOutline(prev => {
+              const updated = [...prev];
+              const index = weekTheme.week - 1;
+              if (index >= 0 && index < updated.length) {
+                updated[index] = {
+                  ...weekData.weekContent,
+                  loading: false // Mark as loaded
+                };
+              }
+              return updated;
+            });
+            
+            // Update loading state for this week
+            setWeekLoadingStates(prev => ({
+              ...prev,
+              [weekTheme.week]: { loading: false, error: null }
+            }));
+            
           } catch (weekError) {
             console.error(`Error generating Week ${weekTheme.week} content:`, weekError);
-            // Return fallback content for this week
-            return {
-              week: weekTheme.week,
-              theme: weekTheme.theme,
-              posts: [
-                { 
-                  type: "Carousel", 
-                  topic: `${weekTheme.theme} overview`, 
-                  audience: strategyData.target_audience[0] || "Fitness enthusiasts",
-                  cta: "Save this post",
-                  principle: "Authority",
-                  principleExplanation: "Expert information establishes trust.",
-                  visual: "Information slides",
-                  proposedCaption: `Week ${weekTheme.week} of your fitness journey focuses on ${weekTheme.theme}. Save this post for reference! #FitnessJourney #HealthTips`
-                },
-                { 
-                  type: "Video", 
-                  topic: `${weekTheme.theme} demonstration`, 
-                  audience: strategyData.target_audience[1] || "Active individuals",
-                  cta: "Try this technique",
-                  principle: "Social Proof",
-                  principleExplanation: "Showing results builds credibility.",
-                  visual: "Demonstration video",
-                  proposedCaption: `See how to implement ${weekTheme.theme} in your fitness routine. Let me know if you try it! #FitnessTips #WorkoutWednesday`
-                },
-                { 
-                  type: "Image", 
-                  topic: `${weekTheme.theme} motivation`, 
-                  audience: strategyData.target_audience[2] || "Fitness beginners",
-                  cta: "Comment your experience",
-                  principle: "Reciprocity",
-                  principleExplanation: "Sharing valuable content creates goodwill.",
-                  visual: "Motivational image",
-                  proposedCaption: `Finding motivation for ${weekTheme.theme} can be challenging. Share your experience in the comments! #FitnessMotivation #FitnessJourney`
-                }
-              ]
-            };
+            
+            // Update error state for this week
+            setWeekLoadingStates(prev => ({
+              ...prev,
+              [weekTheme.week]: { loading: false, error: weekError.message }
+            }));
+            
+            // Still show the partial content with an error indicator
+            setContentOutline(prev => {
+              const updated = [...prev];
+              const index = weekTheme.week - 1;
+              if (index >= 0 && index < updated.length) {
+                updated[index] = {
+                  ...updated[index],
+                  loading: false,
+                  error: weekError.message,
+                  posts: [] // No posts for this week
+                };
+              }
+              return updated;
+            });
           }
-        });
-        
-        // Wait for all weeks to complete - either successfully or with fallbacks
-        generatedWeeks = await Promise.all(weekPromises);
-        
-        // Ensure weeks are in correct order
-        generatedWeeks.sort((a, b) => a.week - b.week);
+        }
         
         console.log("All weeks generated successfully:", generatedWeeks.length);
-        setContentOutline(generatedWeeks);
       } catch (themesError) {
         console.error('Themes generation failed:', themesError);
+        setThemesLoading(false);
         
-        // Fall back to customized mock content if the themes API fails
-        console.warn("Using fallback customized mock content due to themes API error");
-        const customizedMockContent = createCustomizedMockContent(strategyData);
-        setContentOutline(customizedMockContent);
+        // Show error but don't fall back to mock data
+        setError(`Failed to generate content themes: ${themesError.message}. Please try again later.`);
       }
       
       // Set empty daily engagement data (daily engagement API is disabled for now)
@@ -407,7 +451,7 @@ export default function NewContent() {
       setIsLoading(false);
     } catch (error) {
       console.error('Error in multi-stage content generation:', error);
-      setContentOutline(mockContent);
+      setError(`Content generation failed: ${error.message}. Please try again later.`);
       setIsLoading(false);
     }
   };
@@ -634,10 +678,10 @@ export default function NewContent() {
         </div>
 
         <div className={styles.content}>
-          {isLoading ? (
+          {isLoading && !contentOutline.length ? (
             <div className={styles.loading}>
               <div className={styles.spinner}></div>
-              <p>Generating your content outline...</p>
+              <p>Preparing to generate your content outline...</p>
             </div>
           ) : error ? (
             <div className={styles.errorContainer}>
@@ -653,78 +697,117 @@ export default function NewContent() {
             </div>
           ) : (
             <div className={styles.outlineContainer}>
-              {contentOutline.map((week, weekIndex) => (
-                <div key={weekIndex} className={styles.weekSection}>
-                  <h2>Week {week.week}: {week.theme}</h2>
-                  <div className={styles.postsGrid}>
-                    {week.posts.map((post, postIndex) => (
-                      <div key={postIndex} className={styles.postCard}>
-                        <div className={styles.postType}>{post.type}</div>
-                        <p className={styles.postTopic}>{post.topic}</p>
-                        
-                        <div className={styles.postMeta}>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Audience:</span>
-                            <span className={styles.metaValue}>{post.audience}</span>
-                          </div>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>CTA:</span>
-                            <span className={styles.metaValue}>{post.cta}</span>
-                          </div>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Principle:</span>
-                            <span className={styles.metaValue}>{post.principle}</span>
-                          </div>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Why it works:</span>
-                            <span className={styles.metaValue}>{post.principleExplanation}</span>
-                          </div>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Proposed visual:</span>
-                            <span className={styles.metaValue}>{post.visual}</span>
-                          </div>
-                          <div className={styles.metaItem}>
-                            <span className={styles.metaLabel}>Proposed caption:</span>
-                            <span className={styles.metaValue}>{post.proposedCaption || "No caption proposed for this content."}</span>
-                          </div>
-                        </div>
+              {themesLoading ? (
+                <div className={styles.loading}>
+                  <div className={styles.spinner}></div>
+                  <p>Generating weekly content themes...</p>
+                </div>
+              ) : (
+                contentOutline.map((week, weekIndex) => (
+                  <div key={weekIndex} className={styles.weekSection}>
+                    <h2>Week {week.week}: {week.theme}</h2>
+                    
+                    {week.loading || weekLoadingStates[week.week]?.loading ? (
+                      <div className={styles.loadingSection}>
+                        <div className={styles.spinnerSmall}></div>
+                        <p>Generating content for Week {week.week}...</p>
                       </div>
-                    ))}
+                    ) : week.error || weekLoadingStates[week.week]?.error ? (
+                      <div className={styles.weekError}>
+                        <p>Error generating content for this week: {week.error || weekLoadingStates[week.week]?.error}</p>
+                        <button 
+                          className={styles.retryButton} 
+                          onClick={() => {
+                            // If we have themes, we could implement a retry just for this week
+                            alert("Retry functionality not yet implemented");
+                          }}
+                        >
+                          Retry this week
+                        </button>
+                      </div>
+                    ) : week.posts && week.posts.length > 0 ? (
+                      <div className={styles.postsGrid}>
+                        {week.posts.map((post, postIndex) => (
+                          <div key={postIndex} className={styles.postCard}>
+                            <div className={styles.postType}>{post.type}</div>
+                            <p className={styles.postTopic}>{post.topic}</p>
+                            
+                            <div className={styles.postMeta}>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Audience:</span>
+                                <span className={styles.metaValue}>{post.audience}</span>
+                              </div>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>CTA:</span>
+                                <span className={styles.metaValue}>{post.cta}</span>
+                              </div>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Principle:</span>
+                                <span className={styles.metaValue}>{post.principle}</span>
+                              </div>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Why it works:</span>
+                                <span className={styles.metaValue}>{post.principleExplanation}</span>
+                              </div>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Proposed visual:</span>
+                                <span className={styles.metaValue}>{post.visual}</span>
+                              </div>
+                              <div className={styles.metaItem}>
+                                <span className={styles.metaLabel}>Proposed caption:</span>
+                                <span className={styles.metaValue}>{post.proposedCaption || "No caption proposed for this content."}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>No content available for this week yet.</p>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))
+              )}
               
-              <div className={styles.datePickerContainer}>
-                <h3>When would you like to start publishing?</h3>
-                <div className={styles.datePicker}>
-                  <label htmlFor="start-date">Start Date:</label>
-                  <input
-                    type="date"
-                    id="start-date"
-                    value={startDate instanceof Date ? startDate.toISOString().split('T')[0] : ''}
-                    onChange={(e) => setStartDate(new Date(e.target.value))}
-                    className={styles.dateInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.actions}>
-                <button onClick={handleSaveCalendar} className={styles.saveButton}>
-                  Save Content Calendar
-                </button>
-                <button 
-                  onClick={handleSaveContent}
-                  className={styles.calendarButton}
-                >
-                  Save Content Plan
-                </button>
-                <button 
-                  onClick={() => router.push('/dashboard')} 
-                  className={styles.cancelButton}
-                >
-                  Cancel
-                </button>
-              </div>
+              {!isLoading && contentOutline.some(week => week.posts && week.posts.length > 0) && (
+                <>
+                  <div className={styles.datePickerContainer}>
+                    <h3>When would you like to start publishing?</h3>
+                    <div className={styles.datePicker}>
+                      <label htmlFor="start-date">Start Date:</label>
+                      <input
+                        type="date"
+                        id="start-date"
+                        value={startDate instanceof Date ? startDate.toISOString().split('T')[0] : ''}
+                        onChange={(e) => setStartDate(new Date(e.target.value))}
+                        className={styles.dateInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.actions}>
+                    <button 
+                      onClick={handleSaveCalendar} 
+                      className={styles.saveButton}
+                      disabled={contentOutline.some(week => week.loading)}
+                    >
+                      Save Content Calendar
+                    </button>
+                    <button 
+                      onClick={handleSaveContent}
+                      className={styles.calendarButton}
+                      disabled={contentOutline.some(week => week.loading)}
+                    >
+                      Save Content Plan
+                    </button>
+                    <button 
+                      onClick={() => router.push('/dashboard')} 
+                      className={styles.cancelButton}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

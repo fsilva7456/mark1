@@ -24,7 +24,15 @@ export default async function handler(req, res) {
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Try a more stable model - gemini-2.0-flash might not be available
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 300,
+        responseFormat: { type: "json" },
+      }
+    });
     
     // Create a very focused prompt just for theme generation
     const prompt = `
@@ -57,24 +65,32 @@ export default async function handler(req, res) {
     while (attempt < maxRetries) {
       try {
         console.log(`API attempt ${attempt + 1} of ${maxRetries}...`);
+        
+        // Extra debug info
+        console.log("API key exists:", !!apiKey);
+        console.log("Model being used:", "gemini-1.5-flash");
+        console.log("Strategy data preview:", JSON.stringify({
+          has_business_desc: !!strategy.business_description,
+          target_audience_count: strategy.target_audience?.length || 0,
+          objectives_count: strategy.objectives?.length || 0,
+          key_messages_count: strategy.key_messages?.length || 0
+        }));
+        
         result = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.4,  // Even lower temperature for consistent output
-            maxOutputTokens: 300,  // Very small token limit for this simple task
-            responseFormat: { type: "json" }, // Force JSON response format
-          },
         });
         
         // If we get here, the call succeeded
         break;
       } catch (apiError) {
         attempt++;
+        // Enhanced error logging
         console.error(`API attempt ${attempt} failed:`, apiError.message);
+        console.error("Error details:", JSON.stringify(apiError));
         
         if (attempt >= maxRetries) {
           console.error("All API retry attempts failed");
-          throw apiError;
+          throw new Error(`Gemini API error: ${apiError.message}`);
         }
         
         // Exponential backoff with jitter
