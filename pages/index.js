@@ -179,6 +179,8 @@ export default function Home() {
             
             <div className={styles.divider}>or</div>
             
+            {/* Comment out the Google login button temporarily */}
+            {/*
             <button 
               onClick={handleGoogleLogin} 
               className={styles.googleButton}
@@ -189,6 +191,23 @@ export default function Home() {
               </svg>
               Sign in with Google
             </button>
+            */}
+            
+            {/* If it's inside a container with other social logins, you might need to do: */}
+            <div className={styles.socialLogins}>
+              {/* Comment out just the Google button */}
+              {/*
+              <button 
+                onClick={handleGoogleLogin} 
+                className={styles.googleButton}
+              >
+                <img src="/icons/google.svg" alt="Google" />
+                Sign in with Google
+              </button>
+              */}
+              
+              {/* Keep other social login buttons if they exist */}
+            </div>
             
             <div className={styles.formFooter}>
               <p>Don't have an account? <Link href="/signup">Sign up</Link></p>
