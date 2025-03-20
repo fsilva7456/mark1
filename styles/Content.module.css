@@ -458,4 +458,102 @@
   white-space: pre-wrap;
   line-height: 1.5;
   color: #333;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.contentCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.contentCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.weekHeader {
+  background-color: #3454D1;
+  color: white;
+  padding: 1rem;
+}
+
+.weekHeader h4 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.weekTheme {
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  opacity: 0.9;
+}
+
+.contentList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contentItem {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.contentItem:last-child {
+  border-bottom: none;
+}
+
+.contentItemHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.contentItemHead strong {
+  font-weight: 600;
+  color: #1A2B3C;
+  flex: 1;
+}
+
+.contentType {
+  background-color: #EBF4FF;
+  color: #3454D1;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.contentDetails {
+  font-size: 0.9rem;
+  color: #4A5568;
+}
+
+.contentVisual, .contentCaption {
+  margin-bottom: 0.75rem;
+}
+
+.contentVisual strong, .contentCaption strong {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #2D3748;
+  font-weight: 600;
+}
+
+.contentVisual p, .contentCaption p {
+  margin: 0;
+  line-height: 1.5;
+  word-break: normal;
+  overflow-wrap: break-word;
 } 

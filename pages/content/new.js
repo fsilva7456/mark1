@@ -19,7 +19,8 @@ const mockContent = [
         cta: "Save this post for future reference",
         principle: "Authority & Social Proof",
         principleExplanation: "Using expert knowledge to debunk myths establishes authority, while referencing what others commonly believe leverages social proof.",
-        visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text"
+        visual: "Split-screen graphics comparing myths vs. facts with simple icons and bold text",
+        proposedCaption: "Tired of fitness advice that doesn't work? 🤔 Let's bust some common myths! Swipe through to discover what REALLY works based on science, not trends. Save this post for the next time someone tells you one of these myths! #FitnessMyths #FactsNotFiction"
       },
       { 
         type: "Video", 
@@ -28,7 +29,8 @@ const mockContent = [
         cta: "DM me for a free consultation",
         principle: "Reciprocity",
         principleExplanation: "Offering valuable content for free creates a sense of reciprocity, making viewers more likely to respond to your CTA.",
-        visual: "Fast-paced training montage showing your energy and training style in your actual workspace"
+        visual: "Fast-paced training montage showing your energy and training style in your actual workspace",
+        proposedCaption: "This is how we train! 💪 A quick look at what a session with me looks like. Notice how we focus on proper form and sustainable intensity—this isn't about burning you out, it's about building you up! Curious if this approach would work for you? DM me for a free consultation to discuss your fitness goals. #PersonalTrainer #TrainingSession"
       },
       { 
         type: "Story", 
@@ -37,7 +39,8 @@ const mockContent = [
         cta: "Follow for more insights",
         principle: "Liking & Familiarity",
         principleExplanation: "Sharing personal aspects of your business creates likability and builds familiarity, which increases trust over time.",
-        visual: "Candid photos or video clips of your workspace, training equipment, or planning process"
+        visual: "Candid photos or video clips of your workspace, training equipment, or planning process",
+        proposedCaption: "Behind the scenes today! Setting up for a group session and thought I'd give you a peek at what goes into making your workouts effective. Every detail matters! Follow along for more behind-the-scenes content and fitness tips you can actually use. #BehindTheScenes #FitnessCoach"
       }
     ]
   },
@@ -52,7 +55,8 @@ const mockContent = [
         cta: "Book a consultation (link in bio)",
         principle: "Social Proof",
         principleExplanation: "Showing real results creates social proof, demonstrating that your methods work for others and can work for the viewer too.",
-        visual: "Side-by-side comparison photos with consistent lighting and angles to highlight genuine progress"
+        visual: "Side-by-side comparison photos with consistent lighting and angles to highlight genuine progress",
+        proposedCaption: "Meet Sarah who came to me 6 months ago with a goal to gain strength and energy. The transformation goes beyond what you see in the photos—she's now sleeping better, has more energy throughout the day, and feels confident in her skin! This didn't happen overnight, but with consistent work and a sustainable approach. Want to start your journey? Book a consultation through the link in my bio. #TransformationTuesday #RealResults"
       },
       { 
         type: "Testimonial", 
@@ -61,7 +65,8 @@ const mockContent = [
         cta: "Comment if you relate to their story",
         principle: "Liking & Social Proof",
         principleExplanation: "Personal stories create emotional connections and relatability, while positive outcomes reinforce social proof.",
-        visual: "Video interview with client in a comfortable setting with good lighting and clear audio"
+        visual: "Video interview with client in a comfortable setting with good lighting and clear audio",
+        proposedCaption: "\"I never thought I could stick with a fitness routine until I found this approach.\" Hear John's story about how he went from fitness-avoider to consistent gym-goer. What part of his journey resonates with you? Comment below if you've experienced similar challenges! #ClientStory #FitnessJourney"
       },
       { 
         type: "Carousel", 
@@ -70,7 +75,8 @@ const mockContent = [
         cta: "Share this with someone who needs it",
         principle: "Commitment & Consistency",
         principleExplanation: "Highlighting successful habits encourages viewers to commit to small actions, which builds momentum through consistency.",
-        visual: "Clean, minimalist graphics with icons representing each habit and short explanatory text"
+        visual: "Clean, minimalist graphics with icons representing each habit and short explanatory text",
+        proposedCaption: "The difference between those who see results and those who don't often comes down to these 3 key habits. They're not complicated, but they require consistency! Swipe through to learn what my most successful clients all have in common. Know someone who needs this reminder? Tag them in the comments! #HealthyHabits #FitnessSuccess"
       }
     ]
   },
@@ -85,7 +91,8 @@ const mockContent = [
         cta: "Save this to reference during workouts",
         principle: "Authority",
         principleExplanation: "Sharing research-backed information positions you as an expert and authority in your field, building credibility and trust.",
-        visual: "Simple diagrams with scientific concepts visualized in an accessible way with your branding"
+        visual: "Simple diagrams with scientific concepts visualized in an accessible way with your branding",
+        proposedCaption: "Ever wonder WHY certain exercises are more effective than others? It's not magic—it's science! In this carousel, I break down the physiological principles behind the methods we use. Save this post to reference during your next workout. #ExerciseScience #EvidenceBased"
       },
       { 
         type: "Video", 
@@ -94,7 +101,8 @@ const mockContent = [
         cta: "Tag a friend who needs to see this",
         principle: "Loss Aversion",
         principleExplanation: "Highlighting mistakes taps into loss aversion - people's desire to avoid negative outcomes like injury or wasted effort.",
-        visual: "Split-screen demonstrations showing incorrect form (with caution indicator) vs. correct form (with checkmark)"
+        visual: "Split-screen demonstrations showing incorrect form (with caution indicator) vs. correct form (with checkmark)",
+        proposedCaption: "These form mistakes might be sabotaging your progress (and risking injury)! Watch for the correct technique demonstration so you can make every rep count. Know someone who might benefit from these tips? Tag them below so they can avoid these common pitfalls! #ProperForm #ExerciseTips"
       },
       { 
         type: "Reel", 
@@ -103,7 +111,8 @@ const mockContent = [
         cta: "Try this in your next workout",
         principle: "Simplicity & Scarcity",
         principleExplanation: "Quick, actionable tips are perceived as valuable because they save time (scarcity) and are easy to implement (simplicity).",
-        visual: "Fast-paced video with on-screen text highlighting key points and demonstrating quick techniques"
+        visual: "Fast-paced video with on-screen text highlighting key points and demonstrating quick techniques",
+        proposedCaption: "No time? No problem! These 30-second tweaks can dramatically improve your workout efficiency. Even the busiest professionals can implement these tips. Try one in your next workout and let me know which one made the biggest difference for you! #QuickTips #EfficientWorkout"
       }
     ]
   }
@@ -389,6 +398,9 @@ export default function NewContent() {
         : strategyData.business_description;
         
       customContent[0].posts[0].topic = `How ${shortDesc} can transform your fitness journey`;
+      
+      // Customize caption with business description
+      customContent[0].posts[0].proposedCaption = `Discover how ${shortDesc} can completely transform your fitness journey! Swipe to learn more about our unique approach and why it works. Save this post for reference! #FitnessJourney #TransformYourLife`;
     }
     
     // Use objectives in some posts
@@ -396,8 +408,25 @@ export default function NewContent() {
       // Use objective in the second week's first post
       if (customContent[1].posts[0]) {
         customContent[1].posts[0].topic = strategyData.objectives[0];
+        
+        // Add caption that incorporates this objective
+        customContent[1].posts[0].proposedCaption = `Our focus on "${strategyData.objectives[0]}" has helped clients achieve amazing results. Swipe to see the transformation! Want to experience similar results? Book a consultation through the link in my bio. #FitnessGoals #RealResults`;
+      }
+      
+      // Use another objective if available
+      if (strategyData.objectives.length > 1 && customContent[2].posts[0]) {
+        customContent[2].posts[0].proposedCaption = `Let me show you the science behind how we achieve "${strategyData.objectives[1]}" with our clients. These principles are what make our approach so effective! Save this post to reference during your next workout. #FitnessFacts #EvidenceBased`;
       }
     }
+    
+    // Ensure all posts have captions
+    customContent.forEach(week => {
+      week.posts.forEach(post => {
+        if (!post.proposedCaption) {
+          post.proposedCaption = `Check out this ${post.type} about ${post.topic}! Designed specifically for ${post.audience}. ${post.cta} #Fitness #HealthyLifestyle`;
+        }
+      });
+    });
     
     return customContent;
   };
@@ -492,32 +521,53 @@ export default function NewContent() {
 
   const handleSaveContent = async () => {
     try {
+      toast.loading("Saving content plan...");
+      
       if (!selectedStrategy || !selectedStrategy.id) {
-        setError('Strategy information is missing.');
+        toast.error("No strategy selected");
         return;
       }
       
-      // Save the content to Supabase
-      const { data, error } = await supabase
+      // Create a new content plan in the database
+      const { data: contentPlanData, error: contentPlanError } = await supabase
         .from('content_plans')
         .insert([
-          { 
+          {
+            name: `Content Plan for ${selectedStrategy.name}`,
             user_id: user.id,
-            name: `Content Plan for ${selectedStrategy.name || 'Marketing Strategy'}`,
             strategy_id: selectedStrategy.id,
-            campaigns: contentOutline,
-            daily_engagement: dailyEngagement,
-            created_at: new Date()
+            campaigns: contentOutline.map(week => ({
+              week: week.week,
+              theme: week.theme,
+              posts: week.posts.map(post => ({
+                type: post.type,
+                topic: post.topic,
+                audience: post.audience,
+                cta: post.cta,
+                principle: post.principle,
+                principle_explanation: post.principleExplanation,
+                visual: post.visual,
+                proposed_caption: post.proposedCaption
+              }))
+            })),
+            daily_engagement: dailyEngagement
           }
-        ]);
+        ])
+        .select();
       
-      if (error) throw error;
+      if (contentPlanError) {
+        throw contentPlanError;
+      }
       
-      // Redirect to dashboard with success message
-      router.push('/dashboard?success=content-created');
+      toast.dismiss();
+      toast.success("Content plan saved successfully!");
+      
+      // Navigate to the content plan view page
+      router.push(`/content-plans/${contentPlanData[0].id}`);
     } catch (error) {
-      console.error('Error saving content:', error);
-      setError('Failed to save content. Please try again.');
+      toast.dismiss();
+      console.error("Error saving content plan:", error);
+      toast.error("Failed to save content plan");
     }
   };
 
@@ -650,7 +700,22 @@ export default function NewContent() {
                     </div>
                     <ul className={styles.contentList}>
                       {week.posts.map((post, itemIndex) => (
-                        <li key={itemIndex}>{post.topic}</li>
+                        <li key={itemIndex} className={styles.contentItem}>
+                          <div className={styles.contentItemHead}>
+                            <strong>{post.topic}</strong>
+                            <span className={styles.contentType}>{post.type}</span>
+                          </div>
+                          <div className={styles.contentDetails}>
+                            <div className={styles.contentVisual}>
+                              <strong>Proposed Visual:</strong>
+                              <p>{post.visual}</p>
+                            </div>
+                            <div className={styles.contentCaption}>
+                              <strong>Proposed Caption:</strong>
+                              <p>{post.proposedCaption || "No caption proposed for this content."}</p>
+                            </div>
+                          </div>
+                        </li>
                       ))}
                     </ul>
                   </div>

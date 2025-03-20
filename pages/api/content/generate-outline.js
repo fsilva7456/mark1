@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       1. Create a detailed social media content plan with 3 weeks of content
       2. For each week, provide a clear theme based on one of the key messages
       3. For each week, create 3 posts with detailed topics
-      4. Each post must include: content type, topic, target audience, CTA, principle, explanation, and visual recommendation
+      4. Each post must include: content type, topic, target audience, CTA, principle, explanation, visual recommendation, and proposed caption/text
       5. Use exact language from the key messages and target the specific audiences listed
       
       Format your response as a clean JSON object like this (no explanation, just the JSON):
@@ -64,7 +64,8 @@ export default async function handler(req, res) {
                 "cta": "Call to action",
                 "principle": "Persuasion principle",
                 "principleExplanation": "Brief explanation",
-                "visual": "Visual recommendation"
+                "visual": "Visual recommendation",
+                "proposedCaption": "Suggested text/caption for the post that incorporates the key message and calls to action"
               },
               // More posts for week 1
             ]
