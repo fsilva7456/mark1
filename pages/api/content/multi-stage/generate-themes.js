@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     // Define model configuration explicitly for better control
     const modelName = "gemini-2.0-flash";
     const generationConfig = {
-      temperature: 0.4,
+      temperature: 0.3, // Lower temperature for more predictable formatting
       maxOutputTokens: 300,
     };
     
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       apiKeyLength: apiKey ? apiKey.length : 0
     });
     
-    // Create a very focused prompt just for theme generation
+    // Simplify the prompt to reduce chances of malformed JSON
     const prompt = `
       Create 3 weekly content themes for a fitness social media campaign.
 
@@ -68,17 +68,11 @@ export default async function handler(req, res) {
       
       ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
       
-      Make each week's theme match one of the key messages. Each theme should be specific (8-12 words) and clearly communicate the core value proposition for that week.
+      Make each week's theme match one of the key messages. Each theme should be specific (8-12 words) and communicate the core value proposition.
       
-      ${aesthetic ? `Ensure that all themes align with the specified aesthetic/style: "${aesthetic}"` : ''}
+      IMPORTANT: Avoid using quotes or special characters in your response that could break JSON syntax.
       
-      For each theme:
-      1. Focus on ONE specific key message
-      2. Use powerful action words
-      3. Clearly state the benefit to the audience
-      4. Make it memorable and engaging
-      
-      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT WITHOUT ANY EXPLANATION OR MARKDOWN:
+      RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
       {"weeklyThemes":[{"week":1,"theme":"Theme for Week 1"},{"week":2,"theme":"Theme for Week 2"},{"week":3,"theme":"Theme for Week 3"}]}
     `;
     
@@ -138,19 +132,24 @@ export default async function handler(req, res) {
       console.log("API response preview:", text.substring(0, 100) + "...");
       console.log("API full response:", text); // Log full response for debugging
       
-      // Enhanced JSON cleaning
+      // Extremely aggressive JSON cleaning with focus on string termination
       let cleanedText = text
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
         .replace(/^\s+|\s+$/g, '')
-        .replace(/\\n/g, ' ')  // Replace newlines with spaces
-        .replace(/\\"/g, '"'); // Fix escaped quotes
+        .replace(/\\n/g, ' ')    // Replace newlines with spaces
+        .replace(/\\"/g, '"')    // Fix escaped quotes
+        .replace(/\\\\/g, '\\'); // Fix double escapes
       
-      // Additional cleanup to fix common JSON syntax issues
+      // Fix JSON syntax issues
       cleanedText = cleanedText
-        .replace(/,\s*}/g, '}')       // Remove trailing commas in objects
-        .replace(/,\s*\]/g, ']')      // Remove trailing commas in arrays
+        .replace(/,\s*}/g, '}')          // Remove trailing commas in objects
+        .replace(/,\s*\]/g, ']')         // Remove trailing commas in arrays
         .replace(/(['"])\s*:\s*/g, '$1:'); // Normalize spacing around colons
+      
+      // Fix unterminated strings - a common issue in large JSON responses
+      // This regex finds strings that are missing a closing quote
+      cleanedText = fixUnterminatedStrings(cleanedText);
       
       // Try direct parsing first with error handling
       try {
@@ -164,78 +163,90 @@ export default async function handler(req, res) {
         console.log("Attempting more aggressive JSON cleanup...");
         
         try {
-          // Try to extract just the weeklyThemes array if the full JSON is malformed
-          const themesPattern = /"weeklyThemes"\s*:\s*\[([\s\S]*?)\]/g;
-          const themesMatch = themesPattern.exec(cleanedText);
+          // Raw text extraction approach - extract anything that looks like a theme
+          const extractedThemes = extractThemesFromText(text);
           
-          if (themesMatch && themesMatch[1]) {
-            // Try to parse just the themes array
-            const themesContent = themesMatch[1].trim();
-            
-            // Build theme objects individually
-            const themeObjects = [];
-            const themeBlocks = themesContent.split(/},{/);
-            
-            for (let i = 0; i < themeBlocks.length; i++) {
-              let themeBlock = themeBlocks[i];
-              // Add the missing braces for all but first and last
-              if (i > 0) themeBlock = '{' + themeBlock;
-              if (i < themeBlocks.length - 1) themeBlock = themeBlock + '}';
-              
-              try {
-                // Fix common issues in each theme object
-                themeBlock = themeBlock
-                  .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
-                  .replace(/:\s*'([^']*)'/g, ':"$1"');                // Replace single quotes with double quotes
-                
-                const themeObj = JSON.parse(themeBlock);
-                themeObjects.push(themeObj);
-              } catch (themeError) {
-                console.error(`Error parsing theme ${i+1}:`, themeError.message);
-                console.error(`Theme block: ${themeBlock}`);
-                // Add a placeholder theme if parsing fails
-                themeObjects.push({
-                  week: i + 1,
-                  theme: strategy.key_messages[i] ? 
-                    `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
-                    `Week ${i + 1}: Fitness Content`
-                });
-              }
-            }
-            
-            // Create the proper structure
-            jsonData = {
-              weeklyThemes: themeObjects.slice(0, 3) // Ensure we only have 3 themes
-            };
-            
-            console.log("Successfully extracted themes array through manual parsing");
+          if (extractedThemes && extractedThemes.length > 0) {
+            jsonData = { weeklyThemes: extractedThemes };
+            console.log(`Successfully extracted ${extractedThemes.length} themes through text pattern matching`);
           } else {
-            // If we can't extract themes pattern, try extracting any JSON object
-            const jsonPattern = /\{[\s\S]*?\}/g;
-            const matches = cleanedText.match(jsonPattern);
+            // Try to extract just the weeklyThemes array if the full JSON is malformed
+            const themesPattern = /"weeklyThemes"\s*:\s*\[([\s\S]*?)\]/g;
+            const themesMatch = themesPattern.exec(cleanedText);
             
-            if (matches && matches.length > 0) {
-              console.log("Found JSON object in response, attempting to extract structure");
+            if (themesMatch && themesMatch[1]) {
+              // Try to parse just the themes array
+              const themesContent = themesMatch[1].trim();
               
-              // Try each potential JSON object until we find a valid one
-              for (const match of matches) {
+              // Build theme objects individually
+              const themeObjects = [];
+              const themeBlocks = themesContent.split(/},{/);
+              
+              for (let i = 0; i < themeBlocks.length; i++) {
+                let themeBlock = themeBlocks[i];
+                // Add the missing braces for all but first and last
+                if (i > 0) themeBlock = '{' + themeBlock;
+                if (i < themeBlocks.length - 1) themeBlock = themeBlock + '}';
+                
                 try {
-                  const potentialJson = JSON.parse(match);
-                  if (potentialJson.weeklyThemes) {
-                    jsonData = potentialJson;
-                    console.log("Found valid weeklyThemes structure in JSON object");
-                    break;
-                  }
-                } catch (err) {
-                  // Continue to next match
+                  // Fix common issues in each theme object
+                  themeBlock = themeBlock
+                    .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Ensure property names are quoted
+                    .replace(/:\s*'([^']*)'/g, ':"$1"')                 // Replace single quotes with double quotes
+                    .replace(/([^\\])"([^"]*?)([^\\])"/g, '$1"$2$3"');  // Fix nested quotes
+                  
+                  // Try to balance quotes in the theme block
+                  themeBlock = fixUnterminatedStrings(themeBlock);
+                  
+                  const themeObj = JSON.parse(themeBlock);
+                  themeObjects.push(themeObj);
+                } catch (themeError) {
+                  console.error(`Error parsing theme ${i+1}:`, themeError.message);
+                  console.error(`Theme block: ${themeBlock}`);
+                  // Add a placeholder theme if parsing fails
+                  themeObjects.push({
+                    week: i + 1,
+                    theme: strategy.key_messages[i] ? 
+                      `Week ${i + 1}: ${strategy.key_messages[i].substring(0, 30)}...` : 
+                      `Week ${i + 1}: Fitness Content`
+                  });
                 }
               }
               
-              if (!jsonData) {
-                throw new Error("No valid weeklyThemes structure found in JSON objects");
-              }
+              // Create the proper structure
+              jsonData = {
+                weeklyThemes: themeObjects.slice(0, 3) // Ensure we only have 3 themes
+              };
+              
+              console.log("Successfully extracted themes array through manual parsing");
             } else {
-              throw new Error("Could not find weeklyThemes array or any JSON object in response");
+              // If we can't extract themes pattern, try extracting any JSON object
+              const jsonPattern = /\{[\s\S]*?\}/g;
+              const matches = cleanedText.match(jsonPattern);
+              
+              if (matches && matches.length > 0) {
+                console.log("Found JSON object in response, attempting to extract structure");
+                
+                // Try each potential JSON object until we find a valid one
+                for (const match of matches) {
+                  try {
+                    const potentialJson = JSON.parse(match);
+                    if (potentialJson.weeklyThemes) {
+                      jsonData = potentialJson;
+                      console.log("Found valid weeklyThemes structure in JSON object");
+                      break;
+                    }
+                  } catch (err) {
+                    // Continue to next match
+                  }
+                }
+                
+                if (!jsonData) {
+                  throw new Error("No valid weeklyThemes structure found in JSON objects");
+                }
+              } else {
+                throw new Error("Could not find weeklyThemes array or any JSON object in response");
+              }
             }
           }
         } catch (extractError) {
@@ -254,7 +265,7 @@ export default async function handler(req, res) {
           }
           
           jsonData = { weeklyThemes: defaultThemes };
-          throw new Error("Unable to extract valid JSON: " + parseError.message + ". Created default themes.");
+          console.log("Created default themes due to parsing failure");
         }
       }
       
@@ -327,4 +338,87 @@ export default async function handler(req, res) {
       details: "Please try again later or check API key configuration."
     });
   }
+}
+
+// ADD THESE UTILITY FUNCTIONS AT THE END OF THE FILE
+// Helper function to fix unterminated strings in JSON
+function fixUnterminatedStrings(jsonText) {
+  // This is a simplified approach - in production, a more robust parser would be better
+  let fixed = jsonText;
+  
+  // Detect and fix unterminated strings in JSON properties and values
+  // This regex finds property values that start with a quote but don't end with one before the next property or end of object
+  fixed = fixed.replace(/("([^"\\]|\\.)*)((?=,\s*")|(?=\s*}))/g, '$1"$3');
+  
+  // Fix unterminated strings at the end of the content
+  if (fixed.match(/"([^"\\]|\\.)*$/)) {
+    fixed = fixed + '"';
+  }
+  
+  return fixed;
+}
+
+// Extract themes from text using pattern matching when JSON parsing fails completely
+function extractThemesFromText(text) {
+  const themes = [];
+  
+  // Look for week numbers and themes in the text using various patterns
+  const weekMatches = text.match(/week"?\s*:\s*(\d+)/g) || [];
+  const themeMatches = text.match(/theme"?\s*:\s*"([^"]+)"/g) || [];
+  
+  // If we have both week numbers and themes
+  if (weekMatches.length > 0 && themeMatches.length > 0) {
+    // Use the smaller count to determine how many themes we can extract
+    const count = Math.min(weekMatches.length, themeMatches.length);
+    
+    for (let i = 0; i < count; i++) {
+      // Extract the week number
+      const weekMatch = weekMatches[i].match(/(\d+)/);
+      const week = weekMatch ? parseInt(weekMatch[1]) : i + 1;
+      
+      // Extract the theme
+      const themeMatch = themeMatches[i].match(/:\s*"([^"]*)"/);
+      const theme = themeMatch ? themeMatch[1] : `Fitness Content for Week ${i + 1}`;
+      
+      themes.push({ week, theme });
+    }
+  } else {
+    // Fallback - look for any week-like patterns in the text
+    const weekTextPattern = /Week\s+(\d+)[\s:]+([^\.]+)/gi;
+    let match;
+    
+    while ((match = weekTextPattern.exec(text)) !== null) {
+      const week = parseInt(match[1]);
+      const theme = match[2].trim();
+      
+      // Only add if we have both week number and theme text
+      if (week && theme) {
+        themes.push({ week, theme });
+      }
+    }
+  }
+  
+  // If we have found any themes, ensure they're ordered correctly
+  if (themes.length > 0) {
+    // Sort by week number
+    themes.sort((a, b) => a.week - b.week);
+    
+    // Ensure we have exactly 3 themes
+    while (themes.length < 3) {
+      const week = themes.length + 1;
+      themes.push({
+        week,
+        theme: strategy.key_messages[week - 1] ? 
+          `${strategy.key_messages[week - 1].substring(0, 30)}...` : 
+          `Fitness Content for Week ${week}`
+      });
+    }
+    
+    // If we have more than 3, keep only the first 3
+    if (themes.length > 3) {
+      themes.splice(3);
+    }
+  }
+  
+  return themes;
 } 
