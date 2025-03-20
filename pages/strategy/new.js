@@ -844,10 +844,14 @@ export default function NewStrategy() {
                 </div>
                 
                 <div className={styles.suggestedAnswers}>
-                  {suggestions.length > 0 && !messages[messages.length-1]?.text.includes("building your marketing strategy") && (
+                  {suggestions.length > 0 && 
+                   !messages[messages.length-1]?.text.includes("building your marketing strategy") &&
+                   !messages[messages.length-1]?.text.includes("enough information to create a marketing strategy matrix") && (
                     <h4 className={styles.suggestionsTitle}>Example Answers</h4>
                   )}
-                  {suggestions.length > 0 && !messages[messages.length-1]?.text.includes("building your marketing strategy") && 
+                  {suggestions.length > 0 && 
+                   !messages[messages.length-1]?.text.includes("building your marketing strategy") &&
+                   !messages[messages.length-1]?.text.includes("enough information to create a marketing strategy matrix") && 
                     suggestions.map((suggestion, index) => (
                       <button 
                         key={index}
