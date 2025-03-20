@@ -21,11 +21,16 @@ export default async function handler(req, res) {
     }
     
     // Check for API key
-    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('Missing Gemini API key');
+      console.error('Available env vars:', Object.keys(process.env).filter(key => key.includes('GEMINI')));
       return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
+    
+    // Extra debug info about the key
+    console.log("API key exists:", !!apiKey);
+    console.log("API key length:", apiKey ? apiKey.length : 0);
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
