@@ -258,7 +258,7 @@ export default function NewContent() {
   
   const generateContent = async (strategyData) => {
     try {
-      console.log("Generating content with strategy data...");
+      console.log("Generating content with strategy data using multi-stage approach...");
       
       // Validate that we have the required strategy data
       if (!strategyData || !strategyData.target_audience || !strategyData.objectives || !strategyData.key_messages) {
@@ -268,11 +268,14 @@ export default function NewContent() {
         return;
       }
       
-      // Use the Gemini API to generate personalized content
-      console.log("Calling Gemini API for personalized content generation");
+      // Store all generated weeks here
+      let generatedWeeks = [];
+      
+      // Step 1: Generate weekly themes
+      console.log("Step 1: Generating weekly themes...");
       
       try {
-        const response = await fetch('/api/content/generate-outline', {
+        const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -288,85 +291,122 @@ export default function NewContent() {
           }),
         });
         
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
+        if (!themesResponse.ok) {
+          throw new Error(`Themes API error: ${themesResponse.status}`);
         }
         
-        const data = await response.json();
+        const themesData = await themesResponse.json();
         
-        if (!data || !data.campaigns) {
-          throw new Error('Invalid response format from API');
+        if (!themesData || !themesData.weeklyThemes) {
+          throw new Error('Invalid themes response format');
         }
         
-        console.log("Setting personalized content from Gemini API");
-        setContentOutline(data.campaigns);
-      } catch (apiError) {
-        console.error('Gemini API error:', apiError);
+        console.log("Successfully generated themes:", themesData.weeklyThemes);
         
-        // Fall back to customized mock content if API fails
-        console.warn("Using fallback customized mock content due to API error");
+        // Step 2: Generate content for each week in parallel
+        console.log("Step 2: Generating content for each week...");
+        
+        const weekPromises = themesData.weeklyThemes.map(async (weekTheme) => {
+          try {
+            console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
+            
+            const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                strategy: {
+                  name: strategyData.name,
+                  business_description: strategyData.business_description,
+                  target_audience: strategyData.target_audience,
+                  objectives: strategyData.objectives,
+                  key_messages: strategyData.key_messages
+                },
+                weekNumber: weekTheme.week,
+                weekTheme: weekTheme.theme,
+                allThemes: themesData.weeklyThemes
+              }),
+            });
+            
+            if (!weekResponse.ok) {
+              throw new Error(`Week ${weekTheme.week} API error: ${weekResponse.status}`);
+            }
+            
+            const weekData = await weekResponse.json();
+            
+            if (!weekData || !weekData.weekContent) {
+              throw new Error(`Invalid week ${weekTheme.week} response format`);
+            }
+            
+            console.log(`Successfully generated content for Week ${weekTheme.week}`);
+            return weekData.weekContent;
+          } catch (weekError) {
+            console.error(`Error generating Week ${weekTheme.week} content:`, weekError);
+            // Return fallback content for this week
+            return {
+              week: weekTheme.week,
+              theme: weekTheme.theme,
+              posts: [
+                { 
+                  type: "Carousel", 
+                  topic: `${weekTheme.theme} overview`, 
+                  audience: strategyData.target_audience[0] || "Fitness enthusiasts",
+                  cta: "Save this post",
+                  principle: "Authority",
+                  principleExplanation: "Expert information establishes trust.",
+                  visual: "Information slides",
+                  proposedCaption: `Week ${weekTheme.week} of your fitness journey focuses on ${weekTheme.theme}. Save this post for reference! #FitnessJourney #HealthTips`
+                },
+                { 
+                  type: "Video", 
+                  topic: `${weekTheme.theme} demonstration`, 
+                  audience: strategyData.target_audience[1] || "Active individuals",
+                  cta: "Try this technique",
+                  principle: "Social Proof",
+                  principleExplanation: "Showing results builds credibility.",
+                  visual: "Demonstration video",
+                  proposedCaption: `See how to implement ${weekTheme.theme} in your fitness routine. Let me know if you try it! #FitnessTips #WorkoutWednesday`
+                },
+                { 
+                  type: "Image", 
+                  topic: `${weekTheme.theme} motivation`, 
+                  audience: strategyData.target_audience[2] || "Fitness beginners",
+                  cta: "Comment your experience",
+                  principle: "Reciprocity",
+                  principleExplanation: "Sharing valuable content creates goodwill.",
+                  visual: "Motivational image",
+                  proposedCaption: `Finding motivation for ${weekTheme.theme} can be challenging. Share your experience in the comments! #FitnessMotivation #FitnessJourney`
+                }
+              ]
+            };
+          }
+        });
+        
+        // Wait for all weeks to complete - either successfully or with fallbacks
+        generatedWeeks = await Promise.all(weekPromises);
+        
+        // Ensure weeks are in correct order
+        generatedWeeks.sort((a, b) => a.week - b.week);
+        
+        console.log("All weeks generated successfully:", generatedWeeks.length);
+        setContentOutline(generatedWeeks);
+      } catch (themesError) {
+        console.error('Themes generation failed:', themesError);
+        
+        // Fall back to customized mock content if the themes API fails
+        console.warn("Using fallback customized mock content due to themes API error");
         const customizedMockContent = createCustomizedMockContent(strategyData);
         setContentOutline(customizedMockContent);
       }
       
-      // After setting content, generate daily engagement content
-      try {
-        console.log("Daily engagement content generation skipped temporarily");
-        setIsDailyEngagementLoading(true);
-        
-        // Skip the daily engagement API call for now to reduce API load
-        /*
-        // Create a properly formatted strategy matrix from the Supabase data
-        const formattedStrategy = {
-          targetAudience: strategyData.target_audience || [],
-          objectives: strategyData.objectives || [],
-          keyMessages: strategyData.key_messages || []
-        };
-        
-        // Call the API to generate daily engagement content
-        const dailyEngagementResponse = await fetch('/api/content/generate-daily-engagement', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            strategyMatrix: formattedStrategy, // Pass the correctly formatted strategy
-            campaigns: mockContent,
-            businessType: strategyData.user_data?.answers?.[1] || 'fitness business'
-          }),
-        });
-        
-        if (!dailyEngagementResponse.ok) {
-          const errorText = await dailyEngagementResponse.text();
-          console.error("Daily engagement API error:", dailyEngagementResponse.status, errorText);
-          throw new Error(`API error: ${dailyEngagementResponse.status} - ${errorText}`);
-        }
-        
-        const dailyEngagementData = await dailyEngagementResponse.json();
-        
-        if (!dailyEngagementData || !dailyEngagementData.dailyEngagement) {
-          console.error("Invalid daily engagement response:", dailyEngagementData);
-          throw new Error('Invalid response format from API');
-        }
-        
-        console.log("Daily engagement content generated successfully");
-        setDailyEngagement(dailyEngagementData.dailyEngagement);
-        */
-        
-        // Set empty daily engagement data for now
-        setDailyEngagement([]);
-        
-      } catch (dailyError) {
-        console.error('Error generating daily engagement:', dailyError.message, dailyError.stack);
-        // Don't block the overall flow if daily engagement fails
-        // Just show a message in the UI
-      } finally {
-        setIsDailyEngagementLoading(false);
-      }
+      // Set empty daily engagement data (daily engagement API is disabled for now)
+      setDailyEngagement([]);
+      setIsDailyEngagementLoading(false);
       
       setIsLoading(false);
     } catch (error) {
-      console.error('Error generating content:', error);
+      console.error('Error in multi-stage content generation:', error);
       setContentOutline(mockContent);
       setIsLoading(false);
     }
