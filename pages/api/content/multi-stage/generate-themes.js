@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     
     // Configure API
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     // Create a very focused prompt just for theme generation
     const prompt = `
