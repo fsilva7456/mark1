@@ -49,6 +49,12 @@ export default function NewStrategy() {
   // Track current question in a different way
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
+  // Add these state variables near the top with other state variables
+  const [aestheticModal, setAestheticModal] = useState({
+    visible: false,
+    value: ''
+  });
+  
   // Improve the scrollToBottom function even more and add additional scroll calls
   const scrollToBottom = () => {
     // Use multiple timeouts with increasing delays for more reliable scrolling
@@ -810,6 +816,38 @@ export default function NewStrategy() {
     });
   };
 
+  // Add this function to handle aesthetic input changes
+  const handleAestheticChange = (e) => {
+    setAestheticModal({
+      ...aestheticModal,
+      value: e.target.value
+    });
+  };
+
+  // Add this function to handle form submission
+  const handleAestheticSubmit = () => {
+    if (!aestheticModal.value.trim()) return;
+    
+    // First save the strategy if needed
+    if (!strategyId) {
+      handleSaveStrategy().then(() => {
+        if (strategyId) {
+          // Navigate with the aesthetic parameter
+          router.push(`/content/new?strategy=${strategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+        }
+      });
+    } else {
+      // Navigate with the aesthetic parameter if strategy is already saved
+      router.push(`/content/new?strategy=${strategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+    }
+    
+    // Close the modal
+    setAestheticModal({
+      visible: false,
+      value: ''
+    });
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -1006,17 +1044,11 @@ export default function NewStrategy() {
                   
                   <button
                     onClick={() => {
-                      if (!strategyId) {
-                        // First save the strategy, then navigate to content when successful
-                        handleSaveStrategy().then(() => {
-                          if (strategyId) {
-                            router.push(`/content/new?strategy=${strategyId}`);
-                          }
-                        });
-                      } else {
-                        // Already saved, just navigate
-                        router.push(`/content/new?strategy=${strategyId}`);
-                      }
+                      // Show the aesthetic modal instead of directly navigating
+                      setAestheticModal({
+                        visible: true,
+                        value: ''
+                      });
                     }}
                     className={styles.outlineButton}
                     disabled={isProcessing}
@@ -1082,6 +1114,43 @@ export default function NewStrategy() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Aesthetic Modal */}
+      {aestheticModal.visible && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.feedbackModal}>
+            <div className={styles.modalHeader}>
+              <h3>Describe Your Content Style</h3>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setAestheticModal({...aestheticModal, visible: false})}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.feedbackInputContainer}>
+                <label htmlFor="aesthetic">What's the aesthetic or vibe you want for your content?</label>
+                <textarea
+                  id="aesthetic"
+                  value={aestheticModal.value}
+                  onChange={handleAestheticChange}
+                  placeholder="For example: professional and educational, friendly and motivational, bold and high-energy, calm and supportive..."
+                  className={styles.feedbackTextarea}
+                />
+                <button 
+                  onClick={handleAestheticSubmit}
+                  className={styles.saveButton}
+                  disabled={!aestheticModal.value.trim()}
+                >
+                  Generate Content
+                </button>
               </div>
             </div>
           </div>
