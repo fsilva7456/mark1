@@ -683,6 +683,48 @@ export default function NewContent() {
     }
   };
 
+  // Add a function to generate explanations based on the objective
+  function getObjectiveExplanation(objective, theme) {
+    if (!objective) return '';
+    
+    // Extract the action verb from the objective
+    const firstWord = objective.split(' ')[0].toLowerCase();
+    
+    // Create explanations based on the action verb
+    switch (firstWord) {
+      case 'book':
+      case 'schedule':
+      case 'register':
+        return 'Direct conversion actions like this create immediate business value and allow you to capture leads when audience interest is at its peak.';
+      
+      case 'download':
+      case 'save':
+        return 'This objective builds your email list and creates a valuable touchpoint for future marketing while providing immediate value to your audience.';
+      
+      case 'share':
+      case 'tag':
+        return 'Social sharing amplifies your reach through trusted recommendations, effectively growing your audience through word-of-mouth at zero cost.';
+      
+      case 'follow':
+      case 'subscribe':
+        return 'Building your owned audience creates long-term marketing assets and reduces dependency on paid channels for future campaigns.';
+      
+      case 'try':
+      case 'implement':
+      case 'start':
+        return 'Getting customers to take initial action builds momentum in their fitness journey and increases the likelihood of deeper engagement with your services.';
+      
+      case 'comment':
+      case 'join':
+      case 'attend':
+        return 'Community-building objectives increase engagement and foster customer loyalty while providing valuable feedback and social proof.';
+      
+      default:
+        // Create a generic explanation based on the theme
+        return `This action-oriented objective directly supports your "${theme}" content theme by converting audience interest into measurable engagement that builds your business.`;
+    }
+  }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -733,6 +775,9 @@ export default function NewContent() {
                     {week.objective && (
                       <div className={styles.weekObjective}>
                         <span className={styles.objectiveLabel}>Objective:</span> {week.objective}
+                        <div className={styles.objectiveExplanation}>
+                          <p><span className={styles.objectiveWhyLabel}>Why it's effective:</span> {getObjectiveExplanation(week.objective, week.theme)}</p>
+                        </div>
                       </div>
                     )}
                     

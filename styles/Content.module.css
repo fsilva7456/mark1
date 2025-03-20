@@ -599,4 +599,24 @@
 .objectiveLabel {
   font-weight: 600;
   color: #2d3748;
+}
+
+/* New styles for objective explanation */
+.objectiveExplanation {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(52, 84, 209, 0.2);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.objectiveExplanation p {
+  margin: 0;
+  color: #718096;
+}
+
+.objectiveWhyLabel {
+  font-weight: 600;
+  color: #3454D1;
+  margin-right: 6px;
 } 
