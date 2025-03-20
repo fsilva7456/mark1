@@ -49,17 +49,24 @@ export default function NewStrategy() {
   // Track current question in a different way
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
-  // Improve the scrollToBottom function to be more reliable
+  // Improve the scrollToBottom function even more and add additional scroll calls
   const scrollToBottom = () => {
-    // Increase the delay to give DOM more time to update
-    setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-        });
-      }
-    }, 300); // Increased from 100ms to 300ms for more reliable scrolling
+    // Use multiple timeouts with increasing delays for more reliable scrolling
+    const scrollAttempt = (delay) => {
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end',
+          });
+        }
+      }, delay);
+    };
+
+    // Try multiple scroll attempts with increasing delays
+    scrollAttempt(100);  // Quick initial attempt
+    scrollAttempt(300);  // Medium delay attempt
+    scrollAttempt(600);  // Longer delay to ensure rendering is complete
   };
   
   // Initial setup - show first AI message
@@ -409,8 +416,14 @@ export default function NewStrategy() {
           }
         ]);
         
-        // Scroll to bottom after AI response
+        // Scroll immediately and then again after a longer delay
         scrollToBottom();
+        // Add a forced scroll directly without animation for one of the attempts
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ block: 'end' });
+          }
+        }, 800);
         
         // Generate and show matrix
         setTimeout(() => {
@@ -426,8 +439,14 @@ export default function NewStrategy() {
           }
         ]);
         
-        // Scroll to bottom after AI response
+        // Scroll immediately and then again after a longer delay
         scrollToBottom();
+        // Add a forced scroll directly without animation for one of the attempts
+        setTimeout(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ block: 'end' });
+          }
+        }, 800);
       }
     } catch (error) {
       console.error("Error in chat:", error);
