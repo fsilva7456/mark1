@@ -586,10 +586,12 @@ export default function NewStrategy() {
       
       toast.success('Strategy saved successfully!');
       
-      router.push(`/strategy/view/${strategyId}`);
+      // Return the strategyId for promise chaining
+      return strategyId;
     } catch (error) {
       console.error('Error saving strategy:', error);
       toast.error('Failed to save your strategy. Please try again.');
+      return null;
     } finally {
       setIsProcessing(false);
     }
@@ -825,27 +827,33 @@ export default function NewStrategy() {
   };
 
   // Add this function to handle form submission
-  const handleAestheticSubmit = () => {
+  const handleAestheticSubmit = async () => {
     if (!aestheticModal.value.trim()) return;
     
-    // First save the strategy if needed
-    if (!strategyId) {
-      handleSaveStrategy().then(() => {
-        if (strategyId) {
-          // Navigate with the aesthetic parameter
-          router.push(`/content/new?strategy=${strategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+    try {
+      // First save the strategy if needed
+      let savedStrategyId = strategyId;
+      
+      if (!savedStrategyId) {
+        savedStrategyId = await handleSaveStrategy();
+        if (!savedStrategyId) {
+          toast.error('Failed to save strategy. Please try again.');
+          return;
         }
+      }
+      
+      // Navigate directly to content outline with the aesthetic parameter
+      router.push(`/content/new?strategy=${savedStrategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+      
+      // Close the modal
+      setAestheticModal({
+        visible: false,
+        value: ''
       });
-    } else {
-      // Navigate with the aesthetic parameter if strategy is already saved
-      router.push(`/content/new?strategy=${strategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+    } catch (error) {
+      console.error('Error handling aesthetic submission:', error);
+      toast.error('Something went wrong. Please try again.');
     }
-    
-    // Close the modal
-    setAestheticModal({
-      visible: false,
-      value: ''
-    });
   };
 
   return (
