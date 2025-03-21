@@ -1,4 +1,5 @@
-import logger, { debug, info, warn, error, createLogger } from '../../lib/logger';
+const logger = require('../../lib/logger');
+const { debug, info, warn, error, createLogger } = logger;
 
 describe('Logger', () => {
   beforeEach(() => {

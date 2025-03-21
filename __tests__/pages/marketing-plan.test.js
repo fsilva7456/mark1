@@ -3,105 +3,77 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import MarketingPlanDashboard from '../../pages/marketing-plan';
-import { useAuth } from '../../contexts/AuthContext';
-import { useMarketingPlan } from '../../contexts/MarketingPlanContext';
+import { renderWithProviders, createMockAuthContext, createMockMarketingPlanContext } from '../test-utils';
 
-// Mock the auth context
-jest.mock('../../contexts/AuthContext');
-
-// Mock the marketing plan context
-jest.mock('../../contexts/MarketingPlanContext');
-
-// Create router mock object first
+// Create router mock object
 const mockRouterPush = jest.fn();
-
-// Mock next/router
-jest.mock('next/router', () => ({
-  useRouter: () => ({
-    push: mockRouterPush,
-    pathname: '/marketing-plan',
-    query: {},
-    isReady: true,
-  }),
-}));
+const mockRouter = {
+  push: mockRouterPush,
+  pathname: '/marketing-plan',
+  query: {},
+  isReady: true,
+};
 
 describe('MarketingPlanDashboard', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
-    // Mock auth context default values
-    useAuth.mockReturnValue({
-      user: { id: 'user-123', email: 'test@example.com' },
-      loading: false,
-    });
-    
-    // Mock marketing plan context default values
-    useMarketingPlan.mockReturnValue({
-      strategies: [],
-      contentOutlines: [],
-      calendars: [],
-      isLoading: false,
-      error: null,
-      refreshData: jest.fn(),
-      getOutlinesForStrategy: jest.fn(() => []),
-      getCalendarsForStrategy: jest.fn(() => []),
-      deleteMarketingEntity: jest.fn(),
-      logAction: jest.fn(),
-    });
   });
   
   it('redirects to login if user is not authenticated', async () => {
-    // Mock unauthenticated user
-    useAuth.mockReturnValue({
-      user: null,
-      loading: false,
-    });
+    // Set up unauthenticated user
+    const authContext = createMockAuthContext({ user: null });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      authContext,
+      router: mockRouter
+    });
     
     // Check if the router.push was called with '/login'
     expect(mockRouterPush).toHaveBeenCalledWith('/login');
   });
   
   it('shows loading state when data is loading', () => {
-    // Mock loading state
-    useMarketingPlan.mockReturnValue({
-      ...useMarketingPlan(),
-      isLoading: true,
-    });
+    // Set up loading state
+    const marketingPlanContext = createMockMarketingPlanContext({ isLoading: true });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      marketingPlanContext,
+      router: mockRouter
+    });
     
     expect(screen.getByText('Loading your marketing plan data...')).toBeInTheDocument();
   });
   
   it('shows error state when there is an error', () => {
-    // Mock error state
-    useMarketingPlan.mockReturnValue({
-      ...useMarketingPlan(),
-      error: 'Failed to load marketing plan data',
+    // Set up error state
+    const marketingPlanContext = createMockMarketingPlanContext({ 
+      error: 'Failed to load marketing plan data' 
     });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      marketingPlanContext,
+      router: mockRouter
+    });
     
     expect(screen.getByText('Error')).toBeInTheDocument();
     expect(screen.getByText('Failed to load marketing plan data')).toBeInTheDocument();
   });
   
   it('shows empty state when there are no strategies', () => {
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      router: mockRouter
+    });
     
     expect(screen.getByText('No marketing plans yet')).toBeInTheDocument();
     expect(screen.getByText('Start by creating a marketing strategy')).toBeInTheDocument();
   });
   
   it('renders strategies in workflow view', () => {
-    // Mock strategies data
-    useMarketingPlan.mockReturnValue({
-      ...useMarketingPlan(),
+    // Set up strategies data
+    const marketingPlanContext = createMockMarketingPlanContext({
       strategies: [
         {
           id: 'strategy-123',
@@ -110,10 +82,13 @@ describe('MarketingPlanDashboard', () => {
           business_description: 'Test business',
           target_audience: ['Audience 1', 'Audience 2'],
         },
-      ],
+      ]
     });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      marketingPlanContext,
+      router: mockRouter
+    });
     
     expect(screen.getByText('Test Strategy')).toBeInTheDocument();
     expect(screen.getByText('0 outlines')).toBeInTheDocument();
@@ -150,8 +125,7 @@ describe('MarketingPlanDashboard', () => {
       posts_published: 5,
     };
     
-    useMarketingPlan.mockReturnValue({
-      ...useMarketingPlan(),
+    const marketingPlanContext = createMockMarketingPlanContext({
       strategies: [mockStrategy],
       contentOutlines: [mockOutline],
       calendars: [mockCalendar],
@@ -159,7 +133,10 @@ describe('MarketingPlanDashboard', () => {
       getCalendarsForStrategy: jest.fn(() => [mockCalendar]),
     });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      marketingPlanContext,
+      router: mockRouter
+    });
     
     expect(screen.getByText('Test Strategy')).toBeInTheDocument();
     expect(screen.getByText('1 outlines')).toBeInTheDocument();
@@ -173,7 +150,9 @@ describe('MarketingPlanDashboard', () => {
   });
   
   it('toggles between workflow and list view', () => {
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      router: mockRouter
+    });
     
     // Initially in workflow view
     const workflowButton = screen.getByText('Workflow View');
@@ -192,8 +171,7 @@ describe('MarketingPlanDashboard', () => {
   
   it('shows confirmation modal when deleting an entity', () => {
     // Mock strategies data
-    useMarketingPlan.mockReturnValue({
-      ...useMarketingPlan(),
+    const marketingPlanContext = createMockMarketingPlanContext({
       strategies: [
         {
           id: 'strategy-123',
@@ -205,7 +183,10 @@ describe('MarketingPlanDashboard', () => {
       getCalendarsForStrategy: jest.fn(() => []),
     });
     
-    render(<MarketingPlanDashboard />);
+    renderWithProviders(<MarketingPlanDashboard />, {
+      marketingPlanContext,
+      router: mockRouter
+    });
     
     // Find and click the delete button using data-testid
     const deleteButton = screen.getByTestId('delete-strategy-strategy-123');

@@ -3,13 +3,9 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import CalendarManagement from '../../pages/calendar/[id]';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-
-// Mock the auth context
-jest.mock('../../contexts/AuthContext');
+import { renderWithProviders, createMockAuthContext } from '../test-utils';
 
 // Mock the supabase client
 jest.mock('../../lib/supabase', () => ({
@@ -34,37 +30,26 @@ jest.mock('react-hot-toast', () => ({
 
 // Create router mock object first
 const mockRouterPush = jest.fn();
-const mockRouterQuery = { id: 'calendar-123' };
-
-// Mock next/router
-jest.mock('next/router', () => ({
-  useRouter: () => ({
-    push: mockRouterPush,
-    query: mockRouterQuery,
-    isReady: true,
-  }),
-}));
+const mockRouter = {
+  push: mockRouterPush,
+  query: { id: 'calendar-123' },
+  isReady: true,
+};
 
 describe('CalendarManagement', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
-    // Mock auth context default values
-    useAuth.mockReturnValue({
-      user: { id: 'user-123', email: 'test@example.com' },
-      loading: false,
-    });
   });
 
   test('redirects to home if user is not logged in', async () => {
     // Setup auth to return no user
-    useAuth.mockReturnValue({
-      user: null,
-      loading: false,
-    });
+    const authContext = createMockAuthContext({ user: null });
     
-    render(<CalendarManagement />);
+    renderWithProviders(<CalendarManagement />, {
+      authContext,
+      router: mockRouter
+    });
     
     await waitFor(() => {
       expect(mockRouterPush).toHaveBeenCalledWith('/');
@@ -72,7 +57,9 @@ describe('CalendarManagement', () => {
   });
 
   test('displays loading state while fetching calendar data', () => {
-    render(<CalendarManagement />);
+    renderWithProviders(<CalendarManagement />, {
+      router: mockRouter
+    });
     
     expect(screen.getByText('Loading your calendar...')).toBeInTheDocument();
   });
@@ -110,6 +97,7 @@ describe('CalendarManagement', () => {
     ];
     
     // Setup supabase mocks for each specific table
+    const { supabase } = require('../../lib/supabase');
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
         return {
@@ -130,7 +118,9 @@ describe('CalendarManagement', () => {
       };
     });
     
-    render(<CalendarManagement />);
+    renderWithProviders(<CalendarManagement />, {
+      router: mockRouter
+    });
     
     // Wait for the calendar data to load
     await waitFor(() => {
@@ -170,6 +160,7 @@ describe('CalendarManagement', () => {
     let calendarPostsQueryCount = 0;
     
     // Setup supabase to return calendar but no posts and no content plan
+    const { supabase } = require('../../lib/supabase');
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
         return {
@@ -211,7 +202,9 @@ describe('CalendarManagement', () => {
       };
     });
     
-    render(<CalendarManagement />);
+    renderWithProviders(<CalendarManagement />, {
+      router: mockRouter
+    });
     
     // Wait for the calendar data and default posts to load
     await waitFor(() => {
@@ -248,42 +241,50 @@ describe('CalendarManagement', () => {
               topic: 'Welcome Post',
               type: 'Image',
               audience: 'New Followers',
+              platform: 'Instagram',
             },
             {
-              topic: 'About Us',
+              topic: 'Product Overview',
               type: 'Carousel',
               audience: 'All Followers',
-            },
-          ],
-        },
-      ],
+              platform: 'LinkedIn',
+            }
+          ]
+        }
+      ]
     };
     
-    // Mock the inserted posts
-    const mockInsertedPosts = [
+    // Mock the generated posts based on the content plan
+    const mockGeneratedPosts = [
       {
-        id: 'new-post-1',
+        id: 'gen-post-1',
         calendar_id: 'calendar-123',
         title: 'Welcome Post',
-        content: 'Welcome Post',
+        content: 'Content for Welcome Post',
         post_type: 'Image',
-        target_audience: 'New Followers',
+        platform: 'Instagram',
+        week: 1,
+        theme: 'Introduction',
         status: 'scheduled',
       },
       {
-        id: 'new-post-2',
+        id: 'gen-post-2',
         calendar_id: 'calendar-123',
-        title: 'About Us',
-        content: 'About Us',
+        title: 'Product Overview',
+        content: 'Content for Product Overview',
         post_type: 'Carousel',
-        target_audience: 'All Followers',
+        platform: 'LinkedIn',
+        week: 1,
+        theme: 'Introduction',
         status: 'scheduled',
-      },
+      }
     ];
     
     let calendarPostsQueryCount = 0;
+    let contentPlanQueryCount = 0;
     
-    // Setup supabase mocks for this test case
+    // Setup supabase to return calendar, then no posts, but a content plan exists
+    const { supabase } = require('../../lib/supabase');
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
         return {
@@ -303,20 +304,20 @@ describe('CalendarManagement', () => {
             order: jest.fn().mockResolvedValue({ data: [], error: null }),
           };
         } else {
-          // Subsequent queries are for insert operations
+          // Subsequent queries are for posts created from content plan
           return {
             select: jest.fn().mockReturnThis(),
             insert: jest.fn().mockReturnThis(),
             eq: jest.fn().mockReturnThis(),
-            select: jest.fn().mockResolvedValue({ data: mockInsertedPosts, error: null }),
+            order: jest.fn().mockResolvedValue({ data: mockGeneratedPosts, error: null }),
           };
         }
       } else if (table === 'content_plans') {
+        contentPlanQueryCount++;
         return {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
-          // Return array with one content plan
-          select: jest.fn().mockResolvedValue({ data: [mockContentPlan], error: null }),
+          single: jest.fn().mockResolvedValue({ data: mockContentPlan, error: null }),
         };
       }
       return {
@@ -325,12 +326,19 @@ describe('CalendarManagement', () => {
       };
     });
     
-    render(<CalendarManagement />);
+    renderWithProviders(<CalendarManagement />, {
+      router: mockRouter
+    });
     
     // Wait for posts to be created and displayed
     await waitFor(() => {
+      expect(screen.getByText('New Calendar')).toBeInTheDocument();
+    });
+    
+    // Check that posts from content plan are displayed
+    await waitFor(() => {
       expect(screen.getByText('Welcome Post')).toBeInTheDocument();
-      expect(screen.getByText('About Us')).toBeInTheDocument();
+      expect(screen.getByText('Product Overview')).toBeInTheDocument();
     });
   });
 }); 
