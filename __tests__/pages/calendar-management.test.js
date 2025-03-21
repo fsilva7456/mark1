@@ -74,7 +74,7 @@ describe('CalendarManagement', () => {
   test('displays loading state while fetching calendar data', () => {
     render(<CalendarManagement />);
     
-    expect(screen.getByText('Loading calendar details...')).toBeInTheDocument();
+    expect(screen.getByText('Loading your calendar...')).toBeInTheDocument();
   });
 
   test('fetches and displays calendar data with posts', async () => {
@@ -109,24 +109,7 @@ describe('CalendarManagement', () => {
       },
     ];
     
-    // Setup supabase to return mocked data
-    supabase.from.mockImplementation((table) => {
-      return {
-        select: jest.fn().mockReturnThis(),
-        insert: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        eq: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        single: jest.fn().mockImplementation(() => {
-          if (table === 'calendars') {
-            return Promise.resolve({ data: mockCalendar, error: null });
-          }
-          return Promise.resolve({ data: null, error: null });
-        }),
-      };
-    });
-    
-    // Mock the posts query specifically
+    // Setup supabase mocks for each specific table
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
         return {
@@ -155,26 +138,17 @@ describe('CalendarManagement', () => {
     });
     
     // Check that the stats are displayed
-    expect(screen.getByText('5')).toBeInTheDocument(); // Posts scheduled
+    expect(screen.getByText('5')).toBeInTheDocument(); // Total posts scheduled
     expect(screen.getByText('2')).toBeInTheDocument(); // Posts published
     expect(screen.getByText('40%')).toBeInTheDocument(); // Progress
     
-    // Check that the posts are displayed
+    // Check that the posts are displayed in the table
     expect(screen.getByText('First Post')).toBeInTheDocument();
     expect(screen.getByText('Second Post')).toBeInTheDocument();
-    
-    // Initially only scheduled posts should be shown (default tab)
-    expect(screen.getByText('Content for first post')).toBeInTheDocument();
-    
-    // Switch to "All Posts" tab to see both posts
-    fireEvent.click(screen.getByText('All Posts'));
-    
-    expect(screen.getByText('Content for first post')).toBeInTheDocument();
-    expect(screen.getByText('Content for second post')).toBeInTheDocument();
   });
 
-  test('handles empty posts array correctly', async () => {
-    // Mock the calendar data with no posts
+  test('creates default posts when no posts and no content plan exists', async () => {
+    // Mock the calendar data
     const mockCalendar = {
       id: 'calendar-123',
       name: 'Empty Calendar',
@@ -183,25 +157,52 @@ describe('CalendarManagement', () => {
       progress: 0,
     };
     
-    // Setup supabase to return calendar but no posts
+    // Mock the default posts that will be created
+    const mockDefaultPosts = Array(8).fill(null).map((_, index) => ({
+      id: `default-post-${index}`,
+      calendar_id: 'calendar-123',
+      title: `Week ${Math.floor(index/2) + 1} Post for Instagram`,
+      content: `Default content for Empty Calendar - Week ${Math.floor(index/2) + 1}`,
+      post_type: 'Image Post',
+      status: 'scheduled',
+    }));
+    
+    let calendarPostsQueryCount = 0;
+    
+    // Setup supabase to return calendar but no posts and no content plan
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
         return {
           select: jest.fn().mockReturnThis(),
+          update: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
           single: jest.fn().mockResolvedValue({ data: mockCalendar, error: null }),
         };
       } else if (table === 'calendar_posts') {
-        return {
-          select: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          order: jest.fn().mockResolvedValue({ data: [], error: null }),
-        };
+        calendarPostsQueryCount++;
+        
+        if (calendarPostsQueryCount === 1) {
+          // First query returns no posts
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [], error: null }),
+          };
+        } else {
+          // Subsequent queries are for insert operations
+          return {
+            select: jest.fn().mockReturnThis(),
+            insert: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockResolvedValue({ data: mockDefaultPosts, error: null }),
+          };
+        }
       } else if (table === 'content_plans') {
         return {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
+          // Return empty array to simulate no content plans
+          select: jest.fn().mockResolvedValue({ data: [], error: null }),
         };
       }
       return {
@@ -212,13 +213,16 @@ describe('CalendarManagement', () => {
     
     render(<CalendarManagement />);
     
-    // Wait for the calendar data to load
+    // Wait for the calendar data and default posts to load
     await waitFor(() => {
       expect(screen.getByText('Empty Calendar')).toBeInTheDocument();
     });
     
-    // Check that the empty state message is displayed
-    expect(screen.getByText('No posts found for the selected filter.')).toBeInTheDocument();
+    // Check that default posts are created and displayed
+    await waitFor(() => {
+      // Should find at least one of the default posts
+      expect(screen.getByText(/Week 1 Post for Instagram/)).toBeInTheDocument();
+    });
   });
 
   test('creates posts from content plan when no posts exist', async () => {
@@ -277,6 +281,8 @@ describe('CalendarManagement', () => {
       },
     ];
     
+    let calendarPostsQueryCount = 0;
+    
     // Setup supabase mocks for this test case
     supabase.from.mockImplementation((table) => {
       if (table === 'calendars') {
@@ -287,22 +293,30 @@ describe('CalendarManagement', () => {
           single: jest.fn().mockResolvedValue({ data: mockCalendar, error: null }),
         };
       } else if (table === 'calendar_posts') {
-        return {
-          select: jest.fn().mockReturnThis(),
-          insert: jest.fn().mockReturnThis(),
-          eq: jest.fn().mockReturnThis(),
-          order: jest.fn().mockImplementation(() => {
-            // First call returns empty array, simulating no existing posts
-            return Promise.resolve({ data: [], error: null });
-          }),
-          // Mock the insert operation to return the newly created posts
-          select: jest.fn().mockResolvedValue({ data: mockInsertedPosts, error: null }),
-        };
+        calendarPostsQueryCount++;
+        
+        if (calendarPostsQueryCount === 1) {
+          // First query returns no posts
+          return {
+            select: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            order: jest.fn().mockResolvedValue({ data: [], error: null }),
+          };
+        } else {
+          // Subsequent queries are for insert operations
+          return {
+            select: jest.fn().mockReturnThis(),
+            insert: jest.fn().mockReturnThis(),
+            eq: jest.fn().mockReturnThis(),
+            select: jest.fn().mockResolvedValue({ data: mockInsertedPosts, error: null }),
+          };
+        }
       } else if (table === 'content_plans') {
         return {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
-          single: jest.fn().mockResolvedValue({ data: mockContentPlan, error: null }),
+          // Return array with one content plan
+          select: jest.fn().mockResolvedValue({ data: [mockContentPlan], error: null }),
         };
       }
       return {

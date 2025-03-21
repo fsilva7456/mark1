@@ -69,23 +69,25 @@ export default function CalendarManagement() {
       
       console.log('Posts data retrieved:', postsData ? postsData.length : 0, 'posts');
       
-      // If no posts exist yet, create default posts from the content plan
+      // If no posts exist yet, create posts from content plan or defaults
       if (!postsData || postsData.length === 0) {
         console.log('No posts found, checking for content plan...');
-        // Get the content plan associated with this calendar
-        const { data: contentPlan, error: contentError } = await supabase
+        
+        // Get the content plan associated with this calendar - modified to not use .single()
+        const { data: contentPlans, error: contentError } = await supabase
           .from('content_plans')
           .select('*')
-          .eq('calendar_id', calendarId)
-          .single();
+          .eq('calendar_id', calendarId);
         
         if (contentError) {
           console.error('Error fetching content plan:', contentError);
         }
         
+        // Use the first content plan if any exist
+        const contentPlan = contentPlans && contentPlans.length > 0 ? contentPlans[0] : null;
         console.log('Content plan retrieved:', contentPlan ? 'Yes' : 'No');
         
-        if (!contentError && contentPlan && contentPlan.campaigns) {
+        if (contentPlan && contentPlan.campaigns && Array.isArray(contentPlan.campaigns)) {
           // Create posts from the content plan
           const newPosts = [];
           const startDate = new Date();
@@ -142,13 +144,13 @@ export default function CalendarManagement() {
             // Update calendar progress
             await updateCalendarProgress(calendarId, insertedPosts);
           } else {
-            console.log('No posts to insert');
-            setPosts([]);
+            console.log('No posts to insert from content plan, creating default posts');
+            await createDefaultPosts(calendarId, calendarData);
           }
         } else {
-          // No content plan, just set empty posts array
-          console.log('No content plan found or no campaigns in content plan');
-          setPosts([]);
+          // No content plan or no campaigns, create default posts
+          console.log('No valid content plan found, creating default posts');
+          await createDefaultPosts(calendarId, calendarData);
         }
       } else {
         // Use existing posts
@@ -162,6 +164,70 @@ export default function CalendarManagement() {
       setError('Failed to load calendar details.');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  // New function to create default posts when no content plan exists
+  const createDefaultPosts = async (calendarId, calendarData) => {
+    try {
+      console.log('Creating default posts for calendar');
+      
+      const postTypes = ['Image Post', 'Carousel', 'Video', 'Story', 'Reel'];
+      const channels = ['Instagram', 'Facebook', 'Twitter', 'LinkedIn'];
+      const startDate = new Date();
+      const newPosts = [];
+      
+      // Create 8 default posts over 4 weeks
+      for (let week = 0; week < 4; week++) {
+        for (let postIndex = 0; postIndex < 2; postIndex++) {
+          const postDate = new Date(startDate);
+          postDate.setDate(postDate.getDate() + (week * 7) + (postIndex * 3)); // Posts every 3 days
+          
+          const postType = postTypes[Math.floor(Math.random() * postTypes.length)];
+          const channel = channels[Math.floor(Math.random() * channels.length)];
+          
+          newPosts.push({
+            calendar_id: calendarId,
+            title: `Week ${week + 1} ${postType} for ${channel}`,
+            content: `Default content for ${calendarData.name || 'your calendar'} - Week ${week + 1}`,
+            post_type: postType,
+            target_audience: 'General audience',
+            scheduled_date: postDate.toISOString(),
+            channel: channel,
+            status: 'scheduled',
+            user_id: user.id,
+            engagement: {
+              likes: 0,
+              comments: 0,
+              shares: 0,
+              saves: 0,
+              clicks: 0
+            }
+          });
+        }
+      }
+      
+      console.log('Created', newPosts.length, 'default posts');
+      
+      // Add posts to the database
+      const { data: insertedPosts, error: insertError } = await supabase
+        .from('calendar_posts')
+        .insert(newPosts)
+        .select();
+      
+      if (insertError) {
+        console.error('Error inserting default posts:', insertError);
+        throw insertError;
+      }
+      
+      console.log('Successfully inserted', insertedPosts.length, 'default posts');
+      setPosts(insertedPosts);
+      
+      // Update calendar progress
+      await updateCalendarProgress(calendarId, insertedPosts);
+    } catch (error) {
+      console.error('Error creating default posts:', error);
+      setPosts([]); // Set empty posts array on error
     }
   };
   
