@@ -58,16 +58,6 @@ jest.mock('next/link', () => ({
   },
 }));
 
-// Mock next/auth
-jest.mock('next-auth/react', () => ({
-  useSession: () => ({
-    data: null,
-    status: 'unauthenticated',
-  }),
-  signIn: jest.fn(),
-  signOut: jest.fn(),
-}));
-
 // Mock @supabase/supabase-js
 jest.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
