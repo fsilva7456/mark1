@@ -1113,6 +1113,19 @@ export default function NewContent() {
                       Save Content Plan
                     </button>
                     <button 
+                      onClick={() => router.push({
+                        pathname: '/content/calendar-params',
+                        query: { 
+                          contentOutline: JSON.stringify(contentOutline),
+                          strategyId: selectedStrategy.id
+                        }
+                      })}
+                      className={styles.nextButton}
+                      disabled={contentOutline.some(week => week.loading)}
+                    >
+                      Generate Content Calendar
+                    </button>
+                    <button 
                       onClick={() => router.push('/dashboard')} 
                       className={styles.cancelButton}
                     >
