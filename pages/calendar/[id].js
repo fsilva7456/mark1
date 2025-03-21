@@ -39,6 +39,7 @@ export default function CalendarManagement() {
   const fetchCalendarDetails = async (calendarId) => {
     try {
       setIsLoading(true);
+      console.log('Fetching calendar details for ID:', calendarId);
       
       // Fetch calendar data
       const { data: calendarData, error: calendarError } = await supabase
@@ -47,7 +48,12 @@ export default function CalendarManagement() {
         .eq('id', calendarId)
         .single();
       
-      if (calendarError) throw calendarError;
+      if (calendarError) {
+        console.error('Error fetching calendar:', calendarError);
+        throw calendarError;
+      }
+      
+      console.log('Calendar data retrieved:', calendarData);
       
       // Fetch posts for this calendar
       const { data: postsData, error: postsError } = await supabase
@@ -56,10 +62,16 @@ export default function CalendarManagement() {
         .eq('calendar_id', calendarId)
         .order('scheduled_date', { ascending: true });
       
-      if (postsError) throw postsError;
+      if (postsError) {
+        console.error('Error fetching calendar posts:', postsError);
+        throw postsError;
+      }
+      
+      console.log('Posts data retrieved:', postsData ? postsData.length : 0, 'posts');
       
       // If no posts exist yet, create default posts from the content plan
       if (!postsData || postsData.length === 0) {
+        console.log('No posts found, checking for content plan...');
         // Get the content plan associated with this calendar
         const { data: contentPlan, error: contentError } = await supabase
           .from('content_plans')
@@ -67,34 +79,50 @@ export default function CalendarManagement() {
           .eq('calendar_id', calendarId)
           .single();
         
+        if (contentError) {
+          console.error('Error fetching content plan:', contentError);
+        }
+        
+        console.log('Content plan retrieved:', contentPlan ? 'Yes' : 'No');
+        
         if (!contentError && contentPlan && contentPlan.campaigns) {
           // Create posts from the content plan
           const newPosts = [];
           const startDate = new Date();
           
+          console.log('Creating posts from content plan with', contentPlan.campaigns.length, 'weeks');
+          
           contentPlan.campaigns.forEach((week, weekIndex) => {
-            week.posts.forEach((post, postIndex) => {
-              const postDate = new Date(startDate);
-              postDate.setDate(postDate.getDate() + (weekIndex * 7) + postIndex);
-              
-              newPosts.push({
-                calendar_id: calendarId,
-                title: post.topic,
-                content: post.topic,
-                post_type: post.type,
-                target_audience: post.audience,
-                scheduled_date: postDate.toISOString(),
-                status: 'scheduled',
-                engagement: {
-                  likes: 0,
-                  comments: 0,
-                  shares: 0,
-                  saves: 0,
-                  clicks: 0
-                }
+            if (week.posts && Array.isArray(week.posts)) {
+              week.posts.forEach((post, postIndex) => {
+                const postDate = new Date(startDate);
+                postDate.setDate(postDate.getDate() + (weekIndex * 7) + postIndex);
+                
+                newPosts.push({
+                  calendar_id: calendarId,
+                  title: post.topic || `Week ${weekIndex + 1} Post ${postIndex + 1}`,
+                  content: post.topic || `Content for week ${weekIndex + 1}`,
+                  post_type: post.type || 'Post',
+                  target_audience: post.audience || 'General audience',
+                  scheduled_date: postDate.toISOString(),
+                  channel: post.channel || 'Instagram',
+                  status: 'scheduled',
+                  user_id: user.id,
+                  engagement: {
+                    likes: 0,
+                    comments: 0,
+                    shares: 0,
+                    saves: 0,
+                    clicks: 0
+                  }
+                });
               });
-            });
+            } else {
+              console.warn('Week', weekIndex, 'has no posts array or is not formatted correctly');
+            }
           });
+          
+          console.log('Created', newPosts.length, 'new posts from content plan');
           
           // Add posts to the database
           if (newPosts.length > 0) {
@@ -103,18 +131,28 @@ export default function CalendarManagement() {
               .insert(newPosts)
               .select();
             
-            if (!insertError) {
-              setPosts(insertedPosts);
-            } else {
+            if (insertError) {
+              console.error('Error inserting new posts:', insertError);
               throw insertError;
             }
+            
+            console.log('Successfully inserted', insertedPosts.length, 'posts');
+            setPosts(insertedPosts);
+            
+            // Update calendar progress
+            await updateCalendarProgress(calendarId, insertedPosts);
+          } else {
+            console.log('No posts to insert');
+            setPosts([]);
           }
         } else {
           // No content plan, just set empty posts array
+          console.log('No content plan found or no campaigns in content plan');
           setPosts([]);
         }
       } else {
         // Use existing posts
+        console.log('Using existing', postsData.length, 'posts');
         setPosts(postsData);
       }
       
@@ -145,7 +183,7 @@ export default function CalendarManagement() {
       toast.success(`Post marked as ${newStatus}`);
       
       // Update calendar progress
-      updateCalendarProgress();
+      updateCalendarProgress(calendar.id, posts);
     } catch (error) {
       console.error('Error updating post status:', error);
       toast.error('Failed to update post status');
@@ -174,11 +212,11 @@ export default function CalendarManagement() {
     }
   };
   
-  const updateCalendarProgress = async () => {
+  const updateCalendarProgress = async (calendarId, postsData) => {
     try {
       // Calculate progress based on published posts
-      const totalPosts = posts.length;
-      const publishedPosts = posts.filter(post => post.status === 'published').length;
+      const totalPosts = postsData.length;
+      const publishedPosts = postsData.filter(post => post.status === 'published').length;
       const progress = totalPosts > 0 ? Math.round((publishedPosts / totalPosts) * 100) : 0;
       
       // Update the calendar in the database
@@ -187,18 +225,19 @@ export default function CalendarManagement() {
         .update({ 
           progress,
           posts_scheduled: totalPosts,
-          posts_published: publishedPosts
+          posts_published: publishedPosts,
+          modified_at: new Date().toISOString()
         })
-        .eq('id', id)
+        .eq('id', calendarId)
         .select();
       
       if (error) throw error;
       
+      console.log('Updated calendar progress:', progress, '% complete');
       // Update local state
-      setCalendar({...calendar, progress, posts_scheduled: totalPosts, posts_published: publishedPosts});
+      setCalendar(prev => ({...prev, progress, posts_scheduled: totalPosts, posts_published: publishedPosts}));
     } catch (error) {
       console.error('Error updating calendar progress:', error);
-      // Don't show error toast here as it's a background operation
     }
   };
   
@@ -227,7 +266,7 @@ export default function CalendarManagement() {
       toast.success('New post added to calendar');
       
       // Update calendar progress
-      updateCalendarProgress();
+      updateCalendarProgress(id, posts);
     } catch (error) {
       console.error('Error adding new post:', error);
       toast.error('Failed to add new post');
