@@ -59,28 +59,39 @@ export default async function handler(req, res) {
     // Format content for calendar planning
     const formattedContent = contentOutline.map(week => ({
       week: week.week,
-      theme: week.theme,
-      objective: week.objective,
-      targetSegment: week.targetSegment || "",
-      phase: week.phase || "",
-      posts: week.posts.map(post => ({
-        type: post.type,
-        topic: post.topic,
-        audience: post.audience,
-        cta: post.cta,
-        principle: post.principle
+      theme: week.theme ? String(week.theme).replace(/"/g, '\\"') : "",
+      objective: week.objective ? String(week.objective).replace(/"/g, '\\"') : "",
+      targetSegment: week.targetSegment ? String(week.targetSegment).replace(/"/g, '\\"') : "",
+      phase: week.phase ? String(week.phase).replace(/"/g, '\\"') : "",
+      posts: (week.posts || []).map(post => ({
+        type: post.type ? String(post.type).replace(/"/g, '\\"') : "",
+        topic: post.topic ? String(post.topic).replace(/"/g, '\\"') : "",
+        audience: post.audience ? String(post.audience).replace(/"/g, '\\"') : "",
+        cta: post.cta ? String(post.cta).replace(/"/g, '\\"') : "",
+        principle: post.principle ? String(post.principle).replace(/"/g, '\\"') : ""
       }))
     }));
+    
+    // Sanitize business and audience info
+    const businessDesc = strategy.business_description ? 
+      String(strategy.business_description).replace(/"/g, '\\"') : 
+      'Fitness business focusing on personalized training and wellness.';
+    
+    const targetAudience = typeof strategy.target_audience === 'string' ? 
+      strategy.target_audience.replace(/"/g, '\\"') : 
+      (Array.isArray(strategy.target_audience) ? 
+        strategy.target_audience.map(a => String(a).replace(/"/g, '\\"')).join(', ') : 
+        'Fitness enthusiasts');
     
     // Create a prompt for calendar generation
     const prompt = `
       You are a social media marketing expert. Create a content calendar for a fitness business based on the provided content plan and scheduling preferences.
       
       BUSINESS OVERVIEW:
-      ${strategy.business_description || 'Fitness business focusing on personalized training and wellness.'}
+      ${businessDesc}
       
       TARGET AUDIENCE:
-      ${typeof strategy.target_audience === 'string' ? strategy.target_audience : (Array.isArray(strategy.target_audience) ? strategy.target_audience.join(', ') : 'Fitness enthusiasts')}
+      ${targetAudience}
       
       CONTENT PLAN:
       ${JSON.stringify(formattedContent, null, 2)}
@@ -105,6 +116,7 @@ export default async function handler(req, res) {
       - Don't invent new content - use only the provided posts
       - Be strategic about which platform each post type is best suited for
       - For each post, assign a specific date, time, and platform
+      - Ensure your response is valid JSON with properly escaped characters
       
       RESPOND ONLY WITH A JSON OBJECT IN THIS EXACT FORMAT:
       {
@@ -163,13 +175,54 @@ export default async function handler(req, res) {
       const text = response.text();
       console.log(`Calendar response preview:`, text.substring(0, 100) + "...");
       
-      // Clean JSON response
+      // Clean JSON response with more robust processing
       let cleanedText = text
         .replace(/```json\s*/g, '')
         .replace(/```\s*/g, '')
         .trim();
       
-      const jsonData = JSON.parse(cleanedText);
+      // Handle potential escaping issues that could cause JSON parsing errors
+      // Replace any unescaped quotes within strings that might break JSON parsing
+      const fixEscapingRegex = /("(?:\\.|[^"\\])*)"([^":,\[\]{}])/g;
+      cleanedText = cleanedText.replace(fixEscapingRegex, '$1\\"$2');
+      
+      // Try to extract JSON if surrounded by other text
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedText = jsonMatch[0];
+      }
+      
+      // Log the cleaned text for debugging
+      console.log("Attempting to parse JSON:", cleanedText.substring(0, 100) + "...");
+      
+      // Add fallback parsing with a more lenient approach if standard parsing fails
+      let jsonData;
+      try {
+        jsonData = JSON.parse(cleanedText);
+      } catch (initialParseError) {
+        console.error("Initial JSON parse failed:", initialParseError);
+        
+        // Try a more aggressive cleaning approach
+        cleanedText = cleanedText
+          // Remove all control characters
+          .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+          // Ensure property names are quoted
+          .replace(/(\s*?)(\w+)(\s*?):/g, '"$2":')
+          // Fix trailing commas in arrays/objects
+          .replace(/,(\s*[\]}])/g, '$1');
+        
+        try {
+          // Try again with the more aggressively cleaned text
+          jsonData = JSON.parse(cleanedText);
+          console.log("Fallback JSON parsing succeeded after aggressive cleaning");
+        } catch (fallbackError) {
+          console.error("Fallback JSON parsing also failed:", fallbackError);
+          
+          // As a last resort, try to use a safer but less efficient JSON5 approach
+          // If that's not available, just throw and let the error handler deal with it
+          throw new Error(`JSON parsing failed: ${fallbackError.message}. Position: ${fallbackError.position}`);
+        }
+      }
       
       // Validate the response format
       if (!jsonData.posts || !Array.isArray(jsonData.posts)) {
