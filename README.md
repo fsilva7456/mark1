@@ -1,3 +1,5 @@
+# Mark1 App
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -34,6 +36,101 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Automated Testing
+
+The Mark1 App includes automated testing to ensure code quality and prevent regressions. Our testing setup uses Jest and React Testing Library to test both utility functions and React components.
+
+### Testing Setup
+
+- **Testing Framework**: [Jest](https://jestjs.io/)
+- **Testing Library**: [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- **Test Environment**: JSDOM for simulating browser environment
+- **Configuration Files**:
+  - `jest.config.js` - Main Jest configuration
+  - `jest.setup.js` - Test setup and global mocks
+
+### Test Structure
+
+Tests are organized in the `__tests__` directory, mirroring the main project structure:
+
+```
+__tests__/
+├── lib/
+│   └── logger.test.js     # Tests for utility functions
+└── pages/
+    └── marketing-plan.test.js # Tests for page components
+```
+
+### Available Test Suites
+
+#### Utility Tests
+- **Logger Tests** (`__tests__/lib/logger.test.js`):
+  - Tests the logging utility functions
+  - Verifies log level functionality (debug, info, warn, error)
+  - Tests contextual logging with createLogger
+  - Ensures data objects are properly included in logs
+
+#### Component Tests
+- **Marketing Plan Dashboard** (`__tests__/pages/marketing-plan.test.js`):
+  - Tests authentication redirection for unauthenticated users
+  - Verifies loading and error states are displayed correctly
+  - Tests empty state rendering when no data is available 
+  - Ensures proper rendering of strategies in workflow view
+  - Tests the full workflow rendering with complete data
+  - Verifies view toggle functionality between workflow and list views
+  - Tests confirmation modal display when deleting entities
+
+### Running Tests
+
+You can run tests using the following npm scripts:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (for development)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+### Test Coverage
+
+Test coverage reports are generated when running `npm run test:coverage`. The report shows the percentage of code covered by tests for each file, helping identify areas that need additional testing.
+
+### Continuous Integration
+
+Tests are automatically run in the CI/CD pipeline before deployment:
+
+```bash
+# CI command (runs linting and tests)
+npm run ci
+
+# Vercel build command (runs CI checks before building)
+npm run vercel-build
+```
+
+### Mocks
+
+Common dependencies are mocked in `jest.setup.js`:
+
+- **Next.js Router**: Mocks navigation methods and router state
+- **Supabase Client**: Mocks database operations
+- **Fetch API**: Mocks HTTP requests
+- **Toast Notifications**: Mocks user notifications
+
+### Adding New Tests
+
+When adding new features, follow these best practices for testing:
+
+1. Create test files with a `.test.js` extension
+2. Place tests in the appropriate directory under `__tests__`
+3. Test both happy paths and error conditions
+4. Use descriptive test names that explain the expected behavior
+5. Use data-testid attributes for reliable component selection
+6. Mock external dependencies appropriately
 
 # Mark1 App Database Schema
 
