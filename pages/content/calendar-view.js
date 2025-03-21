@@ -89,6 +89,9 @@ export default function CalendarView() {
             resource: post
           }));
           
+          // Sort events by date
+          events.sort((a, b) => a.start - b.start);
+          
           setCalendarEvents(events);
         } else {
           console.warn('No posts data found in calendar');

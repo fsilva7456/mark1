@@ -260,35 +260,43 @@ export default async function handler(req, res) {
         } catch (fallbackError) {
           console.error("Aggressive cleaning failed:", fallbackError);
           
-          // Last resort: Try to construct a valid posts array manually
-          try {
-            console.log("Attempting manual JSON construction...");
-            // Look for post objects in the response
-            const postPattern = /"title"\s*:\s*"([^"]+)"[^}]+"type"\s*:\s*"([^"]+)"[^}]+"channel"\s*:\s*"([^"]+)"/g;
-            const posts = [];
-            let match;
+          // Last resort: Create a calendar manually from the content outline
+          console.log("Creating manual calendar from content outline...");
+          const posts = [];
+          const startDateObj = new Date(startDate);
+          const [hours, minutes] = postTime.split(':');
+          
+          // Process each week's posts
+          contentOutline.forEach((week, weekIndex) => {
+            if (!week.posts || !Array.isArray(week.posts)) return;
             
-            while ((match = postPattern.exec(cleanedText)) !== null) {
+            week.posts.forEach((post, postIndex) => {
+              // Calculate the date for this post
+              const postDate = new Date(startDateObj);
+              postDate.setDate(postDate.getDate() + (weekIndex * 7) + postIndex);
+              
+              // Find next valid posting day
+              while (!postDays.includes(postDate.toLocaleString('en-US', { weekday: 'long' }))) {
+                postDate.setDate(postDate.getDate() + 1);
+              }
+              
+              // Set the time
+              postDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+              
+              // Create the post
               posts.push({
-                title: match[1],
-                content: "Generated content",
-                type: match[2],
-                audience: "Target audience",
-                scheduledDate: new Date().toISOString().split('T')[0],
-                channel: match[3]
+                title: post.topic || `Week ${week.week} Post ${postIndex + 1}`,
+                content: post.topic || "Generated content",
+                type: post.type || "Post",
+                audience: post.audience || "Target audience",
+                scheduledDate: postDate.toISOString(),
+                channel: channels[posts.length % channels.length]
               });
-            }
-            
-            if (posts.length > 0) {
-              console.log(`Manually extracted ${posts.length} posts`);
-              jsonData = { posts };
-            } else {
-              throw new Error("Could not extract any valid post data");
-            }
-          } catch (lastResortError) {
-            console.error("All parsing attempts failed");
-            throw new Error(`JSON parsing failed after multiple attempts: ${initialParseError.message}. See server logs for details.`);
-          }
+            });
+          });
+          
+          jsonData = { posts };
+          console.log(`Created ${posts.length} posts manually`);
         }
       }
       
