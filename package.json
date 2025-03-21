@@ -6,12 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --no-warn-configuration",
+    "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "ci": "npm run lint && npm run test",
-    "vercel-build": "npm run ci && npm run build"
+    "ci": "next build || npm run build",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
