@@ -197,11 +197,10 @@ export default function CalendarView() {
     try {
       toast.loading('Saving your content calendar...');
       
-      // Prepare the updated calendar data
+      // Prepare the updated calendar data - removing modified_at field
       const updatedCalendar = {
         ...calendarData,
-        // Update any fields as needed
-        modified_at: new Date().toISOString(),
+        // Only include fields that exist in the database
         status: 'saved'
       };
       
