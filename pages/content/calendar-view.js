@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { createClient } from '@supabase/supabase-js';
@@ -217,13 +218,18 @@ export default function CalendarView() {
   const calendarComponents = {
     eventWrapper: ({ event, children }) => {
       const bgColor = getPlatformColor(event.resource?.channel || '');
-      return React.cloneElement(React.Children.only(children), {
-        style: {
-          ...children.props.style,
+      return (
+        <div style={{
           backgroundColor: bgColor,
           border: '1px solid ' + getDarkerColor(bgColor),
-        }
-      });
+          borderRadius: '4px',
+          color: '#fff',
+          height: '100%',
+          width: '100%'
+        }}>
+          {children}
+        </div>
+      );
     }
   };
   
