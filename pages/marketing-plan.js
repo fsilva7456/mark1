@@ -3,6 +3,11 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
+import StatusDashboard from '../components/StatusDashboard';
+import WorkflowDiagram from '../components/WorkflowDiagram';
+import ContextualActionButtons from '../components/ContextualActionButtons';
+import ContentPipeline from '../components/ContentPipeline';
+import BreadcrumbNavigation from '../components/BreadcrumbNavigation';
 import styles from '../styles/MarketingPlan.module.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useMarketingPlan, MarketingPlanContext } from '../contexts/MarketingPlanContext';
@@ -222,6 +227,13 @@ export default function MarketingPlanDashboard() {
       <Navbar />
       
       <main className={styles.main}>
+        <BreadcrumbNavigation 
+          path={[
+            { name: 'Dashboard', href: '/' },
+            { name: 'Marketing Plan', href: '/marketing-plan' }
+          ]}
+        />
+        
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <h1>Marketing Plan Dashboard</h1>
@@ -244,170 +256,18 @@ export default function MarketingPlanDashboard() {
           </div>
         </div>
         
+        <StatusDashboard 
+          strategies={strategies} 
+          outlines={contentOutlines} 
+          calendars={calendars} 
+          posts={[]}  // We'll need to implement post retrieval in the context
+        />
+        
         <div className={styles.content}>
           {viewMode === 'workflow' ? (
             <div className={styles.workflowView}>
               {workflowData.length > 0 ? (
-                workflowData.map((workflow) => (
-                  <div key={workflow.strategy.id} className={styles.workflowCard}>
-                    <div className={styles.workflowHeader}>
-                      <h2>{workflow.strategy.name}</h2>
-                      <div className={styles.workflowStats}>
-                        <span>{workflow.outlines.length} outlines</span>
-                        <span>{workflow.calendars.length} calendars</span>
-                      </div>
-                    </div>
-                    
-                    <div className={styles.workflowPath}>
-                      {/* Strategy */}
-                      <div 
-                        className={`${styles.entityNode} ${styles.strategyNode} ${selectedEntity?.type === 'strategy' && selectedEntity?.id === workflow.strategy.id ? styles.selected : ''}`}
-                        onClick={() => handleEntitySelect('strategy', workflow.strategy.id)}
-                      >
-                        <div className={styles.nodeIcon}>📊</div>
-                        <h3>Strategy</h3>
-                        <p className={styles.nodeDate}>
-                          Created: {formatDate(workflow.strategy.created_at)}
-                        </p>
-                        <div className={styles.nodeActions}>
-                          <button
-                            className={styles.viewAction}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigateToEntity('strategy', workflow.strategy.id);
-                            }}
-                          >
-                            View
-                          </button>
-                          <button
-                            className={styles.deleteAction}
-                            data-testid={`delete-strategy-${workflow.strategy.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteClick('strategy', workflow.strategy.id, workflow.strategy.name);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className={styles.connector}></div>
-                      
-                      {/* Content Outlines */}
-                      <div className={styles.entityNodeGroup}>
-                        <h4 className={styles.nodeGroupTitle}>Content Outlines</h4>
-                        {workflow.outlines.length > 0 ? (
-                          workflow.outlines.map((outline) => (
-                            <div 
-                              key={outline.id}
-                              className={`${styles.entityNode} ${styles.outlineNode} ${selectedEntity?.type === 'outline' && selectedEntity?.id === outline.id ? styles.selected : ''}`}
-                              onClick={() => handleEntitySelect('outline', outline.id)}
-                            >
-                              <div className={styles.nodeIcon}>📝</div>
-                              <h3>Content Outline</h3>
-                              <p className={styles.nodeDate}>
-                                Created: {formatDate(outline.created_at)}
-                              </p>
-                              <div className={styles.nodeActions}>
-                                <button
-                                  className={styles.viewAction}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigateToEntity('outline', outline.strategy_id);
-                                  }}
-                                >
-                                  View
-                                </button>
-                                <button
-                                  className={styles.deleteAction}
-                                  data-testid={`delete-outline-${outline.id}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick('outline', outline.id, 'Content Outline');
-                                  }}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className={styles.emptyNode}>
-                            <p>No content outlines</p>
-                            <button
-                              className={styles.createAction}
-                              onClick={() => router.push(`/content/new?strategy=${workflow.strategy.id}`)}
-                            >
-                              Create Outline
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className={styles.connector}></div>
-                      
-                      {/* Calendars */}
-                      <div className={styles.entityNodeGroup}>
-                        <h4 className={styles.nodeGroupTitle}>Content Calendars</h4>
-                        {workflow.calendars.length > 0 ? (
-                          workflow.calendars.map((calendar) => (
-                            <div 
-                              key={calendar.id}
-                              className={`${styles.entityNode} ${styles.calendarNode} ${selectedEntity?.type === 'calendar' && selectedEntity?.id === calendar.id ? styles.selected : ''}`}
-                              onClick={() => handleEntitySelect('calendar', calendar.id)}
-                            >
-                              <div className={styles.nodeIcon}>📅</div>
-                              <h3>{calendar.name || 'Content Calendar'}</h3>
-                              <div className={styles.progressBar}>
-                                <div 
-                                  className={styles.progressFill}
-                                  style={{ width: `${calendar.progress || 0}%` }}
-                                ></div>
-                              </div>
-                              <p className={styles.progressText} data-testid={`progress-text-${calendar.id}`}>
-                                {calendar.progress || 0}% complete
-                              </p>
-                              <div className={styles.nodeActions}>
-                                <button
-                                  className={styles.viewAction}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigateToEntity('calendar', calendar.id);
-                                  }}
-                                >
-                                  Manage
-                                </button>
-                                <button
-                                  className={styles.deleteAction}
-                                  data-testid={`delete-calendar-${calendar.id}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick('calendar', calendar.id, calendar.name || 'Calendar');
-                                  }}
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className={styles.emptyNode}>
-                            <p>No calendars</p>
-                            {workflow.outlines.length > 0 && (
-                              <button
-                                className={styles.createAction}
-                                onClick={() => router.push(`/content/calendar-params?strategyId=${workflow.strategy.id}&contentOutline=${encodeURIComponent(JSON.stringify(workflow.outlines[0].outline))}`)}
-                              >
-                                Create Calendar
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
+                <WorkflowDiagram workflowData={workflowData} />
               ) : (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyIcon}>📊</div>
@@ -646,6 +506,18 @@ export default function MarketingPlanDashboard() {
               />
             </div>
           )}
+          
+          <div className={styles.contentSection}>
+            <h2>Content Pipeline</h2>
+            <ContentPipeline posts={[]} /> {/* We'll need to implement post retrieval */}
+          </div>
+          
+          <ContextualActionButtons 
+            strategies={strategies} 
+            outlines={contentOutlines} 
+            calendars={calendars} 
+            selectedEntity={selectedEntity}
+          />
         </div>
       </main>
       

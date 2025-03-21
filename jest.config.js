@@ -6,56 +6,36 @@ const createJestConfig = nextJest({
   dir: './',
 });
 
-// Check if running in a CI environment (like Vercel)
-const isCI = process.env.CI || process.env.NODE_ENV === 'test';
-
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  // Load setup file
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  // Use jsdom environment
   testEnvironment: 'jest-environment-jsdom',
+  // Handle paths and module aliases
   moduleNameMapper: {
-    // Handle module aliases (if you have them in your project)
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/pages/(.*)$': '<rootDir>/pages/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
   },
+  // Identify test files
   testMatch: ['**/__tests__/**/*.test.js', '**/__tests__/**/*.test.jsx'],
-  collectCoverage: true,
-  collectCoverageFrom: [
-    '**/*.{js,jsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-    '!**/.next/**',
-    '!**/coverage/**',
-    '!**/*config.js',
-    '!**/__tests__/**',
-  ],
-  // Verbose output for CI builds to show detailed test results
-  verbose: Boolean(isCI),
-  // In CI, we want to generate JSON reports for easier parsing
-  reporters: isCI 
-    ? ['default', ['jest-junit', { outputDirectory: './test-results', outputName: 'junit.xml' }]]
-    : ['default'],
-  // Display individual test results with full diffs and proper error stacks
+  // Exclude certain directories from testing
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
-  // Increase test timeout in CI environments
-  testTimeout: isCI ? 30000 : 5000,
-  // Set test environment variables
-  setupFiles: ['<rootDir>/jest.setup.js'],
-  testEnvironmentOptions: {
-    url: 'http://localhost',
-  },
+  // Set reasonable test timeout
+  testTimeout: 10000,
+  // Set environment variables
   globals: {
     'process.env.NODE_ENV': 'test',
   },
-  // Must have a Jest transform for handling JSX
-  transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
-  },
-  // Ensure Jest can resolve modules correctly
-  moduleDirectories: ['node_modules', '<rootDir>'],
+  // Be verbose
+  verbose: true,
+  // Handle ESM modules
+  transformIgnorePatterns: [
+    '/node_modules/(?!react-dnd|react-dnd-html5-backend|dnd-core)/'
+  ],
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+// Export the config
 module.exports = createJestConfig(customJestConfig); 

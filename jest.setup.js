@@ -2,8 +2,8 @@
 // Set test environment variables first
 process.env.NODE_ENV = 'test';
 
-// Then import jest-dom to extend expect properly
-import '@testing-library/jest-dom';
+// Import jest-dom using require
+require('@testing-library/jest-dom');
 
 // Mock console methods for testing
 global.console = {
@@ -14,7 +14,16 @@ global.console = {
   error: jest.fn(),
 };
 
-// Mock next/router
+// Mock window fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+    text: () => Promise.resolve(''),
+  })
+);
+
+// Set up Jest mocks
 jest.mock('next/router', () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -24,7 +33,6 @@ jest.mock('next/router', () => ({
   }),
 }));
 
-// Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -34,38 +42,48 @@ jest.mock('next/navigation', () => ({
   }),
 }));
 
-// Mock next/image
+// Mock next/image without JSX syntax
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props) => {
-    // eslint-disable-next-line jsx-a11y/alt-text
-    return <img {...props} />;
+  default: function Image(props) {
+    // Return a plain object instead of JSX
+    return {
+      type: 'img',
+      props: { ...props },
+    };
   },
 }));
 
-// Mock next/head
+// Mock next/head without JSX syntax
 jest.mock('next/head', () => ({
   __esModule: true,
-  default: ({ children }) => {
-    return <>{children}</>;
+  default: function Head({ children }) {
+    // Return a plain object instead of JSX
+    return {
+      type: 'head',
+      props: { children },
+    };
   },
 }));
 
-// Mock next/link
+// Mock next/link without JSX syntax  
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ children, href }) => {
-    return <a href={href}>{children}</a>;
+  default: function Link({ children, href }) {
+    // Return a plain object instead of JSX
+    return {
+      type: 'a',
+      props: { href, children },
+    };
   },
 }));
 
-// Mock @supabase/supabase-js
 jest.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: {
       getSession: jest.fn(),
-      signInWithPassword: jest.fn(),
       signOut: jest.fn(),
+      signInWithPassword: jest.fn(),
     },
     from: jest.fn(() => ({
       select: jest.fn(),
@@ -76,16 +94,7 @@ jest.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-// Mock window.fetch
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-    text: () => Promise.resolve(''),
-  })
-);
-
-// Set up toast mock
+// Mock react-hot-toast
 jest.mock('react-hot-toast', () => ({
   toast: {
     success: jest.fn(),
@@ -93,13 +102,25 @@ jest.mock('react-hot-toast', () => ({
     loading: jest.fn(),
     dismiss: jest.fn(),
   },
-  Toaster: () => null,
+  Toaster: function Toaster() {
+    return null;
+  },
 }));
 
-// Prevent console errors during tests but keep important ones
+// Mock the Drag and Drop functionality
+jest.mock('react-dnd', () => ({
+  useDrag: () => [{ isDragging: false }, jest.fn(), jest.fn()],
+  useDrop: () => [{ isOver: false }, jest.fn()],
+  DndProvider: ({ children }) => children,
+}));
+
+jest.mock('react-dnd-html5-backend', () => ({
+  HTML5Backend: 'HTML5Backend',
+}));
+
+// Override console.error to suppress certain React warnings
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  // Don't show React internal errors that don't affect testing
   if (
     typeof args[0] === 'string' &&
     (args[0].includes('Warning: ReactDOM.render') ||

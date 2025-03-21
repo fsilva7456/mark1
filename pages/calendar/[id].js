@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import Navbar from '../../components/Navbar';
+import BreadcrumbNavigation from '../../components/BreadcrumbNavigation';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from '../../styles/Calendar.module.css';
@@ -345,454 +348,401 @@ export default function CalendarManagement() {
     return post.status === activeTab;
   });
 
+  // Handle post drag and drop for rescheduling
+  const movePost = async (dragIndex, hoverIndex) => {
+    const dragPost = posts[dragIndex];
+    const targetPost = posts[hoverIndex];
+    
+    if (!dragPost || !targetPost) return;
+    
+    // Create new array
+    const updatedPosts = [...posts];
+    
+    // Swap scheduled dates between the drag post and hover post
+    const dragDate = new Date(dragPost.scheduled_date);
+    const hoverDate = new Date(targetPost.scheduled_date);
+    
+    // Update posts in state
+    updatedPosts[dragIndex] = { ...dragPost, scheduled_date: hoverDate.toISOString() };
+    updatedPosts[hoverIndex] = { ...targetPost, scheduled_date: dragDate.toISOString() };
+    
+    // Update state
+    setPosts(updatedPosts);
+    
+    // Save changes to database
+    try {
+      const updates = [
+        { id: dragPost.id, scheduled_date: hoverDate.toISOString() },
+        { id: targetPost.id, scheduled_date: dragDate.toISOString() }
+      ];
+      
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('calendar_posts')
+          .update({ scheduled_date: update.scheduled_date })
+          .eq('id', update.id);
+          
+        if (error) throw error;
+      }
+      
+      toast.success('Post rescheduled successfully');
+    } catch (error) {
+      console.error('Error updating post dates:', error);
+      toast.error('Failed to reschedule post');
+      
+      // Revert changes on failure
+      fetchCalendarDetails(id);
+    }
+  };
+  
+  // Bulk actions state
+  const [selectedPosts, setSelectedPosts] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  
+  // Toggle post selection for bulk actions
+  const togglePostSelection = (postId) => {
+    if (selectedPosts.includes(postId)) {
+      setSelectedPosts(selectedPosts.filter(id => id !== postId));
+    } else {
+      setSelectedPosts([...selectedPosts, postId]);
+    }
+    
+    // Show bulk actions bar when at least one post is selected
+    setShowBulkActions(selectedPosts.length > 0);
+  };
+  
+  // Bulk status update
+  const bulkUpdateStatus = async (newStatus) => {
+    if (selectedPosts.length === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('calendar_posts')
+        .update({ status: newStatus })
+        .in('id', selectedPosts);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setPosts(posts.map(post => 
+        selectedPosts.includes(post.id) 
+          ? { ...post, status: newStatus } 
+          : post
+      ));
+      
+      toast.success(`${selectedPosts.length} posts updated to ${newStatus}`);
+      setSelectedPosts([]);
+      setShowBulkActions(false);
+    } catch (error) {
+      console.error('Error updating post status:', error);
+      toast.error('Failed to update posts');
+    }
+  };
+  
+  // Bulk delete
+  const bulkDeletePosts = async () => {
+    if (selectedPosts.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedPosts.length} posts? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('calendar_posts')
+        .delete()
+        .in('id', selectedPosts);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setPosts(posts.filter(post => !selectedPosts.includes(post.id)));
+      
+      toast.success(`${selectedPosts.length} posts deleted`);
+      setSelectedPosts([]);
+      setShowBulkActions(false);
+      
+      // Update calendar progress
+      await updateCalendarProgress(id, posts.filter(post => !selectedPosts.includes(post.id)));
+    } catch (error) {
+      console.error('Error deleting posts:', error);
+      toast.error('Failed to delete posts');
+    }
+  };
+  
+  // Post preview state
+  const [previewPost, setPreviewPost] = useState(null);
+  
+  // Toggle post preview
+  const togglePostPreview = (post) => {
+    setPreviewPost(previewPost ? null : post);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Manage Calendar | Mark1</title>
-        <meta name="description" content="Manage your content calendar posts" />
+        <title>{calendar?.name || 'Content Calendar'} | Mark1</title>
+        <meta name="description" content="Manage your content calendar and scheduled posts" />
       </Head>
-
+      
       <Navbar />
-
+      
       <main className={styles.main}>
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1>{calendar?.name || 'Content Calendar'}</h1>
-            <p>Plan, schedule, and track your content publishing and performance.</p>
+        <BreadcrumbNavigation 
+          path={[
+            { name: 'Dashboard', href: '/' },
+            { name: 'Marketing Plan', href: '/marketing-plan' },
+            { name: calendar?.name || 'Calendar', href: `/calendar/${id}` }
+          ]}
+        />
+      
+        {isLoading ? (
+          <div className={styles.loadingContainer}>
+            <div className={styles.spinner}></div>
+            <p>Loading calendar...</p>
           </div>
-        </div>
+        ) : error ? (
+          <div className={styles.errorContainer}>
+            <p className={styles.errorMessage}>{error}</p>
+            <button onClick={() => router.reload()} className={styles.retryButton}>
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className={styles.calendarHeader}>
+              <div>
+                <h1 className={styles.calendarTitle}>{calendar?.name || 'Content Calendar'}</h1>
+                {calendar?.description && (
+                  <p className={styles.calendarDescription}>{calendar.description}</p>
+                )}
+              </div>
+              
+              <div className={styles.calendarActions}>
+                <Link href={`/calendar/${id}/post/new`} className={styles.newPostButton}>
+                  + New Post
+                </Link>
+                <button onClick={() => handleGenerateReport()} className={styles.reportButton}>
+                  Generate Report
+                </button>
+              </div>
+            </div>
 
-        <div className={styles.content}>
-          {isLoading ? (
-            <div className={styles.loading}>
-              <div className={styles.spinner}></div>
-              <p>Loading your calendar...</p>
-            </div>
-          ) : error ? (
-            <div className={styles.errorContainer}>
-              <div className={styles.errorIcon}>⚠️</div>
-              <h3>Error</h3>
-              <p>{error}</p>
-              <button 
-                onClick={() => router.push('/dashboard')} 
-                className={styles.returnButton}
-              >
-                Return to Dashboard
-              </button>
-            </div>
-          ) : (
-            <div className={styles.calendarContainer}>
-              {/* Calendar Overview */}
-              <div className={styles.calendarOverview}>
-                <div className={styles.calendarStats}>
-                  <div className={styles.statCard}>
-                    <h3>Total Posts</h3>
-                    <p>{posts.length}</p>
-                  </div>
-                  <div className={styles.statCard}>
-                    <h3>Published</h3>
-                    <p>{posts.filter(post => post.status === 'published').length}</p>
-                  </div>
-                  <div className={styles.statCard}>
-                    <h3>Scheduled</h3>
-                    <p>{posts.filter(post => post.status === 'scheduled').length}</p>
-                  </div>
-                  <div className={styles.statCard}>
-                    <h3>Progress</h3>
-                    <div className={styles.progressContainer}>
-                      <div className={styles.progressBar}>
-                        <div 
-                          className={styles.progressFill} 
-                          style={{ width: `${calendar?.progress || 0}%` }}
-                        ></div>
-                      </div>
-                      <span>{calendar?.progress || 0}%</span>
-                    </div>
-                  </div>
-                </div>
+            {/* Calendar filters */}
+            <div className={styles.calendarFilters}>
+              <div className={styles.tabsContainer}>
+                <button 
+                  className={`${styles.tab} ${activeTab === 'scheduled' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('scheduled')}
+                >
+                  Scheduled
+                </button>
+                <button 
+                  className={`${styles.tab} ${activeTab === 'draft' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('draft')}
+                >
+                  Drafts
+                </button>
+                <button 
+                  className={`${styles.tab} ${activeTab === 'published' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('published')}
+                >
+                  Published
+                </button>
+                <button 
+                  className={`${styles.tab} ${activeTab === 'all' ? styles.active : ''}`}
+                  onClick={() => setActiveTab('all')}
+                >
+                  All Posts
+                </button>
+              </div>
+              
+              <div className={styles.filtersContainer}>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="platform">Sort by Platform</option>
+                  <option value="title">Sort by Title</option>
+                </select>
                 
-                <div className={styles.calendarActions}>
-                  <button 
-                    onClick={() => setActiveTab('all')}
-                    className={`${styles.tabButton} ${activeTab === 'all' ? styles.active : ''}`}
-                  >
-                    All Posts
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('scheduled')}
-                    className={`${styles.tabButton} ${activeTab === 'scheduled' ? styles.active : ''}`}
-                  >
-                    Scheduled
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('published')}
-                    className={`${styles.tabButton} ${activeTab === 'published' ? styles.active : ''}`}
-                  >
-                    Published
-                  </button>
-                  <button 
-                    onClick={() => document.getElementById('addPostModal').showModal()}
-                    className={styles.addButton}
-                  >
-                    Add New Post
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                  className={styles.sortDirectionButton}
+                >
+                  {sortDirection === 'asc' ? '↑' : '↓'}
+                </button>
               </div>
-              
-              {/* Calendar Posts Table */}
-              <div className={styles.postsTableContainer}>
-                <table className={styles.postsTable}>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Post Title</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                      <th>Engagement</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPosts.length > 0 ? (
-                      filteredPosts.map(post => (
-                        <tr key={post.id} className={styles.postRow}>
-                          <td>{new Date(post.scheduled_date).toLocaleDateString()}</td>
-                          <td>{post.title}</td>
-                          <td>{post.post_type}</td>
-                          <td>
-                            <span className={`${styles.statusBadge} ${styles[post.status]}`}>
-                              {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
-                            </span>
-                          </td>
-                          <td>
-                            <div className={styles.engagementPreview}>
-                              {post.status === 'published' ? (
-                                <>
-                                  <span>👍 {post.engagement?.likes || 0}</span>
-                                  <span>💬 {post.engagement?.comments || 0}</span>
-                                  <span>↗️ {post.engagement?.shares || 0}</span>
-                                </>
-                              ) : (
-                                <span className={styles.notPublished}>Not published yet</span>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className={styles.postActions}>
-                              <button
-                                onClick={() => document.getElementById(`viewPostModal-${post.id}`).showModal()}
-                                className={styles.viewButton}
-                              >
-                                View
-                              </button>
-                              
-                              {post.status === 'scheduled' && (
-                                <button
-                                  onClick={() => updatePostStatus(post.id, 'published')}
-                                  className={styles.publishButton}
-                                >
-                                  Mark Published
-                                </button>
-                              )}
-                              
-                              {post.status === 'published' && (
-                                <button
-                                  onClick={() => document.getElementById(`engagementModal-${post.id}`).showModal()}
-                                  className={styles.engagementButton}
-                                >
-                                  Update Metrics
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className={styles.emptyState}>
-                          No posts in this category
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Modals for post operations */}
-              {posts.map(post => (
-                <div key={`modals-${post.id}`}>
-                  {/* View Post Modal */}
-                  <dialog id={`viewPostModal-${post.id}`} className={styles.modal}>
-                    <div className={styles.modalContent}>
-                      <div className={styles.modalHeader}>
-                        <h3>Post Details</h3>
-                        <button 
-                          onClick={() => document.getElementById(`viewPostModal-${post.id}`).close()}
-                          className={styles.closeButton}
-                        >
-                          ×
-                        </button>
-                      </div>
-                      <div className={styles.modalBody}>
-                        <div className={styles.postDetail}>
-                          <strong>Title:</strong>
-                          <p>{post.title}</p>
-                        </div>
-                        <div className={styles.postDetail}>
-                          <strong>Type:</strong>
-                          <p>{post.post_type}</p>
-                        </div>
-                        <div className={styles.postDetail}>
-                          <strong>Date:</strong>
-                          <p>{new Date(post.scheduled_date).toLocaleDateString()}</p>
-                        </div>
-                        <div className={styles.postDetail}>
-                          <strong>Status:</strong>
-                          <p>{post.status}</p>
-                        </div>
-                        <div className={styles.postDetail}>
-                          <strong>Content:</strong>
-                          <p>{post.content}</p>
-                        </div>
-                        <div className={styles.postDetail}>
-                          <strong>Target Audience:</strong>
-                          <p>{post.target_audience}</p>
-                        </div>
-                        {post.status === 'published' && (
-                          <div className={styles.postDetail}>
-                            <strong>Engagement:</strong>
-                            <div className={styles.engagementMetrics}>
-                              <div className={styles.metric}>
-                                <span>Likes:</span>
-                                <span>{post.engagement?.likes || 0}</span>
-                              </div>
-                              <div className={styles.metric}>
-                                <span>Comments:</span>
-                                <span>{post.engagement?.comments || 0}</span>
-                              </div>
-                              <div className={styles.metric}>
-                                <span>Shares:</span>
-                                <span>{post.engagement?.shares || 0}</span>
-                              </div>
-                              <div className={styles.metric}>
-                                <span>Saves:</span>
-                                <span>{post.engagement?.saves || 0}</span>
-                              </div>
-                              <div className={styles.metric}>
-                                <span>Clicks:</span>
-                                <span>{post.engagement?.clicks || 0}</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className={styles.modalFooter}>
-                        <button 
-                          onClick={() => document.getElementById(`viewPostModal-${post.id}`).close()}
-                          className={styles.cancelButton}
-                        >
-                          Close
-                        </button>
-                      </div>
-                    </div>
-                  </dialog>
-                  
-                  {/* Engagement Metrics Modal */}
-                  {post.status === 'published' && (
-                    <dialog id={`engagementModal-${post.id}`} className={styles.modal}>
-                      <div className={styles.modalContent}>
-                        <div className={styles.modalHeader}>
-                          <h3>Update Engagement Metrics</h3>
-                          <button 
-                            onClick={() => document.getElementById(`engagementModal-${post.id}`).close()}
-                            className={styles.closeButton}
-                          >
-                            ×
-                          </button>
-                        </div>
-                        <div className={styles.modalBody}>
-                          <form 
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              const form = e.target;
-                              updatePostEngagement(post.id, {
-                                likes: parseInt(form.likes.value) || 0,
-                                comments: parseInt(form.comments.value) || 0,
-                                shares: parseInt(form.shares.value) || 0,
-                                saves: parseInt(form.saves.value) || 0,
-                                clicks: parseInt(form.clicks.value) || 0
-                              });
-                              document.getElementById(`engagementModal-${post.id}`).close();
-                            }}
-                            className={styles.engagementForm}
-                          >
-                            <div className={styles.formGroup}>
-                              <label htmlFor={`likes-${post.id}`}>Likes:</label>
-                              <input 
-                                type="number" 
-                                id={`likes-${post.id}`}
-                                name="likes"
-                                defaultValue={post.engagement?.likes || 0}
-                                min="0"
-                              />
-                            </div>
-                            <div className={styles.formGroup}>
-                              <label htmlFor={`comments-${post.id}`}>Comments:</label>
-                              <input 
-                                type="number" 
-                                id={`comments-${post.id}`}
-                                name="comments"
-                                defaultValue={post.engagement?.comments || 0}
-                                min="0"
-                              />
-                            </div>
-                            <div className={styles.formGroup}>
-                              <label htmlFor={`shares-${post.id}`}>Shares:</label>
-                              <input 
-                                type="number" 
-                                id={`shares-${post.id}`}
-                                name="shares"
-                                defaultValue={post.engagement?.shares || 0}
-                                min="0"
-                              />
-                            </div>
-                            <div className={styles.formGroup}>
-                              <label htmlFor={`saves-${post.id}`}>Saves:</label>
-                              <input 
-                                type="number" 
-                                id={`saves-${post.id}`}
-                                name="saves"
-                                defaultValue={post.engagement?.saves || 0}
-                                min="0"
-                              />
-                            </div>
-                            <div className={styles.formGroup}>
-                              <label htmlFor={`clicks-${post.id}`}>Clicks/Link Taps:</label>
-                              <input 
-                                type="number" 
-                                id={`clicks-${post.id}`}
-                                name="clicks"
-                                defaultValue={post.engagement?.clicks || 0}
-                                min="0"
-                              />
-                            </div>
-                            <div className={styles.formActions}>
-                              <button type="submit" className={styles.saveButton}>
-                                Save Metrics
-                              </button>
-                              <button 
-                                type="button"
-                                onClick={() => document.getElementById(`engagementModal-${post.id}`).close()}
-                                className={styles.cancelButton}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      </div>
-                    </dialog>
-                  )}
-                </div>
-              ))}
-              
-              {/* Add New Post Modal */}
-              <dialog id="addPostModal" className={styles.modal}>
-                <div className={styles.modalContent}>
-                  <div className={styles.modalHeader}>
-                    <h3>Add New Post</h3>
-                    <button 
-                      onClick={() => document.getElementById('addPostModal').close()}
-                      className={styles.closeButton}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div className={styles.modalBody}>
-                    <form 
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const form = e.target;
-                        addNewPost({
-                          title: form.title.value,
-                          content: form.content.value,
-                          post_type: form.postType.value,
-                          target_audience: form.audience.value,
-                          scheduled_date: new Date(form.date.value).toISOString()
-                        });
-                        form.reset();
-                        document.getElementById('addPostModal').close();
-                      }}
-                      className={styles.addPostForm}
-                    >
-                      <div className={styles.formGroup}>
-                        <label htmlFor="title">Post Title:</label>
-                        <input 
-                          type="text" 
-                          id="title"
-                          name="title"
-                          required
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="content">Content:</label>
-                        <textarea 
-                          id="content"
-                          name="content"
-                          rows="4"
-                          required
-                        ></textarea>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="postType">Post Type:</label>
-                        <select id="postType" name="postType" required>
-                          <option value="">Select a type</option>
-                          <option value="Carousel">Carousel</option>
-                          <option value="Image Post">Image Post</option>
-                          <option value="Video">Video</option>
-                          <option value="Story">Story</option>
-                          <option value="Reel">Reel</option>
-                          <option value="Text Post">Text Post</option>
-                        </select>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="audience">Target Audience:</label>
-                        <input 
-                          type="text" 
-                          id="audience"
-                          name="audience"
-                          required
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="date">Scheduled Date:</label>
-                        <input 
-                          type="date" 
-                          id="date"
-                          name="date"
-                          required
-                        />
-                      </div>
-                      <div className={styles.formActions}>
-                        <button type="submit" className={styles.saveButton}>
-                          Add Post
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => document.getElementById('addPostModal').close()}
-                          className={styles.cancelButton}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </dialog>
             </div>
-          )}
-        </div>
+            
+            {/* Bulk action bar */}
+            {selectedPosts.length > 0 && (
+              <div className={styles.bulkActions}>
+                <span className={styles.bulkActionsTitle}>
+                  {selectedPosts.length} posts selected
+                </span>
+                <button 
+                  onClick={() => bulkUpdateStatus('draft')}
+                  className={styles.bulkActionsButton}
+                >
+                  Mark as Draft
+                </button>
+                <button 
+                  onClick={() => bulkUpdateStatus('scheduled')}
+                  className={styles.bulkActionsButton}
+                >
+                  Schedule
+                </button>
+                <button 
+                  onClick={() => bulkUpdateStatus('published')}
+                  className={styles.bulkActionsButton}
+                >
+                  Mark as Published
+                </button>
+                <button 
+                  onClick={bulkDeletePosts}
+                  className={`${styles.bulkActionsButton} ${styles.destructive}`}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+            
+            {/* Post listing with drag and drop */}
+            <DndProvider backend={HTML5Backend}>
+              <div className={styles.postsContainer}>
+                {filteredPosts.length > 0 ? (
+                  filteredPosts.map((post, index) => (
+                    <PostItem 
+                      key={post.id}
+                      post={post}
+                      index={index}
+                      movePost={movePost}
+                      isSelected={selectedPosts.includes(post.id)}
+                      toggleSelection={togglePostSelection}
+                      togglePreview={togglePostPreview}
+                    />
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>
+                    <p>No posts found for the selected filters.</p>
+                    <Link href={`/calendar/${id}/post/new`} className={styles.emptyStateAction}>
+                      Create your first post
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </DndProvider>
+            
+            {/* Post preview modal */}
+            {previewPost && (
+              <div className={styles.previewModal} onClick={() => setPreviewPost(null)}>
+                <div className={styles.previewContent} onClick={e => e.stopPropagation()}>
+                  <button 
+                    className={styles.previewClose}
+                    onClick={() => setPreviewPost(null)}
+                  >
+                    ×
+                  </button>
+                  <div className={styles.previewHeader}>
+                    <span className={styles.previewPlatform}>
+                      {previewPost.platform || 'Instagram'}
+                    </span>
+                    <h2 className={styles.previewTitle}>{previewPost.title}</h2>
+                    <div className={styles.previewMeta}>
+                      <span>Scheduled for: {new Date(previewPost.scheduled_date).toLocaleDateString()}</span>
+                      <span>Status: {previewPost.status}</span>
+                    </div>
+                  </div>
+                  <div className={styles.previewBody}>
+                    {previewPost.content}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   );
-} 
+}
+
+// Draggable post item component
+const PostItem = ({ post, index, movePost, isSelected, toggleSelection, togglePreview }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'POST',
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+  
+  const [, drop] = useDrop({
+    accept: 'POST',
+    hover: (draggedItem) => {
+      if (draggedItem.index !== index) {
+        movePost(draggedItem.index, index);
+        draggedItem.index = index;
+      }
+    },
+  });
+  
+  return (
+    <div 
+      ref={node => drag(drop(node))}
+      className={`${styles.postCard} ${styles[post.status]} ${isDragging ? styles.dragging : ''} ${isSelected ? styles.selected : ''}`}
+    >
+      <div className={styles.postSelection}>
+        <label className={styles.checkboxContainer}>
+          <input 
+            type="checkbox" 
+            checked={isSelected} 
+            onChange={() => toggleSelection(post.id)}
+          />
+          <span className={styles.checkmark}></span>
+        </label>
+      </div>
+      
+      <div className={styles.postContent}>
+        <div className={styles.postHeader}>
+          <h3 className={styles.postTitle}>{post.title}</h3>
+          <span className={`${styles.postPlatform} ${styles[post.platform?.toLowerCase()]}`}>
+            {post.platform || 'Instagram'}
+          </span>
+        </div>
+        
+        <p className={styles.postExcerpt}>
+          {post.content?.length > 100 
+            ? post.content.substring(0, 100) + '...' 
+            : post.content}
+        </p>
+        
+        <div className={styles.postMeta}>
+          <span className={styles.postDate}>
+            {new Date(post.scheduled_date).toLocaleDateString()}
+          </span>
+          <span className={`${styles.postStatus} ${styles[post.status]}`}>
+            {post.status}
+          </span>
+        </div>
+      </div>
+      
+      <div className={styles.postActions}>
+        <button 
+          className={styles.previewButton}
+          onClick={() => togglePreview(post)}
+        >
+          Preview
+        </button>
+        <Link 
+          href={`/calendar/${post.calendar_id}/post/${post.id}`} 
+          className={styles.editButton}
+        >
+          Edit
+        </Link>
+      </div>
+    </div>
+  );
+}; 
