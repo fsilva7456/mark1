@@ -1308,6 +1308,21 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  animation: pulse 2s infinite;
+  border-width: 2px;
+  box-shadow: 0 4px 12px rgba(52, 84, 209, 0.15);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(52, 84, 209, 0.15);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(52, 84, 209, 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(52, 84, 209, 0.15);
+  }
 }
 
 .calendarCallToAction {
@@ -1316,7 +1331,7 @@
   padding: 1rem 2rem;
   border-radius: 10px;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1325,6 +1340,7 @@
   gap: 0.75rem;
   box-shadow: 0 4px 6px rgba(52, 84, 209, 0.2);
   margin-bottom: 1rem;
+  padding: 1.2rem 2.5rem;
 }
 
 .calendarCallToAction:hover {
@@ -1341,7 +1357,7 @@
 }
 
 .calendarIcon {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
 }
 
 .calendarDescription {

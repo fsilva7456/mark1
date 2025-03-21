@@ -932,25 +932,33 @@ export default function NewContent() {
             </div>
           ) : (
             <div className={styles.outlineContainer}>
-              {/* Make the calendar button more reliable by showing it as soon as we have a strategy, even when content is loading */}
-              {(contentOutline.length > 0 || isLoading) && selectedStrategy && (
+              {/* Always show the calendar button when a strategy is loaded, regardless of content status */}
+              {selectedStrategy && (
                 <div className={styles.calendarButtonContainer}>
                   <button 
                     onClick={() => router.push({
                       pathname: '/content/calendar-params',
                       query: { 
-                        contentOutline: JSON.stringify(contentOutline),
+                        contentOutline: JSON.stringify(contentOutline.length > 0 ? contentOutline : []),
                         strategyId: selectedStrategy.id
                       }
                     })}
                     className={styles.calendarCallToAction}
-                    disabled={isLoading || contentOutline.some(week => week.loading)}
+                    disabled={isLoading || contentOutline.length === 0 || !contentOutline.some(week => week.posts && week.posts.length > 0)}
                   >
                     <BsCalendarEvent className={styles.calendarIcon} />
                     Generate Content Calendar
                   </button>
                   <p className={styles.calendarDescription}>
-                    Create a structured calendar of posts across your social platforms with optimized scheduling.
+                    {isLoading ? (
+                      "Please wait while we prepare your content..."
+                    ) : contentOutline.length === 0 ? (
+                      "Your content is being prepared. This button will activate once content is ready."
+                    ) : !contentOutline.some(week => week.posts && week.posts.length > 0) ? (
+                      "Content is still generating. The button will activate once at least one week of content is ready."
+                    ) : (
+                      "Create a structured calendar of posts across your social platforms with optimized scheduling."
+                    )}
                   </p>
                 </div>
               )}
