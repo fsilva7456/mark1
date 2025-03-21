@@ -105,4 +105,50 @@
 .dashboard .navLogout,
 .dashboard .navUserSetup {
   display: none;
+}
+
+/* Add styles for navigation links */
+.navLinks {
+  display: flex;
+  gap: 1.5rem;
+  margin-left: 2rem;
+}
+
+.navLink, .activeLink {
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.navLink {
+  color: #4a5568;
+}
+
+.activeLink {
+  color: #3182ce;
+  font-weight: 600;
+}
+
+.navLink:hover {
+  color: #3182ce;
+}
+
+.activeLink::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #3182ce;
+}
+
+/* Media query for mobile view */
+@media (max-width: 768px) {
+  .navLinks {
+    display: none;
+  }
 } 

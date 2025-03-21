@@ -1,5 +1,6 @@
 import '../styles/globals.css'
 import { AuthProvider } from '../contexts/AuthContext'
+import { MarketingPlanProvider } from '../contexts/MarketingPlanContext'
 import { useState } from 'react'
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
@@ -32,8 +33,10 @@ function MyApp({ Component, pageProps }) {
   return (
     <ErrorBoundary setError={setError}>
       <AuthProvider>
-        <Component {...pageProps} />
-        <Toaster position="top-right" />
+        <MarketingPlanProvider>
+          <Component {...pageProps} />
+          <Toaster position="top-right" />
+        </MarketingPlanProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

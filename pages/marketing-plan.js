@@ -5,13 +5,34 @@ import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import styles from '../styles/MarketingPlan.module.css';
 import { useAuth } from '../contexts/AuthContext';
-import { useMarketingPlan } from '../contexts/MarketingPlanContext';
+import { useMarketingPlan, MarketingPlanContext } from '../contexts/MarketingPlanContext';
 import logger from '../lib/logger';
 import { toast } from 'react-hot-toast';
+import { useContext } from 'react';
 
 const log = logger.createLogger('MarketingPlanPage');
 
 export default function MarketingPlanDashboard() {
+  // Check if we're rendering outside of MarketingPlanProvider context (e.g., during static generation)
+  const marketingPlanContext = useContext(MarketingPlanContext);
+  if (!marketingPlanContext) {
+    return (
+      <div className={styles.container}>
+        <Head>
+          <title>Marketing Plan Dashboard | Mark1</title>
+          <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
+        </Head>
+        <Navbar />
+        <main className={styles.main}>
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+            <p>Loading marketing plan dashboard...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { 

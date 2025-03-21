@@ -11,6 +11,13 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   
   const isDashboard = router.pathname === '/dashboard';
+  const isAuthedPath = user && (
+    router.pathname === '/dashboard' || 
+    router.pathname === '/marketing-plan' || 
+    router.pathname.startsWith('/strategy/') || 
+    router.pathname.startsWith('/content/') ||
+    router.pathname.startsWith('/calendar/')
+  );
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -22,6 +29,23 @@ export default function Navbar() {
         <Link href="/" className={styles.logo}>
           <img src="/mark1-logo.svg" alt="Mark1" className={styles.logoImage} />
         </Link>
+
+        {isAuthedPath && (
+          <div className={styles.navLinks}>
+            <Link 
+              href="/dashboard" 
+              className={router.pathname === '/dashboard' ? styles.activeLink : styles.navLink}
+            >
+              Dashboard
+            </Link>
+            <Link 
+              href="/marketing-plan" 
+              className={router.pathname === '/marketing-plan' ? styles.activeLink : styles.navLink}
+            >
+              Marketing Plan
+            </Link>
+          </div>
+        )}
 
         <div className={styles.navControls}>
           <button className={styles.menuButton} onClick={toggleMenu}>
@@ -66,6 +90,16 @@ export default function Navbar() {
           <Link href="/about" className={router.pathname === '/about' ? styles.active : ''}>
             About
           </Link>
+          {user && (
+            <>
+              <Link href="/dashboard" className={router.pathname === '/dashboard' ? styles.active : ''}>
+                Dashboard
+              </Link>
+              <Link href="/marketing-plan" className={router.pathname === '/marketing-plan' ? styles.active : ''}>
+                Marketing Plan
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

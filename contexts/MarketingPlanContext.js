@@ -8,6 +8,15 @@ const log = logger.createLogger('MarketingPlanContext');
 // Create context
 export const MarketingPlanContext = createContext();
 
+// Hook to use the Marketing Plan context
+export const useMarketingPlan = () => {
+  const context = useContext(MarketingPlanContext);
+  if (!context) {
+    throw new Error('useMarketingPlan must be used within a MarketingPlanProvider');
+  }
+  return context;
+};
+
 export const MarketingPlanProvider = ({ children }) => {
   const { user } = useAuth();
   
@@ -246,15 +255,4 @@ export const MarketingPlanProvider = ({ children }) => {
       {children}
     </MarketingPlanContext.Provider>
   );
-};
-
-// Custom hook for using the marketing plan context
-export const useMarketingPlan = () => {
-  const context = useContext(MarketingPlanContext);
-  
-  if (!context) {
-    throw new Error('useMarketingPlan must be used within a MarketingPlanProvider');
-  }
-  
-  return context;
 }; 
