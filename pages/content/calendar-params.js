@@ -223,7 +223,9 @@ export default function CalendarParams() {
                   user_id: user.id,
                   strategy_id: selectedStrategy.id,
                   posts: data.posts,
-                  calendar_params: calendarParams,
+                  progress: 0,
+                  posts_scheduled: data.posts.length,
+                  posts_published: 0,
                   status: 'active'
                 }
               ])
