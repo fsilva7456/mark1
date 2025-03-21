@@ -4,7 +4,7 @@
       "src": "package.json",
       "use": "@vercel/next",
       "config": {
-        "installCommand": "npm install --force && npm install @google/generative-ai axios cheerio",
+        "installCommand": "npm install --force && npm install @google/generative-ai axios cheerio jest-junit",
         "buildCommand": "npm run vercel-build"
       }
     }
@@ -13,6 +13,11 @@
     "NEXT_TELEMETRY_DISABLED": "1",
     "NEXT_LINT_SKIP_ESL_SETUP": "1",
     "ESLINT_SKIP_INIT": "1",
-    "NODE_ENV": "test"
+    "NODE_ENV": "test",
+    "CI": "true",
+    "JEST_JUNIT_OUTPUT_DIR": "./test-results",
+    "JEST_JUNIT_OUTPUT_NAME": "junit.xml",
+    "JEST_JUNIT_CLASSNAME": "Mark1Tests",
+    "JEST_JUNIT_TITLE": "Mark1 Test Results"
   }
 } 
