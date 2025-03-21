@@ -425,41 +425,99 @@ export default async function handler(req, res) {
 
 // Helper function to create a fallback calendar from content outline
 function createFallbackCalendar(contentOutline, startDateStr, postTime, postDays, channels) {
-  // Parse the start date
-  const startDate = new Date(startDateStr);
-  const [hours, minutes] = postTime.split(':');
-  
-  // Organize channels by days to distribute evenly
-  const posts = [];
-  let currentDate = new Date(startDate);
-  let channelIndex = 0;
-  
-  // Process each week's posts
-  contentOutline.forEach((week, weekIndex) => {
-    if (!week.posts || !Array.isArray(week.posts)) return;
-    
-    week.posts.forEach((post, postIndex) => {
-      // Find next valid posting day
-      while (!postDays.includes(getDayName(currentDate))) {
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-      
-      // Create the post
-      posts.push({
-        title: post.topic || `Week ${week.week} Post ${postIndex + 1}`,
-        content: post.topic || "Generated content",
-        type: post.type || "Post",
-        audience: post.audience || "Target audience",
-        scheduledDate: getFormattedDate(currentDate, hours, minutes),
-        channel: channels[channelIndex % channels.length]
-      });
-      
-      // Rotate channels and move to next day
-      channelIndex++;
-      currentDate.setDate(currentDate.getDate() + 1);
-    });
+  console.log("Creating fallback calendar with parameters:", {
+    startDate: startDateStr,
+    postTime,
+    postDays: postDays.join(', '),
+    channels: channels.join(', ')
   });
   
+  // Parse the start date
+  const startDate = new Date(startDateStr);
+  
+  // Parse time
+  let hours = 9, minutes = 0;
+  if (postTime) {
+    const timeParts = postTime.split(':');
+    hours = parseInt(timeParts[0], 10);
+    minutes = parseInt(timeParts[1], 10);
+  }
+  
+  // Map day names to day numbers (0-6, Sunday is 0)
+  const dayMap = {
+    'Sunday': 0, 
+    'Monday': 1, 
+    'Tuesday': 2, 
+    'Wednesday': 3, 
+    'Thursday': 4, 
+    'Friday': 5, 
+    'Saturday': 6
+  };
+  
+  // Convert posting days to numbers
+  const postDayNumbers = postDays.map(day => dayMap[day]);
+  console.log("Post day numbers:", postDayNumbers);
+  
+  // Get all posts from all weeks
+  const allPosts = [];
+  contentOutline.forEach(week => {
+    if (week.posts && Array.isArray(week.posts)) {
+      week.posts.forEach(post => {
+        allPosts.push({
+          ...post,
+          week: week.week
+        });
+      });
+    }
+  });
+  
+  console.log(`Total posts from content outline: ${allPosts.length}`);
+  
+  // Calculate the starting date and ensure it falls on a valid posting day
+  let currentDate = new Date(startDate);
+  
+  // If the start date is not a valid posting day, move to the next valid day
+  while (!postDayNumbers.includes(currentDate.getDay())) {
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // Set the time
+  currentDate.setHours(hours, minutes, 0, 0);
+  
+  // Create a constant to track alternating platforms
+  let platformIndex = 0;
+  
+  // Distribute posts across valid posting days
+  const posts = [];
+  for (let i = 0; i < allPosts.length; i++) {
+    const post = allPosts[i];
+    
+    // Create the post object
+    posts.push({
+      title: post.topic || `Week ${post.week} Post ${i + 1}`,
+      content: post.topic || "Generated content",
+      type: post.type || "Post",
+      audience: post.audience || "Target audience",
+      scheduledDate: new Date(currentDate).toISOString(),
+      channel: channels[platformIndex % channels.length]
+    });
+    
+    // Alternate platforms
+    platformIndex++;
+    
+    // If we've used all platforms for this day, move to the next posting day
+    if (platformIndex % channels.length === 0) {
+      // Find the next valid posting day
+      do {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } while (!postDayNumbers.includes(currentDate.getDay()));
+      
+      // Reset the time for the new day
+      currentDate.setHours(hours, minutes, 0, 0);
+    }
+  }
+  
+  console.log(`Created ${posts.length} posts in fallback calendar`);
   return { posts };
 }
 
