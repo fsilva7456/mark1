@@ -507,6 +507,7 @@ export default function NewContent() {
       }
       
       console.log("All weeks generated successfully:", generatedWeeks.length);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error in multi-stage content generation:', error);
       setError(`Content generation failed: ${error.message}. Please try again later.`);
@@ -944,13 +945,13 @@ export default function NewContent() {
                       }
                     })}
                     className={styles.calendarCallToAction}
-                    disabled={isLoading || contentOutline.length === 0 || !contentOutline.some(week => week.posts && week.posts.length > 0)}
+                    disabled={contentOutline.length === 0 || contentOutline.some(week => week.loading) || !contentOutline.some(week => week.posts && week.posts.length > 0)}
                   >
                     <BsCalendarEvent className={styles.calendarIcon} />
                     Generate Content Calendar
                   </button>
                   <p className={styles.calendarDescription}>
-                    {isLoading ? (
+                    {contentOutline.some(week => week.loading) ? (
                       "Please wait while we prepare your content..."
                     ) : contentOutline.length === 0 ? (
                       "Your content is being prepared. This button will activate once content is ready."
