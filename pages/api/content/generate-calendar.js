@@ -8,7 +8,24 @@ export default async function handler(req, res) {
   try {
     const { contentOutline, strategy, calendarParams, modelConfig } = req.body;
     
+    // Log request details for debugging
+    console.log("Calendar generation request:", {
+      contentOutlineLength: contentOutline?.length || 0,
+      strategyId: strategy?.id || 'none',
+      calendarParamsProvided: !!calendarParams,
+      requestHeaders: {
+        contentType: req.headers['content-type'],
+        userAgent: req.headers['user-agent']
+      }
+    });
+    
     if (!contentOutline || !strategy || !calendarParams) {
+      console.error("Missing required parameters:", {
+        hasContentOutline: !!contentOutline,
+        hasStrategy: !!strategy,
+        hasCalendarParams: !!calendarParams
+      });
+      
       return res.status(400).json({ 
         error: 'Missing required parameters',
         received: JSON.stringify({
@@ -21,6 +38,9 @@ export default async function handler(req, res) {
     
     // Ensure we have posts
     const postCount = contentOutline.reduce((count, week) => count + (week.posts?.length || 0), 0);
+    
+    console.log(`Found ${postCount} posts in content outline`);
+    
     if (postCount === 0) {
       return res.status(400).json({ error: 'No content posts available to schedule' });
     }
@@ -34,6 +54,14 @@ export default async function handler(req, res) {
     
     // Extract calendar parameters
     const { startDate, postFrequency, postDays, postTime, channels } = calendarParams;
+    
+    console.log("Calendar parameters:", {
+      startDate,
+      postFrequency,
+      postDays: postDays.join(', '),
+      postTime,
+      channels: channels.join(', ')
+    });
     
     // Configure API with Gemini 2.0 Flash model
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -138,10 +166,12 @@ export default async function handler(req, res) {
         });
         
         // If we get here, the call succeeded
+        console.log("Successfully generated content from Gemini API");
         break;
       } catch (apiError) {
         attempt++;
         console.error(`API attempt ${attempt} failed:`, apiError.message);
+        console.error(`API error details:`, apiError);
         
         if (attempt >= maxRetries) {
           console.error("All API retry attempts failed");

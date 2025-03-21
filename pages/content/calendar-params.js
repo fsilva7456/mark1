@@ -213,32 +213,47 @@ export default function CalendarParams() {
           }
           
           // Save the calendar data to Supabase
-          const { data: savedCalendar, error: calendarError } = await supabase
-            .from('content_calendars')
-            .insert([
-              {
-                name: `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`,
-                user_id: user.id,
-                strategy_id: selectedStrategy.id,
-                posts: data.posts,
-                calendar_params: calendarParams,
-                status: 'active'
-              }
-            ])
-            .select();
-          
-          if (calendarError) {
-            throw calendarError;
+          console.log('Attempting to save calendar to Supabase with posts:', data.posts.length);
+          try {
+            const { data: savedCalendar, error: calendarError } = await supabase
+              .from('calendars')
+              .insert([
+                {
+                  name: `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`,
+                  user_id: user.id,
+                  strategy_id: selectedStrategy.id,
+                  posts: data.posts,
+                  calendar_params: calendarParams,
+                  status: 'active'
+                }
+              ])
+              .select();
+            
+            if (calendarError) {
+              console.error('Supabase calendar insert error:', calendarError);
+              throw new Error(`Database error: ${calendarError.message || 'Failed to save calendar'}`);
+            }
+            
+            if (!savedCalendar || savedCalendar.length === 0) {
+              console.error('No calendar data returned from Supabase');
+              throw new Error('Database returned empty response when saving calendar');
+            }
+            
+            console.log('Calendar saved successfully with ID:', savedCalendar[0].id);
+            calendarData = savedCalendar;
+            success = true;
+          } catch (dbError) {
+            console.error('Database operation failed:', dbError);
+            throw dbError;
           }
           
-          calendarData = savedCalendar;
-          success = true;
-          
         } catch (attemptError) {
+          const errorDetails = attemptError.message || String(attemptError);
           console.error(`Calendar generation attempt ${attempts} failed:`, attemptError);
+          console.error(`Error details:`, errorDetails);
           
           if (attempts >= maxAttempts) {
-            throw new Error(`Failed after ${maxAttempts} attempts: ${attemptError.message}`);
+            throw new Error(`Failed after ${maxAttempts} attempts: ${errorDetails}`);
           }
           
           // Wait a bit before retrying
@@ -254,15 +269,18 @@ export default function CalendarParams() {
       
     } catch (error) {
       console.error('Error generating calendar:', error);
+      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       toast.dismiss(toastId);
       
       // Provide more specific error messages based on error type
-      if (error.message.includes('parse') || error.message.includes('JSON')) {
+      if (error.message && error.message.includes('parse') || (error.message && error.message.includes('JSON'))) {
         toast.error('Error: The API response format was invalid. Please try again.');
-      } else if (error.message.includes('API')) {
+      } else if (error.message && error.message.includes('API')) {
         toast.error('Error: Failed to connect to the calendar generation service. Please try again later.');
+      } else if (error.message && error.message.includes('Database') || error.message && error.message.includes('404')) {
+        toast.error('Database error: Could not save calendar. Please try again or contact support.');
       } else {
-        toast.error(`Failed to generate calendar: ${error.message}`);
+        toast.error(`Failed to generate calendar: ${error.message || 'Unknown error'}`);
       }
       
       setIsGenerating(false);

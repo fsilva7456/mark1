@@ -50,26 +50,34 @@ export default function CalendarView() {
       try {
         // Fetch calendar data from Supabase
         const { data, error } = await supabase
-          .from('content_calendars')
+          .from('calendars')
           .select('*')
           .eq('id', id)
           .single();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
         
         if (!data) {
+          console.error('Calendar not found with ID:', id);
           toast.error('Calendar not found');
           setLoading(false);
           return;
         }
         
+        console.log('Successfully loaded calendar data:', data.id);
         setCalendarData(data);
         
         // Parse posts data from JSON
         if (data.posts) {
+          console.log('Processing calendar posts data...');
           const parsedPosts = typeof data.posts === 'string' 
             ? JSON.parse(data.posts) 
             : data.posts;
+          
+          console.log(`Found ${parsedPosts.length} posts in calendar`);
           
           // Convert to calendar events format
           const events = parsedPosts.map(post => ({
@@ -81,11 +89,14 @@ export default function CalendarView() {
           }));
           
           setCalendarEvents(events);
+        } else {
+          console.warn('No posts data found in calendar');
         }
         
       } catch (error) {
         console.error('Error fetching calendar:', error);
-        toast.error('Failed to load calendar data');
+        console.error('Full error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        toast.error(`Failed to load calendar data: ${error.message || 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
