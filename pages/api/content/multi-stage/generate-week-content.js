@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { strategy, weekNumber, weekTheme, allThemes, aesthetic } = req.body;
+    const { strategy, weekNumber, weekTheme, allThemes, aesthetic, feedback } = req.body;
     
     if (!strategy || !weekNumber || !weekTheme) {
       return res.status(400).json({ 
@@ -22,6 +22,13 @@ export default async function handler(req, res) {
                           `Engage audience with valuable fitness content`;
     
     console.log(`Week ${weekNumber} objective:`, weekObjective);
+    
+    // Check if user provided feedback
+    const hasFeedback = !!feedback && typeof feedback === 'string' && feedback.trim().length > 0;
+    console.log(`User feedback provided:`, hasFeedback);
+    if (hasFeedback) {
+      console.log(`Feedback content:`, feedback.substring(0, 100) + (feedback.length > 100 ? '...' : ''));
+    }
     
     // Check weekNumber is valid
     if (weekNumber < 1 || weekNumber > 3) {
@@ -104,6 +111,10 @@ export default async function handler(req, res) {
           WEEK THEME: "${weekTheme}"
           WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
           ${aesthetic ? `CONTENT STYLE: "${aesthetic}"` : ''}
+          ${hasFeedback ? `
+          USER FEEDBACK: "${feedback}"
+          IMPORTANT: Incorporate the above user feedback when creating these posts. Address their specific requests and modify the content accordingly.
+          ` : ''}
           
           CONTENT STRATEGY GUIDELINES:
           - Tone of Voice: ${strategy.enhancedStrategy.contentStrategy.tone}
@@ -188,6 +199,10 @@ export default async function handler(req, res) {
           WEEK THEME: "${weekTheme}"
           WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
           ${aesthetic ? `CONTENT STYLE: "${aesthetic}"` : ''}
+          ${hasFeedback ? `
+          USER FEEDBACK: "${feedback}"
+          IMPORTANT: Incorporate the above user feedback when creating these posts. Address their specific requests and modify the content accordingly.
+          ` : ''}
           
           CREATE 3 UNIQUE CONTENT IDEAS FOR THIS WEEK:
           For each post, include:
@@ -245,28 +260,27 @@ export default async function handler(req, res) {
     } else {
       // Fallback to the original prompt if enhanced data isn't available
       prompt = `
-        You are a fitness content marketing expert. Create three highly engaging social media posts based on the theme below.
+        You are a fitness content marketing expert. Create three highly engaging social media posts based on the strategy and theme below.
         
         BUSINESS: "${strategy.business_description || 'Fitness business'}"
         
-        TARGET AUDIENCE:
-        ${strategy.target_audience.map((audience, i) => `${i+1}. "${audience}"`).join('\n')}
+        TARGET AUDIENCE: "${strategy.target_audience || 'Fitness enthusiasts'}"
         
-        OBJECTIVES:
-        ${strategy.objectives.map((objective, i) => `${i+1}. "${objective}"`).join('\n')}
-        
-        KEY MESSAGES:
-        ${strategy.key_messages.map((message, i) => `${i+1}. "${message}"`).join('\n')}
+        KEY MESSAGES: ${Array.isArray(strategy.key_messages) ? strategy.key_messages.join(', ') : strategy.key_messages || 'Health and fitness transformation'}
         
         WEEK THEME: "${weekTheme}"
         WEEK OBJECTIVE: "${weekObjective || 'Engage with the content'}"
-        ${aesthetic ? `AESTHETIC/STYLE: "${aesthetic}"` : ''}
+        ${aesthetic ? `CONTENT STYLE: "${aesthetic}"` : ''}
+        ${hasFeedback ? `
+        USER FEEDBACK: "${feedback}"
+        IMPORTANT: Incorporate the above user feedback when creating these posts. Address their specific requests and modify the content accordingly.
+        ` : ''}
         
         CREATE 3 UNIQUE CONTENT IDEAS FOR THIS WEEK:
         For each post, include:
         1. Content type (Carousel, Video, Reel, Transformation Post, etc.)
-        2. Specific topic and angle
-        3. Target audience segment with detailed persona description
+        2. Specific topic and angle that aligns with the theme and objective
+        3. Target audience description - be specific and detailed about who this post is for
         4. Clear call-to-action (CTA)
         5. Persuasion principle used (e.g., Social Proof, Scarcity, Authority)
         6. Brief explanation of why this principle works here

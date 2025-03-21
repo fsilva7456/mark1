@@ -151,6 +151,11 @@ export default function NewContent() {
   const [themesLoading, setThemesLoading] = useState(false);
   const [themes, setThemes] = useState(null);
   
+  // Add new state variables for feedback modal
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackWeek, setFeedbackWeek] = useState(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  
   useEffect(() => {
     // Redirect if not logged in
     if (!loading && !user) {
@@ -724,6 +729,129 @@ export default function NewContent() {
     }
   };
 
+  // Function to open the feedback modal for a specific week
+  const handleOpenFeedbackModal = (weekNumber) => {
+    const week = contentOutline.find(w => w.week === weekNumber);
+    if (!week) {
+      setError("Week not found in content outline.");
+      return;
+    }
+    
+    setFeedbackWeek(weekNumber);
+    setFeedbackText('');
+    setIsFeedbackModalOpen(true);
+  };
+  
+  // Function to close the feedback modal
+  const handleCloseFeedbackModal = () => {
+    setIsFeedbackModalOpen(false);
+    setFeedbackWeek(null);
+    setFeedbackText('');
+  };
+  
+  // Function to regenerate content with user feedback
+  const handleRegenerateWithFeedback = async () => {
+    if (!feedbackWeek || !feedbackText.trim()) {
+      return;
+    }
+    
+    setIsFeedbackModalOpen(false);
+    setIsLoading(true);
+    setError('');
+    
+    // Update loading state for this specific week
+    setWeekLoadingStates(prev => ({
+      ...prev,
+      [feedbackWeek]: { loading: true, error: null }
+    }));
+    
+    try {
+      const weekToRegenerate = contentOutline.find(week => week.week === feedbackWeek);
+      if (!weekToRegenerate) {
+        throw new Error("Week not found in content outline.");
+      }
+      
+      const aesthetic = router.query.aesthetic || '';
+      
+      // Make API call to regenerate content with feedback
+      const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          strategy: {
+            name: selectedStrategy.name,
+            business_description: selectedStrategy.business_description,
+            target_audience: selectedStrategy.target_audience,
+            objectives: selectedStrategy.objectives,
+            key_messages: selectedStrategy.key_messages
+          },
+          weekNumber: feedbackWeek,
+          weekTheme: weekToRegenerate.theme,
+          weekObjective: weekToRegenerate.objective,
+          allThemes: contentOutline,
+          aesthetic: aesthetic,
+          feedback: feedbackText // Include user feedback
+        }),
+      });
+      
+      if (!weekResponse.ok) {
+        const errorData = await weekResponse.json();
+        throw new Error(errorData.error || `Status code: ${weekResponse.status}`);
+      }
+      
+      const weekData = await weekResponse.json();
+      
+      if (!weekData || !weekData.weekContent) {
+        throw new Error('Invalid week response format');
+      }
+      
+      console.log(`Successfully regenerated content for Week ${feedbackWeek} with feedback`);
+      
+      // Update the content outline with new content
+      setContentOutline(prev => {
+        const updated = [...prev];
+        const index = updated.findIndex(w => w.week === feedbackWeek);
+        if (index !== -1) {
+          updated[index] = {
+            ...weekData.weekContent,
+            loading: false,
+            objective: weekToRegenerate.objective,
+            targetSegment: weekToRegenerate.targetSegment || "",
+            phase: weekToRegenerate.phase || ""
+          };
+        }
+        return updated;
+      });
+      
+      // Update loading state
+      setWeekLoadingStates(prev => ({
+        ...prev,
+        [feedbackWeek]: { loading: false, error: null }
+      }));
+      
+      toast.success(`Week ${feedbackWeek} content regenerated with your feedback!`);
+      
+      // Reset feedback state
+      setFeedbackWeek(null);
+      setFeedbackText('');
+      
+    } catch (error) {
+      console.error(`Error regenerating Week ${feedbackWeek} with feedback:`, error);
+      
+      // Update error state
+      setWeekLoadingStates(prev => ({
+        ...prev,
+        [feedbackWeek]: { loading: false, error: error.message }
+      }));
+      
+      setError(`Failed to regenerate content with feedback: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Add a function to generate explanations based on the objective
   function getObjectiveExplanation(objective, theme) {
     if (!objective) return '';
@@ -894,8 +1022,63 @@ export default function NewContent() {
                     ) : (
                       <p>No content available for this week yet.</p>
                     )}
+                    
+                    {/* Add Feedback and Regenerate button */}
+                    {week.posts && week.posts.length > 0 && !week.loading && (
+                      <div className={styles.weekActions}>
+                        <button 
+                          className={styles.feedbackButton} 
+                          onClick={() => handleOpenFeedbackModal(week.week)}
+                          disabled={contentOutline.some(w => w.loading)}
+                        >
+                          Add Feedback and Regenerate
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
+              )}
+              
+              {/* Feedback Modal */}
+              {isFeedbackModalOpen && (
+                <div className={styles.modalOverlay}>
+                  <div className={styles.modal}>
+                    <div className={styles.modalHeader}>
+                      <h3>Add Feedback for Week {feedbackWeek}</h3>
+                      <button 
+                        className={styles.closeButton} 
+                        onClick={handleCloseFeedbackModal}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className={styles.modalBody}>
+                      <p>Please provide specific feedback on what you'd like to change or improve about this week's content:</p>
+                      <textarea 
+                        className={styles.feedbackTextarea}
+                        value={feedbackText}
+                        onChange={(e) => setFeedbackText(e.target.value)}
+                        placeholder="For example: Make the content more direct and action-oriented. Focus more on beginners. Add more video content instead of carousels..."
+                        rows={5}
+                      ></textarea>
+                    </div>
+                    <div className={styles.modalFooter}>
+                      <button 
+                        className={styles.cancelButton} 
+                        onClick={handleCloseFeedbackModal}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        className={styles.regenerateButton} 
+                        onClick={handleRegenerateWithFeedback}
+                        disabled={!feedbackText.trim()}
+                      >
+                        Regenerate Content
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
               
               {!isLoading && contentOutline.some(week => week.posts && week.posts.length > 0) && (
