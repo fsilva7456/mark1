@@ -32,7 +32,7 @@ const customJestConfig = {
     '!**/__tests__/**',
   ],
   // Verbose output for CI builds to show detailed test results
-  verbose: isCI,
+  verbose: Boolean(isCI),
   // In CI, we want to generate JSON reports for easier parsing
   reporters: isCI 
     ? ['default', ['jest-junit', { outputDirectory: './test-results', outputName: 'junit.xml' }]]
