@@ -456,7 +456,9 @@ export default function NewContent() {
               updated[index] = {
                 ...weekData.weekContent,
                 loading: false, // Mark as loaded
-                objective: weekTheme.objective
+                objective: weekTheme.objective,
+                targetSegment: weekTheme.targetSegment || updated[index].targetSegment || "",
+                phase: weekTheme.phase || updated[index].phase || ""
               };
             }
             return updated;
@@ -487,7 +489,10 @@ export default function NewContent() {
                 loading: false,
                 error: weekError.message,
                 posts: [], // No posts for this week
-                objective: weekTheme.objective
+                objective: weekTheme.objective,
+                // Ensure we preserve these fields
+                targetSegment: weekTheme.targetSegment || updated[index].targetSegment || "",
+                phase: weekTheme.phase || updated[index].phase || ""
               };
             }
             return updated;
@@ -621,7 +626,7 @@ export default function NewContent() {
                 visual: post.visual,
                 proposed_caption: post.proposedCaption
               })),
-              objective: post.objective
+              objective: week.objective
             })),
             daily_engagement: dailyEngagement
           }
@@ -702,7 +707,9 @@ export default function NewContent() {
           updated[index] = {
             ...weekData.weekContent,
             loading: false,
-            objective: weekToRetry.objective
+            objective: weekToRetry.objective,
+            targetSegment: weekToRetry.targetSegment || "",
+            phase: weekToRetry.phase || ""
           };
         }
         return updated;
