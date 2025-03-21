@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { RefreshIcon } from '@heroicons/react/24/outline';
+import { BsCalendarEvent } from 'react-icons/bs';
 
 const mockContent = [
   {
@@ -931,6 +932,29 @@ export default function NewContent() {
             </div>
           ) : (
             <div className={styles.outlineContainer}>
+              {/* Make the calendar button more reliable by showing it as soon as we have a strategy, even when content is loading */}
+              {(contentOutline.length > 0 || isLoading) && selectedStrategy && (
+                <div className={styles.calendarButtonContainer}>
+                  <button 
+                    onClick={() => router.push({
+                      pathname: '/content/calendar-params',
+                      query: { 
+                        contentOutline: JSON.stringify(contentOutline),
+                        strategyId: selectedStrategy.id
+                      }
+                    })}
+                    className={styles.calendarCallToAction}
+                    disabled={isLoading || contentOutline.some(week => week.loading)}
+                  >
+                    <BsCalendarEvent className={styles.calendarIcon} />
+                    Generate Content Calendar
+                  </button>
+                  <p className={styles.calendarDescription}>
+                    Create a structured calendar of posts across your social platforms with optimized scheduling.
+                  </p>
+                </div>
+              )}
+              
               {themesLoading ? (
                 <div className={styles.loading}>
                   <div className={styles.spinner}></div>
@@ -1111,19 +1135,6 @@ export default function NewContent() {
                       disabled={contentOutline.some(week => week.loading)}
                     >
                       Save Content Plan
-                    </button>
-                    <button 
-                      onClick={() => router.push({
-                        pathname: '/content/calendar-params',
-                        query: { 
-                          contentOutline: JSON.stringify(contentOutline),
-                          strategyId: selectedStrategy.id
-                        }
-                      })}
-                      className={styles.nextButton}
-                      disabled={contentOutline.some(week => week.loading)}
-                    >
-                      Generate Content Calendar
                     </button>
                     <button 
                       onClick={() => router.push('/dashboard')} 

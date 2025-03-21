@@ -1295,4 +1295,66 @@
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* Calendar Call-to-Action Styles */
+.calendarButtonContainer {
+  background-color: #EFF6FF;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #BFDBFE;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.calendarCallToAction {
+  background-color: #3454D1;
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 6px rgba(52, 84, 209, 0.2);
+  margin-bottom: 1rem;
+}
+
+.calendarCallToAction:hover {
+  background-color: #2a43a7;
+  transform: translateY(-3px);
+  box-shadow: 0 7px 14px rgba(52, 84, 209, 0.25);
+}
+
+.calendarCallToAction:disabled {
+  background-color: #a5a5a5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.calendarIcon {
+  font-size: 1.25rem;
+}
+
+.calendarDescription {
+  color: #4B5563;
+  margin: 0;
+  max-width: 600px;
+  font-size: 0.95rem;
+}
+
+/* Mobile responsive styles for calendar CTA */
+@media (max-width: 768px) {
+  .calendarCallToAction {
+    width: 100%;
+    justify-content: center;
+  }
 } 
