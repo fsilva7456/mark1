@@ -162,6 +162,120 @@ Stores individual posts that belong to calendars.
 
 These schema updates ensure that the application code works correctly with the database structure.
 
+## Application Workflow
+
+The Mark1 app follows these key process flows for generating marketing strategies, content outlines, and content calendars:
+
+### 1. Marketing Strategy Generation Process
+
+The marketing strategy generation process creates a structured strategy matrix based on user input:
+
+1. **User Questionnaire**:
+   - User answers a series of questions about their fitness business
+   - Questions cover business type, target audience, marketing objectives, unique approach, content preferences, and competitors
+
+2. **AI Processing**:
+   - User responses are collected and organized
+   - Business description is extracted from responses
+   - Data is sent to the Gemini AI model with a structured prompt
+
+3. **Matrix Generation**:
+   - AI generates a 3x3 strategy matrix containing:
+     - 3 target audience segments
+     - 3 business objectives (one per audience segment)
+     - 3 key messages (one per audience-objective pair)
+   - AI response is parsed to extract the JSON array
+
+4. **Strategy Review and Customization**:
+   - User can review the generated strategy matrix
+   - User can edit any element of the matrix to customize it
+   - AI suggestions are provided to help with customization
+
+5. **Strategy Storage**:
+   - When user saves the strategy, it's stored in the `strategies` table
+   - Each element of the matrix (audience, objectives, key messages) is stored in a separate JSONB array
+   - Strategy is linked to the user account via `user_id`
+
+6. **Next Steps**:
+   - User can generate a content outline based on the saved strategy
+   - Strategy ID is passed to the content outline generation process
+
+### 2. Content Outline Generation Process
+
+The content outline process creates a structured 3-week content plan based on the marketing strategy:
+
+1. **Strategy Retrieval**:
+   - Content outline page loads the strategy ID from URL parameters or localStorage
+   - Strategy data is fetched from the `strategies` table
+   - The data includes business description, target audience, objectives, and key messages
+
+2. **Multi-Stage Generation**:
+   - The generation process uses a multi-stage approach for better results:
+   
+   a. **Weekly Themes Generation**:
+      - Initial API call to `/api/content/multi-stage/generate-themes`
+      - AI model creates 3 weekly themes based on strategy
+      - Each theme includes a title, objective, target audience segment, and campaign phase
+      - Has built-in retry logic (up to 3 attempts) with exponential backoff
+   
+   b. **Week-by-Week Content Generation**:
+      - For each weekly theme, makes a separate API call to `/api/content/multi-stage/generate-week-content`
+      - Generates 3-5 post ideas for each week
+      - Each post includes type, topic, audience, call-to-action, persuasion principle, and visual ideas
+      - Posts are designed to build on each other throughout the week
+
+3. **User Feedback and Refinement**:
+   - User can provide feedback on each week's content
+   - Feedback can be used to regenerate specific weeks with refined instructions
+   - Updates are applied immediately to the content outline display
+
+4. **Storage Options**:
+   - User can save the content outline to the `content_outlines` table
+   - Content is also stored in localStorage for backup
+   - Content outline is passed to the calendar generation process via URL parameters
+
+### 3. Calendar Generation Process
+
+The calendar generation process creates a scheduled content calendar from the content outline:
+
+1. **Parameter Setup**:
+   - User sets up calendar parameters including:
+     - Start date
+     - Posting frequency (light, moderate, heavy, intensive)
+     - Posting days (Mon, Wed, Fri, etc.)
+     - Posting time
+     - Social media channels (Instagram, Facebook, etc.)
+
+2. **AI-Powered Distribution**:
+   - Content from the outline is sent to `/api/content/generate-calendar` along with parameters
+   - The API uses Gemini AI to:
+     - Distribute posts across selected posting days
+     - Spread content evenly across weeks
+     - Alternate between selected social channels
+     - Follow frequency parameters
+     - Maintain thematic consistency
+
+3. **Robust Error Handling**:
+   - Has retry mechanism (up to 3 attempts)
+   - Increases AI temperature slightly in each retry for variation
+   - Includes fallback content generation if API fails
+   - Validates response format before proceeding
+
+4. **Calendar Storage**:
+   - Calendar is saved to the `calendars` table with:
+     - Reference to the original strategy (`strategy_id`)
+     - All posts stored in the `posts` JSONB array
+     - Initializes tracking data (progress, posts_scheduled, posts_published)
+     - Sets initial status to 'active'
+
+5. **Viewing and Exporting**:
+   - Calendar can be viewed in calendar or list format
+   - Posts can be edited individually
+   - Calendar can be exported to CSV
+   - Changes can be saved back to database
+
+Each of these processes leverages AI technology to automate complex marketing tasks while allowing user customization at each step. The workflow provides a streamlined path from strategy development to ready-to-implement content calendars with minimal manual effort.
+
 ## Relationships
 
 - A user can have many strategies
