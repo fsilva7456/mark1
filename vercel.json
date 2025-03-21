@@ -5,7 +5,7 @@
       "use": "@vercel/next",
       "config": {
         "installCommand": "npm install --force && npm install @google/generative-ai axios cheerio",
-        "buildCommand": "ESLINT_NO_DEV_ERRORS=true next build"
+        "buildCommand": "npm run vercel-build"
       }
     }
   ],
@@ -13,7 +13,6 @@
     "NEXT_TELEMETRY_DISABLED": "1",
     "NEXT_LINT_SKIP_ESL_SETUP": "1",
     "ESLINT_SKIP_INIT": "1",
-    "ESLINT_NO_DEV_ERRORS": "true",
-    "NEXT_DISABLE_ESLINT": "1"
+    "NODE_ENV": "test"
   }
 } 
