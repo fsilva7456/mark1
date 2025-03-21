@@ -199,6 +199,8 @@ export default function NewContent() {
           return;
         }
         
+        console.log("Strategy ID obtained:", strategyId);
+        
         // Fetch strategy data
         const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
@@ -214,7 +216,9 @@ export default function NewContent() {
           return;
         }
         
-        // Set strategy and update UI
+        console.log("Strategy data loaded successfully:", strategyData.id);
+        
+        // Set strategy and update UI - Ensure this completes before proceeding
         setStrategy(strategyData);
         
         // If we have a saved content outline from localStorage, use it
@@ -224,6 +228,9 @@ export default function NewContent() {
           setIsLoading(false);
           return;
         }
+        
+        // Wait a moment to ensure the strategy state is updated before proceeding
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Otherwise, check if we need to load existing content outline
         const { data: existingContent, error: contentError } = await supabase
@@ -239,8 +246,8 @@ export default function NewContent() {
           // Use existing content outline
           setContentOutline(existingContent[0].outline || []);
         } else {
-          // Generate new content outline
-          await generateWeeklyThemes();
+          // Generate new content outline - directly use strategyData instead of relying on state
+          await generateContent(strategyData);
         }
         
       } catch (error) {
@@ -268,6 +275,23 @@ export default function NewContent() {
       ]);
       
       if (!selectedStrategy) {
+        // Try to use the localStorage strategy ID as a backup
+        const fallbackStrategyId = localStorage.getItem('lastStrategyId');
+        if (fallbackStrategyId) {
+          // Fetch strategy data
+          const { data: strategyData, error: strategyError } = await supabase
+            .from('strategies')
+            .select('*')
+            .eq('id', fallbackStrategyId)
+            .single();
+          
+          if (!strategyError && strategyData) {
+            setStrategy(strategyData);
+            await generateContent(strategyData);
+            return;
+          }
+        }
+        
         throw new Error("No strategy selected. Please select a strategy first.");
       }
       

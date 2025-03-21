@@ -1160,7 +1160,7 @@ Please share:
     };
     
     return (
-      <div className={styles.aestheticModalOverlay}>
+      <div className={styles.modalOverlay}>
         <div className={styles.aestheticModal}>
           <div className={styles.modalHeader}>
             <h3>Select Your Content Aesthetic</h3>
