@@ -240,7 +240,7 @@ export default function NewContent() {
           setContentOutline(existingContent[0].outline || []);
         } else {
           // Generate new content outline
-          generateWeeklyThemes();
+          await generateWeeklyThemes();
         }
         
       } catch (error) {
@@ -255,15 +255,33 @@ export default function NewContent() {
   }, [router.isReady, router.query, user, loading]);
   
   // Add the missing generateWeeklyThemes function
-  const generateWeeklyThemes = () => {
-    if (!selectedStrategy) {
-      setError('No strategy selected. Please select a strategy first.');
-      setIsLoading(false);
-      return;
+  const generateWeeklyThemes = async () => {
+    try {
+      console.log("Generating weekly themes for strategy:", selectedStrategy?.id);
+      setThemesLoading(true);
+      
+      // Initialize an empty content outline with placeholder weeks
+      setContentOutline([
+        { week: 1, theme: "Loading...", posts: [], loading: true },
+        { week: 2, theme: "Loading...", posts: [], loading: true },
+        { week: 3, theme: "Loading...", posts: [], loading: true }
+      ]);
+      
+      if (!selectedStrategy) {
+        throw new Error("No strategy selected. Please select a strategy first.");
+      }
+      
+      // Call the generateContent function which contains the actual theme generation logic
+      await generateContent(selectedStrategy);
+      
+    } catch (error) {
+      console.error("Error generating weekly themes:", error);
+      setError(error.message || "Failed to generate content themes");
+      setThemesLoading(false);
+      
+      // Reset content outline if error
+      setContentOutline([]);
     }
-    
-    console.log("Generating weekly themes for strategy:", selectedStrategy.name);
-    generateContent(selectedStrategy);
   };
   
   const fetchStrategyDetails = async (strategyId) => {

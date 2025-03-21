@@ -116,7 +116,7 @@ export default function NewStrategy() {
   // Replace the dynamic sendToGemini with a hardcoded version
   const sendToGemini = async (userInput, isInitial = false) => {
     try {
-      console.log("Using hardcoded response flow, message count:", messages.length);
+      console.log("Using enhanced chat flow, message count:", messages.length);
       
       // Initial greeting - first message
       if (isInitial) {
@@ -126,39 +126,81 @@ export default function NewStrategy() {
       // Second message - after user provides name
       if (messages.length === 1) {
         const name = userInput.trim();
-        return `Great to meet you, ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? For example, are you a personal trainer, run a gym, or offer specialized classes?`;
+        return `Great to meet you, ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? Please include:
+        
+• Your main service type (personal training, group classes, online coaching, etc.)
+• Your specialization or focus area (strength, yoga, HIIT, etc.)
+• How long you've been in business
+• Where you primarily operate (in-person, online, hybrid)`;
       }
       
       // Third message - after user describes business
       if (messages.length === 3) {
-        return `Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Consider factors like age range, fitness goals, and any specific demographics you currently serve or would like to attract.`;
+        return `Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Please include:
+        
+• Age range (e.g., 25-45)
+• Fitness level (beginners, intermediate, advanced)
+• Specific needs or pain points they have
+• Their primary fitness goals
+• Any demographic details relevant to your marketing`;
       }
       
       // Fourth message - after user describes target audience
       if (messages.length === 5) {
-        return `Great! Now let's focus on your marketing objectives. What specific actions do you want your target audience to take? For example, are you looking to get them to sign up for classes, follow your social media, or schedule consultations?`;
+        return `Great insight about your audience! Now let's focus on your marketing objectives. What specific actions do you want your target audience to take? 
+        
+Please list 2-3 specific behaviors you want to encourage, such as:
+• "Book a free consultation"
+• "Sign up for a class package"
+• "Download a free workout guide"
+• "Follow on social media"
+• "Refer friends and family"`;
       }
       
       // Fifth message - after user describes objectives
       if (messages.length === 7) {
-        return `Thanks for sharing your objectives. Now, what makes your fitness approach unique compared to others in your area? What's your unique selling proposition or competitive advantage?`;
+        return `Thanks for sharing your objectives. Now, what makes your fitness approach unique compared to others in your area? 
+        
+Please describe your competitive advantage in terms of:
+• Your unique methodology or approach
+• Special credentials or expertise you have
+• Client results that set you apart
+• Values or philosophy that guide your business`;
       }
       
       // Sixth message - after user describes unique approach
       if (messages.length === 9) {
-        return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? For example, videos, photos, written posts, social media stories, etc.`;
+        return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? 
+        
+Please indicate which of these you prefer creating and have resources for:
+• Videos (workout demos, tips, client testimonials)
+• Photos (before/after, exercise demonstrations)
+• Written content (blogs, newsletters, social media posts)
+• Live sessions (Instagram/Facebook Lives, webinars)
+• Audio content (podcasts, guided workouts)`;
       }
       
       // Seventh message - after user describes content preferences
       if (messages.length === 11) {
-        return `Perfect! I now have enough information to create a marketing strategy matrix for your fitness business. This will serve as the foundation for your marketing efforts. [READY_FOR_MATRIX]`;
+        return `Based on what you've shared, I have one more important question. Who are your top 2-3 competitors, and what do you notice about their marketing approach? 
+        
+Please share:
+• Competitor names
+• What they seem to do well
+• What opportunities or gaps you see in their approach
+• How clients might compare you to them`;
+      }
+      
+      // Eighth message - after user describes competitors  
+      if (messages.length === 13) {
+        return `Perfect! I now have enough information to create a comprehensive marketing strategy matrix for your fitness business. This will serve as the foundation for your marketing efforts. [READY_FOR_MATRIX]`;
       }
       
       // Fallback for any other message count
       return `Thanks for that information! I'm building your marketing strategy. What's the biggest challenge you currently face in attracting or retaining clients for your fitness business?`;
       
     } catch (error) {
-      console.error('Error in hardcoded response flow:', error);
+      console.error('Error in enhanced response flow:', error);
       
       // Provide appropriate fallback based on message count
       if (isInitial || messages.length === 0) {
@@ -827,14 +869,17 @@ export default function NewStrategy() {
   };
 
   // Add this function to handle form submission
-  const handleAestheticSubmit = async () => {
-    if (!aestheticModal.value.trim()) return;
+  const handleAestheticSubmit = async (aestheticValue) => {
+    const valueToUse = aestheticValue || aestheticModal.value;
+    
+    if (!valueToUse.trim()) return;
     
     try {
       // First save the strategy if needed
       let savedStrategyId = strategyId;
       
       if (!savedStrategyId) {
+        toast.loading('Saving strategy first...');
         savedStrategyId = await handleSaveStrategy();
         if (!savedStrategyId) {
           toast.error('Failed to save strategy. Please try again.');
@@ -842,18 +887,337 @@ export default function NewStrategy() {
         }
       }
       
-      // Navigate directly to content outline with the aesthetic parameter
-      router.push(`/content/new?strategy=${savedStrategyId}&aesthetic=${encodeURIComponent(aestheticModal.value)}`);
+      // Wait a moment to ensure the strategy is saved
+      toast.loading('Preparing content outline...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Close the modal
-      setAestheticModal({
-        visible: false,
-        value: ''
-      });
+      // Store the strategy ID in localStorage as a backup
+      localStorage.setItem('lastStrategyId', savedStrategyId);
+      
+      // Navigate directly to content outline with the strategy ID and aesthetic parameter
+      console.log(`Navigating to content/new with strategy ID: ${savedStrategyId}`);
+      router.push(`/content/new?strategy=${savedStrategyId}&aesthetic=${encodeURIComponent(valueToUse)}`);
     } catch (error) {
       console.error('Error handling aesthetic submission:', error);
       toast.error('Something went wrong. Please try again.');
     }
+  };
+
+  // Enhance Matrix UI display to show the full 3x3x3 structure
+  const MatrixDisplay = ({ matrix }) => {
+    // Check if we have the enhanced matrix structure
+    const hasEnhancedData = matrix.enhancedStrategy && matrix.enhancedStrategy.audiences;
+    
+    if (!hasEnhancedData) {
+      // Fallback to original display if no enhanced data
+      return (
+        <div className={styles.matrix}>
+          <div className={styles.matrixColumn}>
+            <h3>Target Audience</h3>
+            <ul>
+              {matrix.targetAudience.map((item, index) => (
+                <li 
+                  key={index} 
+                  onClick={() => handleCellClick('targetAudience', index, item)}
+                  className={styles.interactiveCell}
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className={styles.matrixColumn}>
+            <h3>Objectives</h3>
+            <ul>
+              {matrix.objectives.map((item, index) => (
+                <li 
+                  key={index} 
+                  onClick={() => handleCellClick('objectives', index, item)}
+                  className={styles.interactiveCell}
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className={styles.matrixColumn}>
+            <h3>Key Messages</h3>
+            <ul>
+              {matrix.keyMessages.map((item, index) => (
+                <li 
+                  key={index} 
+                  onClick={() => handleCellClick('keyMessages', index, item)}
+                  className={styles.interactiveCell}
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      );
+    }
+    
+    // Enhanced display with full 3x3x3 structure
+    return (
+      <div className={styles.enhancedMatrix}>
+        {matrix.enhancedStrategy.audiences.map((audience, audienceIndex) => (
+          <div key={audienceIndex} className={styles.audienceSection}>
+            <h3 className={styles.audienceTitle}>
+              {audience.segment}
+            </h3>
+            
+            <div className={styles.audienceContent}>
+              <div className={styles.objectivesColumn}>
+                <h4>Objectives</h4>
+                <ul>
+                  {audience.objectives.map((obj, objIndex) => (
+                    <li key={objIndex} className={styles.objectiveItem}>
+                      <div className={styles.objectiveHeader}>
+                        {obj.objective}
+                      </div>
+                      <div className={styles.objectiveMeta}>
+                        <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
+                      </div>
+                      <div className={styles.objectiveMeta}>
+                        <span className={styles.metaLabel}>Content Types:</span> {obj.contentTypes.join(', ')}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className={styles.messagesColumn}>
+                <h4>Key Messages</h4>
+                <ul>
+                  {audience.keyMessages.map((message, msgIndex) => (
+                    <li key={msgIndex} className={styles.messageItem}>
+                      {message}
+                    </li>
+                  ))}
+                </ul>
+                
+                <div className={styles.channelsInfo}>
+                  <h4>Primary Channels</h4>
+                  <div className={styles.channelsList}>
+                    {audience.channels.map((channel, chIndex) => (
+                      <span key={chIndex} className={styles.channelTag}>{channel}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        <div className={styles.strategySection}>
+          <div className={styles.timelineSection}>
+            <h3>90-Day Implementation Plan</h3>
+            <div className={styles.timelinePhases}>
+              <div className={styles.timelinePhase}>
+                <h4>Days 1-30</h4>
+                <ul>
+                  {matrix.enhancedStrategy.implementationTimeline.phase1_days1_30.map((task, index) => (
+                    <li key={index}>{task}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className={styles.timelinePhase}>
+                <h4>Days 31-60</h4>
+                <ul>
+                  {matrix.enhancedStrategy.implementationTimeline.phase2_days31_60.map((task, index) => (
+                    <li key={index}>{task}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className={styles.timelinePhase}>
+                <h4>Days 61-90</h4>
+                <ul>
+                  {matrix.enhancedStrategy.implementationTimeline.phase3_days61_90.map((task, index) => (
+                    <li key={index}>{task}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className={styles.competitiveSection}>
+            <h3>Competitive Gap Analysis</h3>
+            <div className={styles.gapsGrid}>
+              <div className={styles.gapsColumn}>
+                <h4>Identified Gaps</h4>
+                <ul>
+                  {matrix.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, index) => (
+                    <li key={index}>{gap}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className={styles.gapsColumn}>
+                <h4>Exploitation Strategies</h4>
+                <ul>
+                  {matrix.enhancedStrategy.competitiveGaps.exploitationStrategies.map((strategy, index) => (
+                    <li key={index}>{strategy}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className={styles.contentStrategySection}>
+            <h3>Content Strategy Guidelines</h3>
+            <div className={styles.contentStrategyInfo}>
+              <div className={styles.strategyInfoRow}>
+                <span className={styles.strategyLabel}>Tone & Style:</span>
+                <span className={styles.strategyValue}>{matrix.enhancedStrategy.contentStrategy.tone}</span>
+              </div>
+              <div className={styles.strategyInfoRow}>
+                <span className={styles.strategyLabel}>Posting Frequency:</span>
+                <span className={styles.strategyValue}>{matrix.enhancedStrategy.contentStrategy.frequencyRecommendation}</span>
+              </div>
+              
+              <div className={styles.ctaLibrary}>
+                <h4>Call-to-Action Library</h4>
+                <div className={styles.ctaList}>
+                  {matrix.enhancedStrategy.contentStrategy.callToActionLibrary.map((cta, index) => (
+                    <div key={index} className={styles.ctaItem}>{cta}</div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className={styles.abTests}>
+                <h4>Recommended A/B Tests</h4>
+                <ul>
+                  {matrix.enhancedStrategy.contentStrategy.abTestRecommendations.map((test, index) => (
+                    <li key={index}>{test}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Add this component for visual aesthetic selection
+  const AestheticSelectionModal = ({ isOpen, onClose, onSelect, selectedValue }) => {
+    const aestheticOptions = [
+      {
+        id: 'professional',
+        name: 'Professional & Educational',
+        description: 'Expert-driven content with an emphasis on knowledge and credibility',
+        image: '/images/aesthetics/professional.jpg'
+      },
+      {
+        id: 'motivational',
+        name: 'Motivational & Energetic',
+        description: 'High-energy content focused on inspiration and motivation',
+        image: '/images/aesthetics/motivational.jpg'
+      },
+      {
+        id: 'community',
+        name: 'Community & Supportive',
+        description: 'Warm, inclusive content that emphasizes connection and belonging',
+        image: '/images/aesthetics/community.jpg'
+      },
+      {
+        id: 'premium',
+        name: 'Premium & Exclusive',
+        description: 'Sophisticated content highlighting premium quality and exclusivity',
+        image: '/images/aesthetics/premium.jpg'
+      },
+      {
+        id: 'authentic',
+        name: 'Authentic & Raw',
+        description: 'Real, unfiltered content showcasing genuine moments and transformations',
+        image: '/images/aesthetics/authentic.jpg'
+      },
+      {
+        id: 'custom',
+        name: 'Custom Style',
+        description: 'Describe your own unique aesthetic',
+        image: '/images/aesthetics/custom.jpg'
+      }
+    ];
+    
+    const [customAesthetic, setCustomAesthetic] = useState('');
+    const [selected, setSelected] = useState(selectedValue || '');
+    
+    if (!isOpen) return null;
+    
+    const handleSelect = (aestheticId) => {
+      setSelected(aestheticId);
+      if (aestheticId !== 'custom') {
+        const option = aestheticOptions.find(o => o.id === aestheticId);
+        onSelect(option.name);
+      }
+    };
+    
+    const handleCustomSubmit = () => {
+      if (customAesthetic.trim()) {
+        onSelect(customAesthetic);
+      }
+    };
+    
+    return (
+      <div className={styles.aestheticModalOverlay}>
+        <div className={styles.aestheticModal}>
+          <div className={styles.modalHeader}>
+            <h3>Select Your Content Aesthetic</h3>
+            <button 
+              className={styles.closeButton}
+              onClick={onClose}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className={styles.modalBody}>
+            <p className={styles.modalDescription}>
+              Choose the visual style and tone that best represents your brand
+            </p>
+            
+            <div className={styles.aestheticGrid}>
+              {aestheticOptions.map(option => (
+                <div 
+                  key={option.id}
+                  className={`${styles.aestheticCard} ${selected === option.id ? styles.selectedAesthetic : ''}`}
+                  onClick={() => handleSelect(option.id)}
+                >
+                  <div className={styles.aestheticImage}>
+                    <img src={option.image} alt={option.name} />
+                  </div>
+                  <div className={styles.aestheticInfo}>
+                    <h4>{option.name}</h4>
+                    <p>{option.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {selected === 'custom' && (
+              <div className={styles.customAestheticInput}>
+                <label htmlFor="customAesthetic">Describe your preferred content style:</label>
+                <textarea
+                  id="customAesthetic"
+                  value={customAesthetic}
+                  onChange={(e) => setCustomAesthetic(e.target.value)}
+                  placeholder="e.g., Modern with earthy tones, focusing on authentic moments and educational overlays..."
+                  className={styles.feedbackTextarea}
+                />
+                <button 
+                  onClick={handleCustomSubmit}
+                  className={styles.saveButton}
+                  disabled={!customAesthetic.trim()}
+                >
+                  Apply Custom Style
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -996,50 +1360,7 @@ export default function NewStrategy() {
                     </button>
                   </div>
                 ) : (
-                  <div className={styles.matrix}>
-                    <div className={styles.matrixColumn}>
-                      <h3>Target Audience</h3>
-                      <ul>
-                        {matrix.targetAudience.map((item, index) => (
-                          <li 
-                            key={index} 
-                            onClick={() => handleCellClick('targetAudience', index, item)}
-                            className={styles.interactiveCell}
-                          >
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className={styles.matrixColumn}>
-                      <h3>Objectives</h3>
-                      <ul>
-                        {matrix.objectives.map((item, index) => (
-                          <li 
-                            key={index} 
-                            onClick={() => handleCellClick('objectives', index, item)}
-                            className={styles.interactiveCell}
-                          >
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className={styles.matrixColumn}>
-                      <h3>Key Messages</h3>
-                      <ul>
-                        {matrix.keyMessages.map((item, index) => (
-                          <li 
-                            key={index} 
-                            onClick={() => handleCellClick('keyMessages', index, item)}
-                            className={styles.interactiveCell}
-                          >
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+                  <MatrixDisplay matrix={matrix} />
                 )}
                 <div className={styles.matrixActions}>
                   <button
@@ -1129,41 +1450,15 @@ export default function NewStrategy() {
       )}
 
       {/* Aesthetic Modal */}
-      {aestheticModal.visible && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.feedbackModal}>
-            <div className={styles.modalHeader}>
-              <h3>Describe Your Content Style</h3>
-              <button 
-                className={styles.closeButton}
-                onClick={() => setAestheticModal({...aestheticModal, visible: false})}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.feedbackInputContainer}>
-                <label htmlFor="aesthetic">What's the aesthetic or vibe you want for your content?</label>
-                <textarea
-                  id="aesthetic"
-                  value={aestheticModal.value}
-                  onChange={handleAestheticChange}
-                  placeholder="For example: professional and educational, friendly and motivational, bold and high-energy, calm and supportive..."
-                  className={styles.feedbackTextarea}
-                />
-                <button 
-                  onClick={handleAestheticSubmit}
-                  className={styles.saveButton}
-                  disabled={!aestheticModal.value.trim()}
-                >
-                  Generate Content
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AestheticSelectionModal 
+        isOpen={aestheticModal.visible}
+        onClose={() => setAestheticModal({...aestheticModal, visible: false})}
+        onSelect={(value) => {
+          setAestheticModal({value: value, visible: false});
+          handleAestheticSubmit(value);
+        }}
+        selectedValue={aestheticModal.value}
+      />
 
       {process.env.NODE_ENV !== 'production' && (
         <div className={styles.diagnosticTools}>
