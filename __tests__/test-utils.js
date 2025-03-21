@@ -2,8 +2,15 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 
+// Create mock for AuthContext
+const createAuthContextValue = (overrides = {}) => ({
+  user: { id: 'user-123', email: 'test@example.com' },
+  loading: false,
+  ...overrides
+});
+
 // Create mock for MarketingPlanContext
-export const createMockMarketingPlanContext = (overrides = {}) => ({
+const createMarketingPlanContextValue = (overrides = {}) => ({
   strategies: [],
   contentOutlines: [],
   calendars: [],
@@ -17,46 +24,75 @@ export const createMockMarketingPlanContext = (overrides = {}) => ({
   ...overrides
 });
 
-// Create mock for AuthContext
-export const createMockAuthContext = (overrides = {}) => ({
-  user: { id: 'user-123', email: 'test@example.com' },
-  loading: false,
-  ...overrides
+// Mock context modules at the top level
+jest.mock('../contexts/AuthContext', () => {
+  // Store the context value here so it can be updated in tests
+  let mockAuthContext = createAuthContextValue();
+  
+  return {
+    useAuth: () => mockAuthContext,
+    setMockAuthContext: (newValue) => {
+      mockAuthContext = { ...mockAuthContext, ...newValue };
+    },
+    AuthContext: {
+      Provider: ({ children }) => children,
+    }
+  };
 });
 
-// Custom wrapper to provide all the necessary context providers
-export function renderWithProviders(ui, {
-  marketingPlanContext = createMockMarketingPlanContext(),
-  authContext = createMockAuthContext(),
-  router = {
-    push: jest.fn(),
+jest.mock('../contexts/MarketingPlanContext', () => {
+  // Store the context value here so it can be updated in tests
+  let mockMarketingPlanContext = createMarketingPlanContextValue();
+  
+  return {
+    useMarketingPlan: () => mockMarketingPlanContext,
+    setMockMarketingPlanContext: (newValue) => {
+      mockMarketingPlanContext = { ...mockMarketingPlanContext, ...newValue };
+    },
+    MarketingPlanContext: {
+      Provider: ({ children }) => children,
+    }
+  };
+});
+
+// Custom render that wraps with all providers
+function renderWithContext(ui, {
+  authContext,
+  marketingPlanContext,
+  routerProps = {},
+  ...renderOptions
+} = {}) {
+  // Set context values based on provided props
+  if (authContext) {
+    const { setMockAuthContext } = require('../contexts/AuthContext');
+    setMockAuthContext(authContext);
+  }
+  
+  if (marketingPlanContext) {
+    const { setMockMarketingPlanContext } = require('../contexts/MarketingPlanContext');
+    setMockMarketingPlanContext(marketingPlanContext);
+  }
+  
+  // Mock router
+  const mockRouter = {
     pathname: '/marketing-plan',
     query: {},
     isReady: true,
-  },
-  ...renderOptions
-} = {}) {
-  // Mock context hooks
-  jest.mock('../contexts/MarketingPlanContext', () => ({
-    useMarketingPlan: () => marketingPlanContext,
-    MarketingPlanContext: {
-      Provider: ({ children }) => children,
-      Consumer: ({ children }) => children(marketingPlanContext),
-    },
-  }));
-
-  jest.mock('../contexts/AuthContext', () => ({
-    useAuth: () => authContext,
-    AuthContext: {
-      Provider: ({ children }) => children,
-      Consumer: ({ children }) => children(authContext),
-    },
-  }));
-
+    push: jest.fn(),
+    replace: jest.fn(),
+    ...routerProps
+  };
+  
   jest.mock('next/router', () => ({
-    useRouter: () => router,
+    useRouter: () => mockRouter
   }));
-
-  // Return rendered UI
+  
+  // Return rendered component
   return render(ui, { ...renderOptions });
-} 
+}
+
+export {
+  createAuthContextValue,
+  createMarketingPlanContextValue,
+  renderWithContext
+}; 

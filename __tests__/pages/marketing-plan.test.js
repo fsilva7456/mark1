@@ -5,16 +5,10 @@
 import React from 'react';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
 import MarketingPlanDashboard from '../../pages/marketing-plan';
-import { renderWithProviders, createMockAuthContext, createMockMarketingPlanContext } from '../test-utils';
+import { renderWithContext, createAuthContextValue, createMarketingPlanContextValue } from '../test-utils';
 
-// Create router mock object
+// Create mock router
 const mockRouterPush = jest.fn();
-const mockRouter = {
-  push: mockRouterPush,
-  pathname: '/marketing-plan',
-  query: {},
-  isReady: true,
-};
 
 describe('MarketingPlanDashboard', () => {
   beforeEach(() => {
@@ -24,11 +18,9 @@ describe('MarketingPlanDashboard', () => {
   
   it('redirects to login if user is not authenticated', async () => {
     // Set up unauthenticated user
-    const authContext = createMockAuthContext({ user: null });
-    
-    renderWithProviders(<MarketingPlanDashboard />, {
-      authContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      authContext: { user: null },
+      routerProps: { push: mockRouterPush }
     });
     
     // Check if the router.push was called with '/login'
@@ -36,26 +28,16 @@ describe('MarketingPlanDashboard', () => {
   });
   
   it('shows loading state when data is loading', () => {
-    // Set up loading state
-    const marketingPlanContext = createMockMarketingPlanContext({ isLoading: true });
-    
-    renderWithProviders(<MarketingPlanDashboard />, {
-      marketingPlanContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      marketingPlanContext: { isLoading: true }
     });
     
     expect(screen.getByText('Loading your marketing plan data...')).toBeInTheDocument();
   });
   
   it('shows error state when there is an error', () => {
-    // Set up error state
-    const marketingPlanContext = createMockMarketingPlanContext({ 
-      error: 'Failed to load marketing plan data' 
-    });
-    
-    renderWithProviders(<MarketingPlanDashboard />, {
-      marketingPlanContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      marketingPlanContext: { error: 'Failed to load marketing plan data' }
     });
     
     expect(screen.getByText('Error')).toBeInTheDocument();
@@ -63,9 +45,7 @@ describe('MarketingPlanDashboard', () => {
   });
   
   it('shows empty state when there are no strategies', () => {
-    renderWithProviders(<MarketingPlanDashboard />, {
-      router: mockRouter
-    });
+    renderWithContext(<MarketingPlanDashboard />);
     
     expect(screen.getByText('No marketing plans yet')).toBeInTheDocument();
     expect(screen.getByText('Start by creating a marketing strategy')).toBeInTheDocument();
@@ -73,21 +53,18 @@ describe('MarketingPlanDashboard', () => {
   
   it('renders strategies in workflow view', () => {
     // Set up strategies data
-    const marketingPlanContext = createMockMarketingPlanContext({
-      strategies: [
-        {
-          id: 'strategy-123',
-          name: 'Test Strategy',
-          created_at: '2023-01-01T00:00:00Z',
-          business_description: 'Test business',
-          target_audience: ['Audience 1', 'Audience 2'],
-        },
-      ]
-    });
+    const strategies = [
+      {
+        id: 'strategy-123',
+        name: 'Test Strategy',
+        created_at: '2023-01-01T00:00:00Z',
+        business_description: 'Test business',
+        target_audience: ['Audience 1', 'Audience 2'],
+      },
+    ];
     
-    renderWithProviders(<MarketingPlanDashboard />, {
-      marketingPlanContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      marketingPlanContext: { strategies }
     });
     
     expect(screen.getByText('Test Strategy')).toBeInTheDocument();
@@ -125,17 +102,14 @@ describe('MarketingPlanDashboard', () => {
       posts_published: 5,
     };
     
-    const marketingPlanContext = createMockMarketingPlanContext({
-      strategies: [mockStrategy],
-      contentOutlines: [mockOutline],
-      calendars: [mockCalendar],
-      getOutlinesForStrategy: jest.fn(() => [mockOutline]),
-      getCalendarsForStrategy: jest.fn(() => [mockCalendar]),
-    });
-    
-    renderWithProviders(<MarketingPlanDashboard />, {
-      marketingPlanContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      marketingPlanContext: {
+        strategies: [mockStrategy],
+        contentOutlines: [mockOutline],
+        calendars: [mockCalendar],
+        getOutlinesForStrategy: () => [mockOutline],
+        getCalendarsForStrategy: () => [mockCalendar],
+      }
     });
     
     expect(screen.getByText('Test Strategy')).toBeInTheDocument();
@@ -150,9 +124,7 @@ describe('MarketingPlanDashboard', () => {
   });
   
   it('toggles between workflow and list view', () => {
-    renderWithProviders(<MarketingPlanDashboard />, {
-      router: mockRouter
-    });
+    renderWithContext(<MarketingPlanDashboard />);
     
     // Initially in workflow view
     const workflowButton = screen.getByText('Workflow View');
@@ -171,21 +143,20 @@ describe('MarketingPlanDashboard', () => {
   
   it('shows confirmation modal when deleting an entity', () => {
     // Mock strategies data
-    const marketingPlanContext = createMockMarketingPlanContext({
-      strategies: [
-        {
-          id: 'strategy-123',
-          name: 'Test Strategy',
-          created_at: '2023-01-01T00:00:00Z',
-        },
-      ],
-      getOutlinesForStrategy: jest.fn(() => []),
-      getCalendarsForStrategy: jest.fn(() => []),
-    });
+    const strategies = [
+      {
+        id: 'strategy-123',
+        name: 'Test Strategy',
+        created_at: '2023-01-01T00:00:00Z',
+      }
+    ];
     
-    renderWithProviders(<MarketingPlanDashboard />, {
-      marketingPlanContext,
-      router: mockRouter
+    renderWithContext(<MarketingPlanDashboard />, {
+      marketingPlanContext: {
+        strategies,
+        getOutlinesForStrategy: () => [],
+        getCalendarsForStrategy: () => [],
+      }
     });
     
     // Find and click the delete button using data-testid

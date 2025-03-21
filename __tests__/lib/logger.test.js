@@ -3,8 +3,14 @@ const { debug, info, warn, error, createLogger } = logger;
 
 describe('Logger', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
+    // Reset mocks before each test
     jest.clearAllMocks();
+    
+    // Explicitly mock console methods for these tests
+    global.console.debug = jest.fn();
+    global.console.info = jest.fn();
+    global.console.warn = jest.fn();
+    global.console.error = jest.fn();
   });
 
   it('should export debug, info, warn, error, and createLogger functions', () => {
