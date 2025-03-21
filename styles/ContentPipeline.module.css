@@ -1,0 +1,275 @@
+.pipelineContainer {
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pipelineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.pipelineHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.pipelineFilters {
+  display: flex;
+  gap: 1rem;
+}
+
+.searchWrapper {
+  position: relative;
+}
+
+.searchInput {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 200px;
+  font-size: 0.9rem;
+}
+
+.filterWrapper select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: white;
+}
+
+.pipelineColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  overflow-x: auto;
+}
+
+.pipelineColumn {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pipelineColumn.isOver {
+  background: #f0f7ff;
+  box-shadow: 0 0 0 2px #2196f3;
+}
+
+.columnHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.columnHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.postCount {
+  background: #eee;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.columnContent {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.postItem {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.postItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.postItem.dragging {
+  opacity: 0.6;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.postHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.postTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.postPlatform {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  background: #f5f5f5;
+  color: #666;
+  white-space: nowrap;
+}
+
+.postMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #777;
+  margin-bottom: 0.5rem;
+}
+
+.postDate {
+  font-weight: 500;
+}
+
+.postType {
+  opacity: 0.7;
+}
+
+.postExcerpt {
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.postActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.editButton, .previewButton {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-decoration: none;
+}
+
+.editButton {
+  color: #2196f3;
+}
+
+.previewButton {
+  color: #555;
+}
+
+.editButton:hover, .previewButton:hover {
+  background: #f0f0f0;
+}
+
+.emptyState {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #999;
+  background: #f1f1f1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.bulkActionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+.selectedCount {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.bulkActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bulkButton {
+  padding: 0.5rem 1rem;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.bulkButton:hover {
+  background: #1976d2;
+}
+
+.bulkButton:disabled {
+  background: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+/* Platform styles */
+.instagram {
+  background: #e1306c;
+  color: white;
+}
+
+.facebook {
+  background: #1877f2;
+  color: white;
+}
+
+.twitter {
+  background: #1da1f2;
+  color: white;
+}
+
+.linkedin {
+  background: #0077b5;
+  color: white;
+}
+
+.tiktok {
+  background: #000000;
+  color: white;
+}
+
+.pinterest {
+  background: #e60023;
+  color: white;
+} 

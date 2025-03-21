@@ -1,0 +1,119 @@
+.actionButtonsContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 100;
+}
+
+.actionButton {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.actionButtonIcon {
+  font-size: 1.1rem;
+}
+
+.primaryButton {
+  background-color: #2196f3;
+}
+
+.secondaryButton {
+  background-color: #4caf50;
+}
+
+.tertiaryButton {
+  background-color: #ff9800;
+}
+
+.dangerButton {
+  background-color: #f44336;
+}
+
+.actionButtonLabel {
+  display: flex;
+  flex-direction: column;
+}
+
+.actionButtonContext {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.expandButton {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background-color: #2196f3;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  font-size: 1.5rem;
+}
+
+.expandButton:hover {
+  transform: scale(1.05);
+  background-color: #1976d2;
+}
+
+.expandedMenu {
+  position: absolute;
+  bottom: 4.5rem;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
+  min-width: 200px;
+}
+
+.expandedMenuItem {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.expandedMenuItem:hover {
+  background-color: #f5f5f5;
+}
+
+.expandedMenuItemIcon {
+  color: #2196f3;
+}
+
+.noEntitySelected {
+  color: #666;
+  font-style: italic;
+  padding: 0.75rem 1rem;
+  text-align: center;
+} 
