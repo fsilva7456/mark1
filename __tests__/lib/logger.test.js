@@ -1,28 +1,9 @@
 import logger, { debug, info, warn, error, createLogger } from '../../lib/logger';
 
 describe('Logger', () => {
-  // Save original console methods
-  const originalConsole = {
-    debug: console.debug,
-    info: console.info,
-    warn: console.warn,
-    error: console.error,
-  };
-
-  // Mock console methods
   beforeEach(() => {
-    console.debug = jest.fn();
-    console.info = jest.fn();
-    console.warn = jest.fn();
-    console.error = jest.fn();
-  });
-
-  // Restore original console methods
-  afterEach(() => {
-    console.debug = originalConsole.debug;
-    console.info = originalConsole.info;
-    console.warn = originalConsole.warn;
-    console.error = originalConsole.error;
+    // Clear all mocks before each test
+    jest.clearAllMocks();
   });
 
   it('should export debug, info, warn, error, and createLogger functions', () => {

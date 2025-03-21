@@ -41,6 +41,14 @@ const customJestConfig = {
   testPathIgnorePatterns: ['/node_modules/', '/.next/'],
   // Increase test timeout in CI environments
   testTimeout: isCI ? 30000 : 5000,
+  // Set test environment variables
+  setupFiles: ['<rootDir>/jest.setup.js'],
+  testEnvironmentOptions: {
+    url: 'http://localhost',
+  },
+  globals: {
+    'process.env.NODE_ENV': 'test',
+  },
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

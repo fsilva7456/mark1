@@ -1,61 +1,89 @@
 // jest.setup.js
 import '@testing-library/jest-dom';
 
-// Mock Next.js router
+// Set test environment variables
+process.env.NODE_ENV = 'test';
+
+// Mock console methods for testing
+global.console = {
+  ...console,
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
+// Mock next/router
 jest.mock('next/router', () => ({
   useRouter: () => ({
-    pathname: '/',
-    query: {},
-    asPath: '/',
     push: jest.fn(),
     replace: jest.fn(),
-    back: jest.fn(),
-    reload: jest.fn(),
-    prefetch: jest.fn(() => Promise.resolve()),
-    events: {
-      on: jest.fn(),
-      off: jest.fn(),
-      emit: jest.fn(),
-    },
-    isReady: true,
+    prefetch: jest.fn(),
+    query: {},
   }),
 }));
 
-// Mock Supabase
-jest.mock('@supabase/supabase-js', () => {
-  return {
-    createClient: jest.fn(() => ({
-      auth: {
-        getSession: jest.fn(() => Promise.resolve({ data: { session: null } })),
-        signInWithPassword: jest.fn(),
-        signUp: jest.fn(),
-        signOut: jest.fn(),
-      },
-      from: jest.fn(() => ({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-            order: jest.fn(() => Promise.resolve({ data: [], error: null })),
-            limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
-          })),
-          order: jest.fn(() => Promise.resolve({ data: [], error: null })),
-          limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        })),
-        insert: jest.fn(() => ({
-          select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-        })),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => Promise.resolve({ data: [], error: null })),
-          })),
-        })),
-        delete: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: null })),
-        })),
-      })),
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    query: {},
+  }),
+}));
+
+// Mock next/image
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: (props) => {
+    // eslint-disable-next-line jsx-a11y/alt-text
+    return <img {...props} />;
+  },
+}));
+
+// Mock next/head
+jest.mock('next/head', () => ({
+  __esModule: true,
+  default: ({ children }) => {
+    return <>{children}</>;
+  },
+}));
+
+// Mock next/link
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href }) => {
+    return <a href={href}>{children}</a>;
+  },
+}));
+
+// Mock next/auth
+jest.mock('next-auth/react', () => ({
+  useSession: () => ({
+    data: null,
+    status: 'unauthenticated',
+  }),
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+}));
+
+// Mock @supabase/supabase-js
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    auth: {
+      getSession: jest.fn(),
+      signInWithPassword: jest.fn(),
+      signOut: jest.fn(),
+    },
+    from: jest.fn(() => ({
+      select: jest.fn(),
+      insert: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
     })),
-  };
-});
+  }),
+}));
 
 // Mock window.fetch
 global.fetch = jest.fn(() =>
