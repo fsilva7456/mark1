@@ -49,6 +49,12 @@ const customJestConfig = {
   globals: {
     'process.env.NODE_ENV': 'test',
   },
+  // Must have a Jest transform for handling JSX
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
+  },
+  // Ensure Jest can resolve modules correctly
+  moduleDirectories: ['node_modules', '<rootDir>'],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

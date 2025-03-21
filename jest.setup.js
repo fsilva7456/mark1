@@ -1,8 +1,9 @@
 // jest.setup.js
-import '@testing-library/jest-dom';
-
-// Set test environment variables
+// Set test environment variables first
 process.env.NODE_ENV = 'test';
+
+// Then import jest-dom to extend expect properly
+import '@testing-library/jest-dom';
 
 // Mock console methods for testing
 global.console = {
