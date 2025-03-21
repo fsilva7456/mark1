@@ -254,6 +254,18 @@ export default function NewContent() {
     initializePage();
   }, [router.isReady, router.query, user, loading]);
   
+  // Add the missing generateWeeklyThemes function
+  const generateWeeklyThemes = () => {
+    if (!selectedStrategy) {
+      setError('No strategy selected. Please select a strategy first.');
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log("Generating weekly themes for strategy:", selectedStrategy.name);
+    generateContent(selectedStrategy);
+  };
+  
   const fetchStrategyDetails = async (strategyId) => {
     try {
       console.log("Fetching strategy details for ID:", strategyId);
