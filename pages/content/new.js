@@ -140,7 +140,7 @@ export default function NewContent() {
   const [dailyEngagement, setDailyEngagement] = useState([]);
   const [isDailyEngagementLoading, setIsDailyEngagementLoading] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
-  const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [selectedStrategy, setStrategy] = useState(null);
   const [error, setError] = useState('');
   // Add states for individual week loading
   const [weekLoadingStates, setWeekLoadingStates] = useState({
@@ -157,79 +157,101 @@ export default function NewContent() {
   const [feedbackWeek, setFeedbackWeek] = useState(null);
   const [feedbackText, setFeedbackText] = useState('');
   
+  // When component mounts, check URL params and localStorage for strategy ID
   useEffect(() => {
-    // Redirect if not logged in
+    // Check for user authentication
     if (!loading && !user) {
-      router.push('/');
+      toast.error('Please login to continue');
+      router.push('/login');
       return;
     }
     
     if (!router.isReady) return;
     
-    const handleStrategy = async () => {
-      setIsLoading(true);
+    const initializePage = async () => {
       try {
-        const strategyParam = router.query.strategy;
-        console.log("Strategy parameter received:", strategyParam);
+        setIsLoading(true);
         
-        if (!strategyParam) {
+        // First try to get strategy ID from URL
+        let strategyId = router.query.strategy;
+        let savedContentOutline = null;
+        
+        // If no strategy ID in URL, check localStorage
+        if (!strategyId) {
+          strategyId = localStorage.getItem('lastStrategyId');
+          
+          // If we found a strategy ID in localStorage, also check for saved content outline
+          if (strategyId) {
+            try {
+              const savedOutline = localStorage.getItem('lastContentOutline');
+              if (savedOutline) {
+                savedContentOutline = JSON.parse(savedOutline);
+              }
+            } catch (e) {
+              console.error('Failed to parse saved content outline:', e);
+            }
+          }
+        }
+        
+        if (!strategyId) {
           setError('No strategy ID provided. Please select a strategy first.');
           setIsLoading(false);
           return;
         }
         
-        // Check if the strategy param is a UUID
-        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const isUuid = uuidPattern.test(strategyParam);
+        // Fetch strategy data
+        const { data: strategyData, error: strategyError } = await supabase
+          .from('strategies')
+          .select('*')
+          .eq('id', strategyId)
+          .single();
         
-        if (isUuid) {
-          // We have a UUID, proceed normally
-          console.log("Strategy ID is a valid UUID, fetching directly");
-          fetchStrategyDetails(strategyParam);
-        } else {
-          // We have a name instead of ID, need to look up the ID
-          console.log("Strategy parameter is not a valid UUID, looking up by name");
-          
-          // Look up the strategy ID by name
-          const { data, error } = await supabase
-            .from('strategies')
-            .select('id')
-            .eq('name', strategyParam)
-            .single();
-          
-          if (error || !data) {
-            console.error("Error finding strategy by name:", error);
-            setError('Could not find strategy with this name. Please go back to the dashboard and try again.');
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log("Found strategy ID from name:", data.id);
-          
-          // Check if the retrieved ID is a valid UUID
-          if (!uuidPattern.test(data.id)) {
-            console.error("Retrieved ID is not a valid UUID:", data.id);
-            setError('Invalid strategy ID format in database. Please contact support.');
-            setIsLoading(false);
-            return;
-          }
-          
-          // Silently update the URL to use the UUID instead of the name
-          router.replace(`/content/new?strategy=${encodeURIComponent(data.id)}`, undefined, { shallow: true });
-          
-          // Fetch strategy details with the correct ID
-          fetchStrategyDetails(data.id);
+        if (strategyError) throw strategyError;
+        
+        if (!strategyData) {
+          setError('Strategy not found');
+          setIsLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Error handling strategy parameter:", err);
-        setError('Error processing strategy information: ' + err.message);
+        
+        // Set strategy and update UI
+        setStrategy(strategyData);
+        
+        // If we have a saved content outline from localStorage, use it
+        if (savedContentOutline && savedContentOutline.length > 0) {
+          console.log('Using content outline from localStorage');
+          setContentOutline(savedContentOutline);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise, check if we need to load existing content outline
+        const { data: existingContent, error: contentError } = await supabase
+          .from('content_outlines')
+          .select('*')
+          .eq('strategy_id', strategyId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (contentError) throw contentError;
+        
+        if (existingContent && existingContent.length > 0) {
+          // Use existing content outline
+          setContentOutline(existingContent[0].outline || []);
+        } else {
+          // Generate new content outline
+          generateWeeklyThemes();
+        }
+        
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        setError(`Failed to load strategy: ${error.message}`);
+      } finally {
         setIsLoading(false);
       }
     };
     
-    if (user) {
-      handleStrategy();
-    }
+    initializePage();
   }, [router.isReady, router.query, user, loading]);
   
   const fetchStrategyDetails = async (strategyId) => {
@@ -257,7 +279,7 @@ export default function NewContent() {
       
       if (data) {
         console.log("Strategy data loaded successfully:", data.id);
-        setSelectedStrategy(data);
+        setStrategy(data);
         // Generate content after strategy is loaded
         generateContent(data);
       } else {

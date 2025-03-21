@@ -282,9 +282,17 @@ export default function CalendarView() {
         <div className={styles.headerActions}>
           <button 
             className={styles.backButton}
-            onClick={handleBack}
+            onClick={() => {
+              // Try to get the strategy ID from localStorage
+              const strategyId = localStorage.getItem('lastStrategyId');
+              if (strategyId) {
+                router.push(`/content/new?strategy=${strategyId}`);
+              } else {
+                router.push('/dashboard');
+              }
+            }}
           >
-            &#8592; Back
+            Back to Content Outline
           </button>
           <button 
             className={styles.actionButton}

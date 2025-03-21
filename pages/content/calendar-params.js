@@ -289,6 +289,22 @@ export default function CalendarParams() {
     }
   };
   
+  // Save the strategy ID to localStorage when it's loaded
+  useEffect(() => {
+    if (selectedStrategy?.id) {
+      localStorage.setItem('lastStrategyId', selectedStrategy.id);
+      
+      // Also save the content outline if available
+      if (contentOutline && contentOutline.length > 0) {
+        try {
+          localStorage.setItem('lastContentOutline', JSON.stringify(contentOutline));
+        } catch (e) {
+          console.error('Failed to save content outline to localStorage:', e);
+        }
+      }
+    }
+  }, [selectedStrategy, contentOutline]);
+  
   if (loading) {
     return (
       <div className={styles.container}>
@@ -319,7 +335,14 @@ export default function CalendarParams() {
             <h3>Error</h3>
             <p>{error}</p>
             <button 
-              onClick={() => router.push('/content/new?strategy=' + (selectedStrategy?.id || ''))} 
+              onClick={() => {
+                const strategyId = selectedStrategy?.id || localStorage.getItem('lastStrategyId');
+                if (strategyId) {
+                  router.push(`/content/new?strategy=${strategyId}`);
+                } else {
+                  router.push('/dashboard');
+                }
+              }} 
               className={styles.returnButton}
             >
               Return to Content Outline
@@ -503,7 +526,14 @@ export default function CalendarParams() {
             {/* Action Buttons */}
             <div className={styles.actions}>
               <button 
-                onClick={() => router.back()} 
+                onClick={() => {
+                  const strategyId = selectedStrategy?.id || localStorage.getItem('lastStrategyId');
+                  if (strategyId) {
+                    router.push(`/content/new?strategy=${strategyId}`);
+                  } else {
+                    router.back();
+                  }
+                }} 
                 className={styles.backButton}
                 disabled={isGenerating}
               >
