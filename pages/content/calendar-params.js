@@ -54,37 +54,72 @@ export default function CalendarParams() {
         // Parse content outline from query params
         const { contentOutline: contentOutlineParam, strategyId } = router.query;
         
-        if (!contentOutlineParam || !strategyId) {
-          setError('Missing required parameters. Please go back to the content outline page.');
-          setLoading(false);
-          return;
-        }
-        
-        try {
-          // Parse the content outline from JSON
-          const parsedContentOutline = JSON.parse(contentOutlineParam);
-          setContentOutline(parsedContentOutline);
-          
-          // Fetch strategy details
-          const { data: strategyData, error: strategyError } = await supabase
-            .from('strategies')
-            .select('*')
-            .eq('id', strategyId)
-            .single();
-          
-          if (strategyError) throw strategyError;
-          
-          if (!strategyData) {
-            setError('Strategy not found.');
+        // First try using URL parameters
+        if (contentOutlineParam && strategyId) {
+          try {
+            // Parse the content outline from JSON
+            const parsedContentOutline = JSON.parse(contentOutlineParam);
+            setContentOutline(parsedContentOutline);
+            
+            // Fetch strategy details
+            const { data: strategyData, error: strategyError } = await supabase
+              .from('strategies')
+              .select('*')
+              .eq('id', strategyId)
+              .single();
+            
+            if (strategyError) throw strategyError;
+            
+            if (!strategyData) {
+              setError('Strategy not found.');
+              setLoading(false);
+              return;
+            }
+            
+            setSelectedStrategy(strategyData);
             setLoading(false);
             return;
+          } catch (parseError) {
+            console.error('Error parsing content outline:', parseError);
+            // Continue to fallback if parsing fails
           }
-          
-          setSelectedStrategy(strategyData);
-        } catch (parseError) {
-          console.error('Error parsing content outline:', parseError);
-          setError('Invalid content data format. Please go back and try again.');
         }
+        
+        // Try to load from localStorage as fallback
+        const savedStrategyId = localStorage.getItem('lastStrategyId');
+        const savedContentOutline = localStorage.getItem('lastContentOutline');
+        
+        if (savedStrategyId && savedContentOutline) {
+          try {
+            // Parse the saved content outline
+            const parsedContentOutline = JSON.parse(savedContentOutline);
+            setContentOutline(parsedContentOutline);
+            
+            // Fetch strategy details
+            const { data: strategyData, error: strategyError } = await supabase
+              .from('strategies')
+              .select('*')
+              .eq('id', savedStrategyId)
+              .single();
+            
+            if (strategyError) throw strategyError;
+            
+            if (!strategyData) {
+              setError('Strategy not found.');
+              setLoading(false);
+              return;
+            }
+            
+            setSelectedStrategy(strategyData);
+            setLoading(false);
+            return;
+          } catch (fallbackError) {
+            console.error('Error loading from localStorage:', fallbackError);
+          }
+        }
+        
+        // If we get here, both methods failed
+        setError('Missing required parameters. Please go back to the content outline page.');
       } catch (err) {
         console.error('Error initializing page:', err);
         setError('Failed to initialize: ' + err.message);
@@ -444,6 +479,16 @@ export default function CalendarParams() {
             <div className={styles.paramSection}>
               <h3>Posting Days</h3>
               <p>On which days would you like to publish your content?</p>
+              <div className={styles.bestPractices}>
+                <h4>Best Practices for Fitness Content</h4>
+                <p>For fitness audiences, the most engaging days are:</p>
+                <ul>
+                  <li><strong>Monday:</strong> When motivation is high for weekly fitness goals</li>
+                  <li><strong>Wednesday:</strong> Mid-week motivation boost to counter slumps</li>
+                  <li><strong>Friday:</strong> Perfect for weekend workout inspiration</li>
+                  <li><strong>Sunday:</strong> Great for planning the upcoming week's fitness routine</li>
+                </ul>
+              </div>
               <div className={styles.daysGrid}>
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
                   <button 
@@ -461,6 +506,16 @@ export default function CalendarParams() {
             <div className={styles.paramSection}>
               <h3>Posting Time</h3>
               <p>At what time would you like to schedule your posts?</p>
+              <div className={styles.bestPractices}>
+                <h4>Best Times for Fitness Content</h4>
+                <p>Based on engagement analytics, the optimal times to post fitness content are:</p>
+                <ul>
+                  <li><strong>6:00-8:00 AM:</strong> Reach early-morning exercisers</li>
+                  <li><strong>12:00-1:00 PM:</strong> Target lunch break browsers</li>
+                  <li><strong>5:30-7:00 PM:</strong> Catch people after work planning evening workouts</li>
+                  <li><strong>8:00-9:00 PM:</strong> Connect with those planning tomorrow's routine</li>
+                </ul>
+              </div>
               <div className={styles.paramGroup}>
                 <label htmlFor="post-time">Time:</label>
                 <input
@@ -486,40 +541,48 @@ export default function CalendarParams() {
                   <span className={styles.channelName}>Instagram</span>
                 </button>
                 <button 
-                  className={`${styles.channelButton} ${selectedChannels.includes('facebook') ? styles.channelSelected : ''}`}
+                  className={`${styles.channelButton} ${selectedChannels.includes('facebook') ? styles.channelSelected : ''} ${styles.channelDisabled}`}
                   onClick={() => handleChannelToggle('facebook')}
+                  disabled={false} /* Not fully disabled to allow selection, but styled differently */
                 >
                   <span className={styles.channelIcon}><Facebook /></span>
                   <span className={styles.channelName}>Facebook</span>
                 </button>
                 <button 
-                  className={`${styles.channelButton} ${selectedChannels.includes('twitter') ? styles.channelSelected : ''}`}
+                  className={`${styles.channelButton} ${selectedChannels.includes('twitter') ? styles.channelSelected : ''} ${styles.channelDisabled}`}
                   onClick={() => handleChannelToggle('twitter')}
+                  disabled={true}
                 >
                   <span className={styles.channelIcon}><Twitter /></span>
                   <span className={styles.channelName}>Twitter</span>
                 </button>
                 <button 
-                  className={`${styles.channelButton} ${selectedChannels.includes('linkedin') ? styles.channelSelected : ''}`}
+                  className={`${styles.channelButton} ${selectedChannels.includes('linkedin') ? styles.channelSelected : ''} ${styles.channelDisabled}`}
                   onClick={() => handleChannelToggle('linkedin')}
+                  disabled={true}
                 >
                   <span className={styles.channelIcon}><Linkedin /></span>
                   <span className={styles.channelName}>LinkedIn</span>
                 </button>
                 <button 
-                  className={`${styles.channelButton} ${selectedChannels.includes('youtube') ? styles.channelSelected : ''}`}
+                  className={`${styles.channelButton} ${selectedChannels.includes('youtube') ? styles.channelSelected : ''} ${styles.channelDisabled}`}
                   onClick={() => handleChannelToggle('youtube')}
+                  disabled={true}
                 >
                   <span className={styles.channelIcon}><Youtube /></span>
                   <span className={styles.channelName}>YouTube</span>
                 </button>
                 <button 
-                  className={`${styles.channelButton} ${selectedChannels.includes('tiktok') ? styles.channelSelected : ''}`}
+                  className={`${styles.channelButton} ${selectedChannels.includes('tiktok') ? styles.channelSelected : ''} ${styles.channelDisabled}`}
                   onClick={() => handleChannelToggle('tiktok')}
+                  disabled={true}
                 >
                   <span className={styles.channelIcon}><TikTok /></span>
                   <span className={styles.channelName}>TikTok</span>
                 </button>
+              </div>
+              <div className={styles.channelNote}>
+                <p><strong>Note:</strong> Currently only Instagram and Facebook are fully supported. Other platforms will be available in future updates.</p>
               </div>
             </div>
             

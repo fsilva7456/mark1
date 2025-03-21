@@ -1373,4 +1373,119 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Best Practices Section */
+.bestPractices {
+  background-color: #f8f9fa;
+  border-left: 4px solid #4CAF50;
+  border-radius: 0 4px 4px 0;
+  padding: 12px 16px;
+  margin: 15px 0;
+  font-size: 0.9rem;
+}
+
+.bestPractices h4 {
+  margin: 0 0 8px 0;
+  color: #2c5282;
+  font-size: 1rem;
+}
+
+.bestPractices ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+
+.bestPractices li {
+  margin-bottom: 5px;
+}
+
+/* Channel Note */
+.channelNote {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff8e2;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.channelNote p {
+  margin: 0;
+  color: #805B10;
+}
+
+/* Channel Button Disabled */
+.channelDisabled {
+  opacity: 0.5;
+  position: relative;
+}
+
+.channelDisabled:hover {
+  cursor: not-allowed;
+  background-color: #f3f3f3;
+  border-color: #dbdbdb;
+}
+
+/* Override for Facebook which is still selectable */
+button.channelDisabled:not([disabled]):hover {
+  cursor: pointer;
+  background-color: #f8f9fa;
+  border-color: #3B5998;
+  opacity: 0.8;
+}
+
+button.channelDisabled:not([disabled]).channelSelected {
+  opacity: 1;
+  background-color: #f0f8ff;
+  border-color: #3B5998;
+}
+
+/* Save Calendar Button */
+.saveCalendarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.saveCalendarButton:hover {
+  background-color: #3e8e41;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.saveCalendarButton:active {
+  transform: translateY(1px);
+}
+
+.saveCalendarButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.saveCalendarButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.successMessage {
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #e6ffef;
+  border: 1px solid #a3e6c5;
+  border-radius: 4px;
+  color: #287d47;
+  text-align: center;
+  font-weight: 500;
 } 

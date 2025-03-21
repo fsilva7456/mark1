@@ -8,6 +8,7 @@ import Head from 'next/head';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { BsFillCalendarCheckFill } from 'react-icons/bs';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,6 +26,8 @@ export default function CalendarView() {
   const [viewType, setViewType] = useState('calendar'); // 'calendar' or 'list'
   const [selectedPost, setSelectedPost] = useState(null);
   const [user, setUser] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Check for login and fetch calendar data
   useEffect(() => {
@@ -184,6 +187,49 @@ export default function CalendarView() {
     }
   };
 
+  // Function to save the calendar
+  const handleSaveCalendar = async () => {
+    if (isSaving || !calendarData || !calendarEvents.length) return;
+    
+    setIsSaving(true);
+    setSaveSuccess(false);
+    
+    try {
+      toast.loading('Saving your content calendar...');
+      
+      // Prepare the updated calendar data
+      const updatedCalendar = {
+        ...calendarData,
+        // Update any fields as needed
+        modified_at: new Date().toISOString(),
+        status: 'saved'
+      };
+      
+      // Save to Supabase
+      const { data, error } = await supabase
+        .from('calendars')
+        .update(updatedCalendar)
+        .eq('id', calendarData.id);
+      
+      if (error) throw error;
+      
+      toast.dismiss();
+      toast.success('Calendar saved successfully!');
+      setSaveSuccess(true);
+      
+      // Store the successful save in localStorage for cross-page awareness
+      localStorage.setItem('calendarSaved', 'true');
+      localStorage.setItem('lastSavedCalendarId', calendarData.id);
+      
+    } catch (error) {
+      console.error('Error saving calendar:', error);
+      toast.dismiss();
+      toast.error(`Failed to save calendar: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -300,8 +346,22 @@ export default function CalendarView() {
           >
             Export to CSV
           </button>
+          <button 
+            className={styles.saveCalendarButton}
+            onClick={handleSaveCalendar}
+            disabled={isSaving || saveSuccess}
+          >
+            <BsFillCalendarCheckFill />
+            {isSaving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save Calendar'}
+          </button>
         </div>
       </header>
+      
+      {saveSuccess && (
+        <div className={styles.successMessage}>
+          Your content calendar has been saved successfully!
+        </div>
+      )}
       
       <div className={styles.viewToggle}>
         <button 
