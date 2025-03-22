@@ -176,6 +176,21 @@ Return your response in this JSON format ONLY:
 }
 
 Ensure your response is complete, strategic, and provides clear guidance on implementation.
+
+IMPORTANT: For the "channels" field in each audience segment, ONLY select from this specific list of allowed marketing channels:
+- Instagram
+- Facebook
+- TikTok
+- Email Marketing
+- LinkedIn
+- YouTube
+- Pinterest
+- SMS/Text Marketing
+- Google Ads
+- Website Content
+- Podcasts
+- In-Person Events
+- Print Marketing
 `;
 
     // Call Gemini API to generate the strategy with enhanced parameters
@@ -242,9 +257,9 @@ Ensure your response is complete, strategic, and provides clear guidance on impl
             `Convert prospects to paying clients through effective messaging`
           ],
           keyMessages: [
-            `Experience a fitness approach tailored to your specific needs`,
-            `Achieve your goals faster with our proven fitness systems`,
-            `Join a supportive community that helps you stay accountable`
+            `Experience personalized fitness guidance tailored to your unique needs and goals`,
+            `Join a supportive community that keeps you accountable and motivated`,
+            `Achieve sustainable results through our proven methodology`
           ],
           enhancedStrategy: createFallbackEnhancedMatrix(userData)
         };
@@ -267,9 +282,9 @@ Ensure your response is complete, strategic, and provides clear guidance on impl
           `Convert prospects to paying clients through effective messaging`
         ],
         keyMessages: [
-          `Experience a fitness approach tailored to your specific needs`,
-          `Achieve your goals faster with our proven fitness systems`,
-          `Join a supportive community that helps you stay accountable`
+          `Experience personalized fitness guidance tailored to your unique needs and goals`,
+          `Join a supportive community that keeps you accountable and motivated`,
+          `Achieve sustainable results through our proven methodology`
         ],
         enhancedStrategy: createFallbackEnhancedMatrix(userData)
       };
@@ -317,7 +332,7 @@ function createFallbackEnhancedMatrix(userData) {
           `Join a supportive community that keeps you accountable and motivated`,
           `Achieve sustainable results through our proven methodology`
         ],
-        channels: ["Instagram", "Facebook", "Email marketing"]
+        channels: ["Instagram", "Email Marketing"]
       },
       {
         segment: `Busy professionals looking for efficient workout options`,
@@ -343,7 +358,7 @@ function createFallbackEnhancedMatrix(userData) {
           `Fit effective workouts into your busy schedule with our flexible options`,
           `Experience the benefits of expert guidance without the time commitment`
         ],
-        channels: ["LinkedIn", "Email marketing", "Google Ads"]
+        channels: ["LinkedIn", "Email Marketing"]
       },
       {
         segment: `Fitness enthusiasts wanting to reach new goals`,
@@ -369,7 +384,7 @@ function createFallbackEnhancedMatrix(userData) {
           `Join a community of dedicated fitness enthusiasts who push each other to excel`,
           `Access expert guidance to safely push your limits and achieve new personal bests`
         ],
-        channels: ["Instagram", "YouTube", "TikTok"]
+        channels: ["Instagram", "YouTube"]
       }
     ],
     implementationTimeline: {
