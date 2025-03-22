@@ -24,9 +24,17 @@ const ProjectSelectorModal = () => {
       projectsCount: projects.length 
     });
     
-    // Force show regardless of project count
-    setShowProjectSelector(true);
+    // Only force show on initial mount, not when showProjectSelector changes
+    // This prevents reopening the modal after it's been explicitly closed
   }, [projects.length, showProjectSelector]);
+
+  // Add a separate effect that only runs once on mount to initialize the modal
+  useEffect(() => {
+    // Force show on initial component mount
+    if (projects.length > 0) {
+      setShowProjectSelector(true);
+    }
+  }, []);
   
   // Close the modal (only if we have at least one project)
   const handleClose = () => {

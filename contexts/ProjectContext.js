@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useRouter } from 'next/router';
@@ -36,12 +36,19 @@ export const ProjectProvider = ({ children }) => {
     }
   }, [user]);
 
-  // Add a check when route changes to ensure project selector appears
+  // Check for path changes to marketing plan page
   useEffect(() => {
-    // Only run this effect when user is logged in and we're on marketing plan page
-    if (user && router.pathname === '/marketing-plan') {
+    // Track previous path to avoid showing selector again on rerender
+    const prevPath = useRef(router.pathname);
+    
+    // Only show when user is logged in and we're navigating TO the marketing plan page
+    if (user && router.pathname === '/marketing-plan' && prevPath.current !== '/marketing-plan') {
+      console.log('Path changed to marketing-plan, showing project selector');
       setShowProjectSelector(true);
     }
+    
+    // Update the previous path
+    prevPath.current = router.pathname;
   }, [router.pathname, user]);
 
   // Fetch projects from the database

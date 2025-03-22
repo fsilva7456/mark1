@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -61,12 +61,17 @@ export default function MarketingPlanDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ type: '', id: '', name: '' });
 
-  // Force project selector to appear when page loads if multiple projects exist
+  // Initialize project selector on first page load
   useEffect(() => {
     console.log('Marketing plan page mounted, user:', user?.id);
-    if (user) {
-      console.log('Setting showProjectSelector to true');
+    
+    // Use a ref to track if this is the initial mount
+    const isInitialMount = useRef(true);
+    
+    if (user && isInitialMount.current) {
+      console.log('Setting showProjectSelector to true on initial mount');
       setShowProjectSelector(true);
+      isInitialMount.current = false;
     }
   }, [user]);
 
