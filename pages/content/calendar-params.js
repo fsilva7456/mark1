@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { createClient } from '@supabase/supabase-js';
 import Navbar from '../../components/Navbar';
-import styles from '../../styles/CalendarParams.module.css';
+import styles from '../../styles/Calendar.module.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProject } from '../../contexts/ProjectContext';
 import { 
