@@ -524,4 +524,104 @@
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+/* Guided Workflow */
+.guidedWorkflow {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid #e9ecef;
+}
+
+.workflowSteps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.workflowStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.stepNumber {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+  color: #6c757d;
+  margin-bottom: 8px;
+  border: 2px solid transparent;
+}
+
+.stepLabel {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.stepConnector {
+  height: 2px;
+  background-color: #e9ecef;
+  width: 60px;
+  margin: 0 10px;
+  position: relative;
+  top: -12px;
+}
+
+.workflowStep.active .stepNumber {
+  background-color: #ffffff;
+  color: #3454D1;
+  border-color: #3454D1;
+}
+
+.workflowStep.active .stepLabel {
+  color: #3454D1;
+  font-weight: 600;
+}
+
+.workflowStep.completed .stepNumber {
+  background-color: #3454D1;
+  color: white;
+  border-color: #3454D1;
+}
+
+.workflowMessage {
+  text-align: center;
+  padding: 20px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.workflowMessage p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #343a40;
+}
+
+.workflowAction {
+  display: inline-block;
+  background-color: #3454D1;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.workflowAction:hover {
+  background-color: #2a43a7;
+  text-decoration: none;
 } 

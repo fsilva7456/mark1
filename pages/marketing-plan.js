@@ -156,6 +156,43 @@ export default function MarketingPlanDashboard() {
       day: 'numeric'
     });
   };
+  
+  // Determine the current workflow step for guided experience
+  const determineWorkflowStep = () => {
+    if (strategies.length === 0) {
+      return {
+        step: 1,
+        message: 'Create a marketing strategy to get started',
+        action: '/strategy/new',
+        actionText: 'Create Strategy'
+      };
+    } else if (contentOutlines.length === 0) {
+      const strategyId = strategies[0].id;
+      return {
+        step: 2,
+        message: 'Now, create a content outline based on your strategy',
+        action: `/content/new?strategy=${strategyId}`,
+        actionText: 'Create Content Outline'
+      };
+    } else if (calendars.length === 0) {
+      const strategyId = strategies[0].id;
+      return {
+        step: 3,
+        message: 'Finally, set up your content calendar',
+        action: `/content/calendar-params?strategyId=${strategyId}`,
+        actionText: 'Create Content Calendar'
+      };
+    } else {
+      return {
+        step: 4,
+        message: 'Your marketing plan is complete! You can now manage your content.',
+        action: `/calendar/${calendars[0].id}`,
+        actionText: 'Manage Content Calendar'
+      };
+    }
+  };
+  
+  const workflowStep = determineWorkflowStep();
 
   // Loading state
   if (authLoading || isLoading) {
@@ -229,38 +266,54 @@ export default function MarketingPlanDashboard() {
       <main className={styles.main}>
         <BreadcrumbNavigation 
           path={[
-            { name: 'Dashboard', href: '/' },
-            { name: 'Marketing Plan', href: '/marketing-plan' }
+            { label: "Marketing Plan", href: "/marketing-plan" }
           ]}
         />
         
         <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1>Marketing Plan Dashboard</h1>
-            <p>Manage your strategies, content outlines, and calendars in one unified view</p>
+          <h1>Marketing Plan Dashboard</h1>
+          <div className={styles.actionButtons}>
+            <ContextualActionButtons 
+              onCreateStrategy={() => router.push('/strategy/new')}
+              onViewDashboard={() => setViewMode('workflow')}
+              onViewList={() => setViewMode('list')}
+              activeView={viewMode}
+            />
           </div>
-          
-          <div className={styles.viewControls}>
-            <button 
-              className={`${styles.viewButton} ${viewMode === 'workflow' ? styles.active : ''}`}
-              onClick={() => setViewMode('workflow')}
-            >
-              Workflow View
-            </button>
-            <button 
-              className={`${styles.viewButton} ${viewMode === 'list' ? styles.active : ''}`}
-              onClick={() => setViewMode('list')}
-            >
-              List View
-            </button>
+        </div>
+        
+        {/* Guided Workflow Component */}
+        <div className={styles.guidedWorkflow}>
+          <div className={styles.workflowSteps}>
+            <div className={`${styles.workflowStep} ${workflowStep.step >= 1 ? styles.active : ''} ${workflowStep.step > 1 ? styles.completed : ''}`}>
+              <div className={styles.stepNumber}>1</div>
+              <div className={styles.stepLabel}>Strategy</div>
+            </div>
+            <div className={styles.stepConnector}></div>
+            <div className={`${styles.workflowStep} ${workflowStep.step >= 2 ? styles.active : ''} ${workflowStep.step > 2 ? styles.completed : ''}`}>
+              <div className={styles.stepNumber}>2</div>
+              <div className={styles.stepLabel}>Content Outline</div>
+            </div>
+            <div className={styles.stepConnector}></div>
+            <div className={`${styles.workflowStep} ${workflowStep.step >= 3 ? styles.active : ''} ${workflowStep.step > 3 ? styles.completed : ''}`}>
+              <div className={styles.stepNumber}>3</div>
+              <div className={styles.stepLabel}>Content Calendar</div>
+            </div>
+          </div>
+          <div className={styles.workflowMessage}>
+            <p>{workflowStep.message}</p>
+            <Link href={workflowStep.action} className={styles.workflowAction}>
+              {workflowStep.actionText}
+            </Link>
           </div>
         </div>
         
         <StatusDashboard 
-          strategies={strategies} 
-          outlines={contentOutlines} 
-          calendars={calendars} 
-          posts={[]}  // We'll need to implement post retrieval in the context
+          strategies={strategies.length}
+          outlines={contentOutlines.length}
+          calendars={calendars.length}
+          postsScheduled={calendars.reduce((acc, cal) => acc + (cal.posts_scheduled || 0), 0)}
+          postsPublished={calendars.reduce((acc, cal) => acc + (cal.posts_published || 0), 0)}
         />
         
         <div className={styles.content}>

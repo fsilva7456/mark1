@@ -81,6 +81,19 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
+  // Switch to a different project
+  const switchProject = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setCurrentProject(project);
+      setShowProjectSelector(false);
+      localStorage.setItem('projectSelected', 'true');
+      
+      // Redirect to marketing plan page for the selected project
+      router.push('/marketing-plan');
+    }
+  };
+
   // Create a new project
   const createProject = async (name, description = '') => {
     try {
@@ -115,6 +128,9 @@ export const ProjectProvider = ({ children }) => {
         setShowProjectSelector(false);
         localStorage.setItem('projectSelected', 'true');
         
+        // Redirect to marketing plan page
+        router.push('/marketing-plan');
+        
         return data[0];
       }
     } catch (error) {
@@ -123,19 +139,6 @@ export const ProjectProvider = ({ children }) => {
       return null;
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Switch to a different project
-  const switchProject = (projectId) => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setCurrentProject(project);
-      setShowProjectSelector(false);
-      localStorage.setItem('projectSelected', 'true');
-      
-      // Redirect to marketing plan page for the selected project
-      router.push('/marketing-plan');
     }
   };
 

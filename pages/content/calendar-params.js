@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Navbar from '../../components/Navbar';
-import styles from '../../styles/Content.module.css';
+import Link from 'next/link';
+import { toast } from 'react-hot-toast';
 import { createClient } from '@supabase/supabase-js';
+import Navbar from '../../components/Navbar';
+import styles from '../../styles/CalendarParams.module.css';
 import { useAuth } from '../../contexts/AuthContext';
-import { toast, Toaster } from 'react-hot-toast';
+import { useProject } from '../../contexts/ProjectContext';
 import { 
   Instagram, 
   Facebook, 
@@ -23,6 +25,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export default function CalendarParams() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { currentProject } = useProject();
   const [loading, setLoading] = useState(true);
   const [contentOutline, setContentOutline] = useState([]);
   const [selectedStrategy, setSelectedStrategy] = useState(null);
@@ -261,7 +264,8 @@ export default function CalendarParams() {
                   progress: 0,
                   posts_scheduled: data.posts.length,
                   posts_published: 0,
-                  status: 'active'
+                  status: 'active',
+                  project_id: currentProject.id
                 }
               ])
               .select();
@@ -398,8 +402,6 @@ export default function CalendarParams() {
       </Head>
       
       <Navbar />
-      <Toaster position="top-center" />
-      
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerContent}>

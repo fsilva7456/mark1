@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { RefreshIcon } from '@heroicons/react/24/outline';
 import { BsCalendarEvent } from 'react-icons/bs';
+import { useProject } from '../../contexts/ProjectContext';
 
 const mockContent = [
   {
@@ -134,13 +135,15 @@ export default function NewContent() {
   const router = useRouter();
   const { strategy } = router.query;
   const { user, loading } = useAuth();
+  const { currentProject } = useProject();
   const [contentOutline, setContentOutline] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [startDate, setStartDate] = useState(new Date());
   const [dailyEngagement, setDailyEngagement] = useState([]);
   const [isDailyEngagementLoading, setIsDailyEngagementLoading] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(1);
-  const [selectedStrategy, setStrategy] = useState(null);
+  const [selectedStrategy, setSelectedStrategy] = useState(null);
+  const [strategies, setStrategies] = useState([]);
   const [error, setError] = useState('');
   // Add states for individual week loading
   const [weekLoadingStates, setWeekLoadingStates] = useState({
@@ -219,7 +222,7 @@ export default function NewContent() {
         console.log("Strategy data loaded successfully:", strategyData.id);
         
         // Set strategy and update UI - Ensure this completes before proceeding
-        setStrategy(strategyData);
+        setSelectedStrategy(strategyData);
         
         // If we have a saved content outline from localStorage, use it
         if (savedContentOutline && savedContentOutline.length > 0) {
@@ -286,7 +289,7 @@ export default function NewContent() {
             .single();
           
           if (!strategyError && strategyData) {
-            setStrategy(strategyData);
+            setSelectedStrategy(strategyData);
             await generateContent(strategyData);
             return;
           }
@@ -333,7 +336,7 @@ export default function NewContent() {
       
       if (data) {
         console.log("Strategy data loaded successfully:", data.id);
-        setStrategy(data);
+        setSelectedStrategy(data);
         // Generate content after strategy is loaded
         generateContent(data);
       } else {
@@ -688,15 +691,20 @@ export default function NewContent() {
         return;
       }
       
+      if (!currentProject) {
+        toast.error("No project selected");
+        return;
+      }
+      
       // Create a new content plan in the database
       const { data: contentPlanData, error: contentPlanError } = await supabase
-        .from('content_plans')
+        .from('content_outlines')
         .insert([
           {
-            name: `Content Plan for ${selectedStrategy.name}`,
             user_id: user.id,
+            project_id: currentProject.id,
             strategy_id: selectedStrategy.id,
-            campaigns: contentOutline.map(week => ({
+            outline: contentOutline.map(week => ({
               week: week.week,
               theme: week.theme,
               posts: week.posts.map(post => ({
@@ -711,7 +719,6 @@ export default function NewContent() {
               })),
               objective: week.objective
             })),
-            daily_engagement: dailyEngagement
           }
         ])
         .select();
@@ -721,14 +728,14 @@ export default function NewContent() {
       }
       
       toast.dismiss();
-      toast.success("Content plan saved successfully!");
+      toast.success("Content outline saved successfully!");
       
-      // Navigate to the content plan view page
-      router.push(`/content-plans/${contentPlanData[0].id}`);
+      // Navigate to the content calendar creation page
+      router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&contentOutline=${encodeURIComponent(JSON.stringify(contentPlanData[0].outline))}`);
     } catch (error) {
       toast.dismiss();
-      console.error("Error saving content plan:", error);
-      toast.error("Failed to save content plan");
+      console.error("Error saving content outline:", error);
+      toast.error("Failed to save content outline");
     }
   };
 
