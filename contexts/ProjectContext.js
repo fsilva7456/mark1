@@ -24,6 +24,9 @@ export const ProjectProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
+  
+  // Ref to track previous path
+  const prevPath = useRef(router.pathname);
 
   // Fetch projects when user changes
   useEffect(() => {
@@ -38,9 +41,6 @@ export const ProjectProvider = ({ children }) => {
 
   // Check for path changes to marketing plan page
   useEffect(() => {
-    // Track previous path to avoid showing selector again on rerender
-    const prevPath = useRef(router.pathname);
-    
     // Only show when user is logged in and we're navigating TO the marketing plan page
     if (user && router.pathname === '/marketing-plan' && prevPath.current !== '/marketing-plan') {
       console.log('Path changed to marketing-plan, showing project selector');

@@ -60,13 +60,13 @@ export default function MarketingPlanDashboard() {
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ type: '', id: '', name: '' });
+  
+  // Create ref at the component level, not inside a hook
+  const isInitialMount = useRef(true);
 
   // Initialize project selector on first page load
   useEffect(() => {
     console.log('Marketing plan page mounted, user:', user?.id);
-    
-    // Use a ref to track if this is the initial mount
-    const isInitialMount = useRef(true);
     
     if (user && isInitialMount.current) {
       console.log('Setting showProjectSelector to true on initial mount');
