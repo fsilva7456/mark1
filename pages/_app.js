@@ -1,9 +1,11 @@
 import '../styles/globals.css'
 import { AuthProvider } from '../contexts/AuthContext'
+import { ProjectProvider } from '../contexts/ProjectContext'
 import { MarketingPlanProvider } from '../contexts/MarketingPlanContext'
 import { useState } from 'react'
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
+import ProjectSelectorModal from '../components/ProjectSelectorModal'
 
 function MyApp({ Component, pageProps }) {
   const [error, setError] = useState(null)
@@ -33,10 +35,13 @@ function MyApp({ Component, pageProps }) {
   return (
     <ErrorBoundary setError={setError}>
       <AuthProvider>
-        <MarketingPlanProvider>
-          <Component {...pageProps} />
-          <Toaster position="top-right" />
-        </MarketingPlanProvider>
+        <ProjectProvider>
+          <MarketingPlanProvider>
+            <Component {...pageProps} />
+            <ProjectSelectorModal />
+            <Toaster position="top-right" />
+          </MarketingPlanProvider>
+        </ProjectProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

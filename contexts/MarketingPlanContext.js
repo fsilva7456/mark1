@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { useProject } from './ProjectContext';
 import logger from '../lib/logger';
 
 const log = logger.createLogger('MarketingPlanContext');
@@ -19,6 +20,7 @@ export const useMarketingPlan = () => {
 
 export const MarketingPlanProvider = ({ children }) => {
   const { user } = useAuth();
+  const { currentProject } = useProject();
   
   // State for strategies, content outlines, and calendars
   const [strategies, setStrategies] = useState([]);
@@ -27,64 +29,71 @@ export const MarketingPlanProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Fetch data when user changes
+  // Fetch data when user or current project changes
   useEffect(() => {
-    if (user) {
+    if (user && currentProject) {
       fetchAllData();
     } else {
-      // Reset state when user logs out
+      // Reset state when user logs out or no project is selected
       setStrategies([]);
       setContentOutlines([]);
       setCalendars([]);
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, currentProject]);
   
   // Fetch all marketing plan data (strategies, outlines, calendars)
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
-      log.info('Fetching all marketing plan data for user', { userId: user.id });
+      log.info('Fetching all marketing plan data for user and project', { 
+        userId: user.id,
+        projectId: currentProject?.id
+      });
       
       // Fetch strategies
       const { data: strategiesData, error: strategiesError } = await supabase
         .from('strategies')
         .select('*')
         .eq('user_id', user.id)
+        .eq('project_id', currentProject.id)
         .order('created_at', { ascending: false });
       
-      if (strategiesError) throw strategiesError;
+      if (strategiesError) {
+        throw strategiesError;
+      }
       
       // Fetch content outlines
       const { data: outlinesData, error: outlinesError } = await supabase
         .from('content_outlines')
         .select('*')
         .eq('user_id', user.id)
+        .eq('project_id', currentProject.id)
         .order('created_at', { ascending: false });
       
-      if (outlinesError) throw outlinesError;
+      if (outlinesError) {
+        throw outlinesError;
+      }
       
       // Fetch calendars
       const { data: calendarsData, error: calendarsError } = await supabase
         .from('calendars')
         .select('*')
         .eq('user_id', user.id)
+        .eq('project_id', currentProject.id)
         .order('created_at', { ascending: false });
       
-      if (calendarsError) throw calendarsError;
+      if (calendarsError) {
+        throw calendarsError;
+      }
       
-      log.info('Fetched marketing plan data', { 
-        strategiesCount: strategiesData?.length || 0,
-        outlinesCount: outlinesData?.length || 0,
-        calendarsCount: calendarsData?.length || 0
-      });
-      
+      // Update state with fetched data
       setStrategies(strategiesData || []);
       setContentOutlines(outlinesData || []);
       setCalendars(calendarsData || []);
       setError(null);
     } catch (error) {
-      log.error('Error fetching marketing plan data', error);
+      log.error('Error fetching marketing plan data', { error });
       setError('Failed to load marketing plan data');
     } finally {
       setIsLoading(false);

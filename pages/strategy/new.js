@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 import styles from '../../styles/Strategy.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useProject } from '../../contexts/ProjectContext';
 import { toast } from 'react-hot-toast';
 
 export default function NewStrategy() {
@@ -41,6 +42,15 @@ export default function NewStrategy() {
   const [strategyId, setStrategyId] = useState(null);
   
   const { user } = useAuth();
+  const { currentProject, projects, setShowProjectSelector } = useProject();
+  
+  // Use effect to check if a project is selected
+  useEffect(() => {
+    if (user && (!currentProject || !projects || projects.length === 0)) {
+      // Show project selector if no project is selected
+      setShowProjectSelector(true);
+    }
+  }, [user, currentProject, projects, setShowProjectSelector]);
   
   // Replace the AI suggestions code with this modified version that works with the chat flow
   const [aiSuggestions, setAiSuggestions] = useState([]);
@@ -593,47 +603,54 @@ Please share:
   };
   
   const handleSaveStrategy = async () => {
+    if (!user) {
+      toast.error('You must be logged in to save a strategy');
+      return;
+    }
+    
+    if (!currentProject) {
+      toast.error('You must select a project to save your strategy');
+      setShowProjectSelector(true);
+      return;
+    }
+    
+    setIsProcessing(true);
+    
     try {
-      setIsProcessing(true);
+      // Format data for Supabase
+      const strategyData = {
+        user_id: user.id,
+        project_id: currentProject.id,
+        name: userData.name || 'Untitled Strategy',
+        business_description: userData.answers[0] || '',
+        target_audience: matrix.targetAudience,
+        objectives: matrix.objectives,
+        key_messages: matrix.keyMessages,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
       
-      // Extract the user name and business description from userData
-      const name = userData.name || 'User';
-      const businessDescription = userData.answers && userData.answers.length > 1 
-        ? userData.answers[1] 
-        : "Fitness business";
-      
-      // Create a UUID explicitly for the strategy if needed
-      const strategyId = crypto.randomUUID();
-      
+      // Save to Supabase
       const { data, error } = await supabase
         .from('strategies')
-        .insert([
-          {
-            id: strategyId,
-            name: `${name}'s Marketing Strategy`,
-            user_id: user.id,
-            business_description: businessDescription,
-            target_audience: matrix.targetAudience,
-            objectives: matrix.objectives,
-            key_messages: matrix.keyMessages,
-            created_at: new Date().toISOString()
-          }
-        ])
+        .insert([strategyData])
         .select();
       
       if (error) throw error;
       
-      // Update strategy ID state with the UUID
-      setStrategyId(strategyId);
-      
+      // Success!
       toast.success('Strategy saved successfully!');
       
-      // Return the strategyId for promise chaining
-      return strategyId;
+      // Store the strategy ID
+      if (data && data.length > 0) {
+        setStrategyId(data[0].id);
+        
+        // Redirect to the content generation page
+        router.push(`/content/new?strategy=${data[0].id}`);
+      }
     } catch (error) {
       console.error('Error saving strategy:', error);
-      toast.error('Failed to save your strategy. Please try again.');
-      return null;
+      toast.error('Failed to save strategy');
     } finally {
       setIsProcessing(false);
     }

@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "ci": "npm run test",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "db:migrate": "node db/run-migrations.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.1.3",
