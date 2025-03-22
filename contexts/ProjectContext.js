@@ -65,8 +65,8 @@ export const ProjectProvider = ({ children }) => {
           setCurrentProject(data[0]);
         }
         
-        // Show project selector if more than one project exists
-        if (data.length > 1 && !localStorage.getItem('projectSelected')) {
+        // Show project selector if more than one project exists or if we're on a new login
+        if (data.length > 1) {
           setShowProjectSelector(true);
         }
       } else if (data && data.length === 0) {
@@ -87,7 +87,6 @@ export const ProjectProvider = ({ children }) => {
     if (project) {
       setCurrentProject(project);
       setShowProjectSelector(false);
-      localStorage.setItem('projectSelected', 'true');
       
       // Redirect to marketing plan page for the selected project
       router.push('/marketing-plan');
@@ -126,7 +125,6 @@ export const ProjectProvider = ({ children }) => {
         
         // Close selector and mark as selected
         setShowProjectSelector(false);
-        localStorage.setItem('projectSelected', 'true');
         
         // Redirect to marketing plan page
         router.push('/marketing-plan');
