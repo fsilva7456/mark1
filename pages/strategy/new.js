@@ -15,6 +15,7 @@ export default function NewStrategy() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [userData, setUserData] = useState({
     name: '',
+    location: '',
     answers: []
   });
   const [showMatrix, setShowMatrix] = useState(false);
@@ -136,7 +137,12 @@ export default function NewStrategy() {
       // Second message - after user provides name
       if (messages.length === 1) {
         const name = userInput.trim();
-        return `Great to meet you, ${name}! I'd like to understand more about your fitness business. What type of fitness services do you offer? Please include:
+        return `Great to meet you, ${name}! Where are you located? This will help me tailor recommendations to your local market (e.g., Toronto, Calgary, or another city).`;
+      }
+      
+      // Third message - after user provides location
+      if (messages.length === 3) {
+        return `Thanks for sharing your location. Now I'd like to understand more about your fitness business. What type of fitness services do you offer? Please include:
         
 • Your main service type (personal training, group classes, online coaching, etc.)
 • Your specialization or focus area (strength, yoga, HIIT, etc.)
@@ -144,8 +150,8 @@ export default function NewStrategy() {
 • Where you primarily operate (in-person, online, hybrid)`;
       }
       
-      // Third message - after user describes business
-      if (messages.length === 3) {
+      // Fourth message - after user describes business
+      if (messages.length === 5) {
         return `Thanks for sharing that information about your fitness business. Now I'd like to understand your target audience better. Who are your ideal clients? Please include:
         
 • Age range (e.g., 25-45)
@@ -155,8 +161,8 @@ export default function NewStrategy() {
 • Any demographic details relevant to your marketing`;
       }
       
-      // Fourth message - after user describes target audience
-      if (messages.length === 5) {
+      // Fifth message - after user describes target audience
+      if (messages.length === 7) {
         return `Great insight about your audience! Now let's focus on your marketing objectives. What specific actions do you want your target audience to take? 
         
 Please list 2-3 specific behaviors you want to encourage, such as:
@@ -167,8 +173,8 @@ Please list 2-3 specific behaviors you want to encourage, such as:
 • "Refer friends and family"`;
       }
       
-      // Fifth message - after user describes objectives
-      if (messages.length === 7) {
+      // Sixth message - after user describes objectives
+      if (messages.length === 9) {
         return `Thanks for sharing your objectives. Now, what makes your fitness approach unique compared to others in your area? 
         
 Please describe your competitive advantage in terms of:
@@ -178,8 +184,8 @@ Please describe your competitive advantage in terms of:
 • Values or philosophy that guide your business`;
       }
       
-      // Sixth message - after user describes unique approach
-      if (messages.length === 9) {
+      // Seventh message - after user describes unique approach
+      if (messages.length === 11) {
         return `That's really helpful! Now, let's talk about content creation. What types of content do you feel most comfortable creating? 
         
 Please indicate which of these you prefer creating and have resources for:
@@ -190,8 +196,8 @@ Please indicate which of these you prefer creating and have resources for:
 • Audio content (podcasts, guided workouts)`;
       }
       
-      // Seventh message - after user describes content preferences
-      if (messages.length === 11) {
+      // Eighth message - after user describes content preferences
+      if (messages.length === 13) {
         return `Based on what you've shared, I have one more important question. Who are your top 2-3 competitors, and what do you notice about their marketing approach? 
         
 Please share:
@@ -201,13 +207,13 @@ Please share:
 • How clients might compare you to them`;
       }
       
-      // Eighth message - after user describes competitors  
-      if (messages.length === 13) {
+      // Ninth message - after user describes competitors  
+      if (messages.length === 15) {
         return `Perfect! I now have enough information to create a comprehensive marketing strategy matrix for your fitness business. This will serve as the foundation for your marketing efforts. [READY_FOR_MATRIX]`;
       }
       
       // Fallback for any other message count
-      return `Thanks for that information! I'm building your marketing strategy. What's the biggest challenge you currently face in attracting or retaining clients for your fitness business?`;
+      return `Thanks for that information! I'm building your marketing strategy. What's the biggest challenge you currently face in attracting or retaining clients for your fitness business in your area?`;
       
     } catch (error) {
       console.error('Error in enhanced response flow:', error);
@@ -230,16 +236,17 @@ Please share:
       const userAnswers = userData.answers;
       
       // Extract information from answers
-      const name = userAnswers[0] || 'User';
-      const business = userAnswers[1] || 'fitness business';
-      const audience = userAnswers[2] || 'fitness enthusiasts';
-      const goals = userAnswers[3] || 'attract new clients';
-      const unique = userAnswers[4] || 'personalized approach';
-      const content = userAnswers[5] || 'various content types';
+      const name = userData.name || 'User';
+      const location = userData.location || 'Toronto'; // Default to Toronto if no location provided
+      const business = userAnswers[2] || 'fitness business'; // Index shifted due to location question
+      const audience = userAnswers[3] || 'fitness enthusiasts';
+      const goals = userAnswers[4] || 'attract new clients';
+      const unique = userAnswers[5] || 'personalized approach';
+      const content = userAnswers[6] || 'various content types';
       
-      // Fetch gym data to inform the strategy
-      console.log("DEBUG: Starting to fetch gym data for strategy generation...");
-      const gymData = await fetchCompetitiveInsights('Downtown Toronto');
+      // Fetch gym data to inform the strategy - use the user's location
+      console.log("DEBUG: Starting to fetch gym data for strategy generation in location:", location);
+      const gymData = await fetchCompetitiveInsights(location);
       console.log("DEBUG: Gym data fetch result:", gymData ? `${gymData.length} records` : "no data");
       
       // Variables to track errors
@@ -251,7 +258,7 @@ Please share:
         console.log("DEBUG: Gym data available, calling generate enhanced strategy");
         // Send all data to Gemini for analysis
         const result = await generateEnhancedStrategy(
-          name, business, audience, goals, unique, content, gymData
+          name, location, business, audience, goals, unique, content, gymData
         );
         
         console.log("DEBUG: Enhanced strategy result:", result);
@@ -304,7 +311,7 @@ Please share:
   };
   
   // Update generateEnhancedStrategy with better error handling
-  const generateEnhancedStrategy = async (name, business, audience, goals, unique, content, gymData) => {
+  const generateEnhancedStrategy = async (name, location, business, audience, goals, unique, content, gymData) => {
     try {
       console.log("DEBUG: Generating enhanced strategy with gym data...");
       
@@ -336,6 +343,7 @@ Please share:
             body: JSON.stringify({
               userData: {
                 name,
+                location,
                 business,
                 audience,
                 goals,
@@ -447,11 +455,31 @@ Please share:
     scrollToBottom();
     
     // Store user input in userData
-    setUserData(prev => ({
-      ...prev,
-      name: messages.length === 1 ? currentInput : prev.name,
-      answers: [...prev.answers, currentInput]
-    }));
+    setUserData(prev => {
+      // First answer is name
+      if (messages.length === 1) {
+        return {
+          ...prev,
+          name: currentInput,
+          answers: [...prev.answers, currentInput]
+        };
+      }
+      // Second answer is location
+      else if (messages.length === 3) {
+        return {
+          ...prev,
+          location: currentInput,
+          answers: [...prev.answers, currentInput]
+        };
+      }
+      // All other answers
+      else {
+        return {
+          ...prev,
+          answers: [...prev.answers, currentInput]
+        };
+      }
+    });
     
     // Process the user input with the hardcoded flow
     setIsProcessing(true);
