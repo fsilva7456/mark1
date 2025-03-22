@@ -19,7 +19,7 @@ export default function Home() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      router.push('/dashboard');
+      router.push('/marketing-plan');
     }
   }, [user, loading, router]);
 
@@ -36,7 +36,7 @@ export default function Home() {
       
       if (error) throw error;
       
-      router.push('/dashboard');
+      router.push('/marketing-plan');
     } catch (error) {
       setError(error.message || 'An error occurred during login.');
     } finally {

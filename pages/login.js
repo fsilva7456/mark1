@@ -27,7 +27,7 @@ export default function Login() {
       if (email && password) {
         // Save mock user to localStorage
         localStorage.setItem('user', JSON.stringify({ email }));
-        router.push('/'); // Redirect to home page after login
+        router.push('/marketing-plan'); // Redirect to marketing plan page after login
       } else {
         setError('Please enter both email and password');
       }
@@ -53,7 +53,7 @@ export default function Login() {
         email: 'user@example.com',
         provider: 'google'
       }));
-      router.push('/'); // Redirect to home page after login
+      router.push('/marketing-plan'); // Redirect to marketing plan page after login
       setIsLoading(false);
     }, 1000);
   };

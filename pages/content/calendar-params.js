@@ -44,7 +44,7 @@ export default function CalendarParams() {
     // Check for login
     if (!authLoading && !user) {
       toast.error('Please login to continue');
-      router.push('/login');
+      router.push('/marketing-plan');
       return;
     }
     

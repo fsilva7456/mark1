@@ -165,7 +165,7 @@ export default function NewContent() {
     // Check for user authentication
     if (!loading && !user) {
       toast.error('Please login to continue');
-      router.push('/login');
+      router.push('/marketing-plan');
       return;
     }
     

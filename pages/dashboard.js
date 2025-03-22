@@ -18,6 +18,11 @@ export default function Dashboard() {
   const [isLoadingStrategies, setIsLoadingStrategies] = useState(true);
   const [error, setError] = useState(null);
 
+  // Redirect to marketing plan page
+  useEffect(() => {
+    router.push('/marketing-plan');
+  }, []);
+
   useEffect(() => {
     // Redirect if not logged in
     if (!loading && !user) {

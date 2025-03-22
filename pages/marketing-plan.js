@@ -60,16 +60,26 @@ export default function MarketingPlanDashboard() {
 
   // Early return for unauthenticated users - this will run immediately on render
   if (!authLoading && !user) {
-    router.push('/login');
-    return null; // Return early to prevent rendering the rest of the component
+    // Instead of redirecting, show loading until auth state is resolved
+    return (
+      <div className={styles.container}>
+        <Head>
+          <title>Marketing Plan Dashboard | Mark1</title>
+          <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
+        </Head>
+        <main className={styles.main}>
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+            <p>Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   // Check for user login (still keep this for effect-based redirect)
   useEffect(() => {
-    if (!authLoading && !user) {
-      log.info('Redirecting unauthenticated user to login page');
-      router.push('/login');
-    }
+    // No redirect needed - we'll handle auth in the project context
   }, [user, authLoading, router]);
   
   // Log page view
