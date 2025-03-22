@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from '../styles/ProjectSelectorModal.module.css';
 import { useProject } from '../contexts/ProjectContext';
 
@@ -16,6 +16,19 @@ const ProjectSelectorModal = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [formError, setFormError] = useState('');
+  
+  // Debug the modal state on mount and when relevant states change
+  useEffect(() => {
+    console.log('ProjectSelectorModal state:', { 
+      showProjectSelector, 
+      projectsCount: projects.length 
+    });
+    
+    // Force show if there are multiple projects
+    if (projects.length > 1) {
+      setShowProjectSelector(true);
+    }
+  }, [projects.length, showProjectSelector]);
   
   // Close the modal (only if we have at least one project)
   const handleClose = () => {

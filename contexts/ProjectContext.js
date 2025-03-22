@@ -36,6 +36,14 @@ export const ProjectProvider = ({ children }) => {
     }
   }, [user]);
 
+  // Add a check when route changes to ensure project selector appears
+  useEffect(() => {
+    // Only run this effect when user is logged in and we're on marketing plan page
+    if (user && router.pathname === '/marketing-plan' && projects.length > 1) {
+      setShowProjectSelector(true);
+    }
+  }, [router.pathname, user, projects.length]);
+
   // Fetch projects from the database
   const fetchProjects = async () => {
     try {

@@ -14,6 +14,7 @@ import { useMarketingPlan, MarketingPlanContext } from '../contexts/MarketingPla
 import logger from '../lib/logger';
 import { toast } from 'react-hot-toast';
 import { useContext } from 'react';
+import { useProject } from '../contexts/ProjectContext';
 
 const log = logger.createLogger('MarketingPlanPage');
 
@@ -53,10 +54,19 @@ export default function MarketingPlanDashboard() {
     logAction
   } = useMarketingPlan();
   
+  const { setShowProjectSelector, projects } = useProject();
+  
   const [viewMode, setViewMode] = useState('workflow'); // 'workflow' or 'list'
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ type: '', id: '', name: '' });
+
+  // Force project selector to appear when page loads if multiple projects exist
+  useEffect(() => {
+    if (user && projects && projects.length > 1) {
+      setShowProjectSelector(true);
+    }
+  }, [user, projects]);
 
   // Early return for unauthenticated users - this will run immediately on render
   if (!authLoading && !user) {
