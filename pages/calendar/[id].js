@@ -11,6 +11,20 @@ import { useAuth } from '../../contexts/AuthContext';
 import styles from '../../styles/Calendar.module.css';
 import { toast } from 'react-hot-toast';
 
+// Add these static generation methods to improve build-time handling
+export async function getStaticPaths() {
+  return {
+    paths: [],
+    fallback: 'blocking'
+  };
+}
+
+export async function getStaticProps() {
+  return {
+    props: {}
+  };
+}
+
 export default function CalendarManagement() {
   const router = useRouter();
   const { id } = router.query;
@@ -27,6 +41,9 @@ export default function CalendarManagement() {
   const [sortDirection, setSortDirection] = useState('asc');
   
   useEffect(() => {
+    // Skip during server-side rendering
+    if (typeof window === 'undefined') return;
+    
     // Redirect if not logged in
     if (!loading && !user) {
       router.push('/');
@@ -53,7 +70,9 @@ export default function CalendarManagement() {
       
       if (calendarError) {
         console.error('Error fetching calendar:', calendarError);
-        throw calendarError;
+        setError('Failed to load calendar data. Please try again.');
+        setIsLoading(false);
+        return;
       }
       
       console.log('Calendar data retrieved:', calendarData);
@@ -67,7 +86,9 @@ export default function CalendarManagement() {
       
       if (postsError) {
         console.error('Error fetching calendar posts:', postsError);
-        throw postsError;
+        setError('Failed to load calendar posts. Please try again.');
+        setIsLoading(false);
+        return;
       }
       
       console.log('Posts data retrieved:', postsData ? postsData.length : 0, 'posts');
@@ -164,7 +185,7 @@ export default function CalendarManagement() {
       setCalendar(calendarData);
     } catch (err) {
       console.error('Error fetching calendar:', err);
-      setError('Failed to load calendar details.');
+      setError('Failed to load calendar details. Please try again.');
     } finally {
       setIsLoading(false);
     }
