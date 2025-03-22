@@ -39,10 +39,10 @@ export const ProjectProvider = ({ children }) => {
   // Add a check when route changes to ensure project selector appears
   useEffect(() => {
     // Only run this effect when user is logged in and we're on marketing plan page
-    if (user && router.pathname === '/marketing-plan' && projects.length > 1) {
+    if (user && router.pathname === '/marketing-plan') {
       setShowProjectSelector(true);
     }
-  }, [router.pathname, user, projects.length]);
+  }, [router.pathname, user]);
 
   // Fetch projects from the database
   const fetchProjects = async () => {
@@ -73,10 +73,8 @@ export const ProjectProvider = ({ children }) => {
           setCurrentProject(data[0]);
         }
         
-        // Show project selector if more than one project exists or if we're on a new login
-        if (data.length > 1) {
-          setShowProjectSelector(true);
-        }
+        // Always show project selector when projects exist
+        setShowProjectSelector(true);
       } else if (data && data.length === 0) {
         // Auto-open project selector if no projects exist
         setShowProjectSelector(true);

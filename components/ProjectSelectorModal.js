@@ -24,10 +24,8 @@ const ProjectSelectorModal = () => {
       projectsCount: projects.length 
     });
     
-    // Force show if there are multiple projects
-    if (projects.length > 1) {
-      setShowProjectSelector(true);
-    }
+    // Force show regardless of project count
+    setShowProjectSelector(true);
   }, [projects.length, showProjectSelector]);
   
   // Close the modal (only if we have at least one project)

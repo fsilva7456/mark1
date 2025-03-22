@@ -63,10 +63,10 @@ export default function MarketingPlanDashboard() {
 
   // Force project selector to appear when page loads if multiple projects exist
   useEffect(() => {
-    if (user && projects && projects.length > 1) {
+    if (user) {
       setShowProjectSelector(true);
     }
-  }, [user, projects]);
+  }, [user]);
 
   // Early return for unauthenticated users - this will run immediately on render
   if (!authLoading && !user) {
