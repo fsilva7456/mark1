@@ -43,19 +43,22 @@ export default async function handler(req, res) {
     
     const prompt = `
       ${promptContext}
-      You are an expert marketing consultant helping a ${businessContext} create a marketing strategy.
+      You are an expert marketing consultant helping create a targeted marketing strategy for: "${businessContext}".
       
-      Please provide 3 different high-quality, CONCISE suggestions for this question:
+      The user needs to answer this specific question:
       "${question}"
       
-      The suggestions should be:
-      1. Specific to a ${businessContext}
-      2. Varied to present different options
-      3. VERY BRIEF (25-40 words maximum per suggestion)
-      4. Professional and ready to use
+      Generate 3 different high-quality BRIEF response options that the user could select:
       
-      Format your response as a JSON array with exactly 3 suggestions:
-      ["short suggestion 1", "short suggestion 2", "short suggestion 3"]
+      The suggestions MUST:
+      1. Directly answer the specific question asked
+      2. Be tailored to the exact business context: "${businessContext}"
+      3. Be VERY CONCISE (15-25 words maximum per suggestion)
+      4. Be specific, concrete and actionable
+      5. Use different approaches/angles for variety
+      
+      Format your response as a clean JSON array with exactly 3 suggestions:
+      ["suggestion 1", "suggestion 2", "suggestion 3"]
     `;
     
     console.log('🔍 [DEBUG] Prompt being sent to Gemini API:', prompt);
