@@ -89,13 +89,18 @@ export const ProjectProvider = ({ children }) => {
 
   // Switch to a different project
   const switchProject = (projectId) => {
+    console.log('switchProject called with ID:', projectId);
     const project = projects.find(p => p.id === projectId);
     if (project) {
+      console.log('Setting current project:', project.name);
       setCurrentProject(project);
       setShowProjectSelector(false);
       
       // Redirect to marketing plan page for the selected project
+      console.log('Redirecting to marketing plan...');
       router.push('/marketing-plan');
+    } else {
+      console.error('Project not found with ID:', projectId);
     }
   };
 

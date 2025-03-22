@@ -63,7 +63,9 @@ export default function MarketingPlanDashboard() {
 
   // Force project selector to appear when page loads if multiple projects exist
   useEffect(() => {
+    console.log('Marketing plan page mounted, user:', user?.id);
     if (user) {
+      console.log('Setting showProjectSelector to true');
       setShowProjectSelector(true);
     }
   }, [user]);

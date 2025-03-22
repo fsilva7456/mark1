@@ -98,7 +98,10 @@ const ProjectSelectorModal = () => {
                 <div 
                   key={project.id} 
                   className={styles.projectCard}
-                  onClick={() => switchProject(project.id)}
+                  onClick={() => {
+                    console.log('Project card clicked:', project.name, project.id);
+                    switchProject(project.id);
+                  }}
                 >
                   <h3>{project.name}</h3>
                   {project.description && (
