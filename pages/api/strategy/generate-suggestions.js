@@ -56,6 +56,8 @@ export default async function handler(req, res) {
       3. Be VERY CONCISE (15-25 words maximum per suggestion)
       4. Be specific, concrete and actionable
       5. Use different approaches/angles for variety
+      6. NEVER include greetings, introductions, or phrases like "Hi I'm Francis" - jump straight to the answer
+      7. Start each suggestion with an action word or key information
       
       Format your response as a clean JSON array with exactly 3 suggestions:
       ["suggestion 1", "suggestion 2", "suggestion 3"]
