@@ -6,17 +6,20 @@ export default async function handler(req, res) {
   }
   
   try {
+    console.log('🔍 [DEBUG] Suggestion API - Request received:', JSON.stringify(req.body));
     const { question, businessContext, previousAnswers, questionIndex } = req.body;
     
     // Skip suggestion generation for name question
     if (questionIndex === 0) {
+      console.log('🔍 [DEBUG] Skipping suggestions for name question (index 0)');
       return res.status(200).json({ suggestions: [] });
     }
     
     // Check for API key
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log('🔍 [DEBUG] API key present:', !!apiKey, 'length:', apiKey ? apiKey.length : 0);
     if (!apiKey) {
-      console.error('Missing Gemini API key');
+      console.error('❌ [ERROR] Missing Gemini API key');
       return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
     
@@ -55,74 +58,97 @@ export default async function handler(req, res) {
       ["short suggestion 1", "short suggestion 2", "short suggestion 3"]
     `;
     
-    console.log("Generating suggestions with Gemini API...");
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.8,
-        maxOutputTokens: 1024,
-      },
-    });
+    console.log('🔍 [DEBUG] Prompt being sent to Gemini API:', prompt);
+    console.log('🔍 [DEBUG] Generating suggestions with Gemini API...');
     
-    const response = result.response;
-    const text = response.text();
-    
-    // Extract JSON array from response
-    let suggestions;
     try {
-      // Look for JSON array in the response
-      const jsonMatch = text.match(/\[\s*".*"\s*,\s*".*"\s*,\s*".*"\s*\]/s) || 
-                        text.match(/```json\n([\s\S]*?)\n```/) ||
-                        text.match(/```\n([\s\S]*?)\n```/);
-                        
-      if (jsonMatch) {
-        const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '');
-        suggestions = JSON.parse(jsonString);
-      } else {
-        // If no JSON format detected, try to extract from the whole response
-        suggestions = JSON.parse(text);
-      }
-      
-      // Ensure we have exactly 3 suggestions
-      if (!Array.isArray(suggestions) || suggestions.length < 3) {
-        throw new Error('Invalid suggestions format');
-      }
-      
-      // Limit to first 3 suggestions
-      suggestions = suggestions.slice(0, 3);
-      
-      return res.status(200).json({ suggestions });
-    } catch (parseError) {
-      console.error('Failed to parse suggestions:', parseError);
-      
-      // Fallback: extract text-based suggestions from the response
-      const lines = text.split('\n').filter(line => 
-        line.trim().length > 0 && 
-        !line.includes('```') &&
-        !line.includes('[') &&
-        !line.includes(']')
-      );
-      
-      const extractedSuggestions = lines.slice(0, 3).map(line => {
-        return line.replace(/^\d+\.\s*/, '')  // Remove numbering
-                  .replace(/^["']|["']$/g, ''); // Remove quotes
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.8,
+          maxOutputTokens: 1024,
+        },
       });
       
-      if (extractedSuggestions.length >= 3) {
-        return res.status(200).json({ suggestions: extractedSuggestions });
-      }
+      console.log('✅ [DEBUG] Gemini API call successful');
+      const response = result.response;
+      const text = response.text();
+      console.log('🔍 [DEBUG] Raw API response text:', text);
       
-      // Last resort fallback
-      return res.status(200).json({ 
-        suggestions: [
-          "Option 1: Consider your unique strengths and positioning in the market.",
-          "Option 2: Think about what specific problems you solve for your clients.",
-          "Option 3: Focus on what differentiates you from competitors."
-        ] 
-      });
+      // Extract JSON array from response
+      let suggestions;
+      try {
+        // Look for JSON array in the response
+        console.log('🔍 [DEBUG] Attempting to parse JSON from response');
+        const jsonMatch = text.match(/\[\s*".*"\s*,\s*".*"\s*,\s*".*"\s*\]/s) || 
+                          text.match(/```json\n([\s\S]*?)\n```/) ||
+                          text.match(/```\n([\s\S]*?)\n```/);
+        
+        if (jsonMatch) {
+          console.log('✅ [DEBUG] JSON pattern matched:', jsonMatch[0]);
+          const jsonString = jsonMatch[0].replace(/```json\n|```\n|```/g, '');
+          console.log('🔍 [DEBUG] Cleaned JSON string:', jsonString);
+          suggestions = JSON.parse(jsonString);
+        } else {
+          console.log('ℹ️ [DEBUG] No JSON pattern matched, trying to parse entire response');
+          suggestions = JSON.parse(text);
+        }
+        
+        console.log('✅ [DEBUG] Parsed suggestions:', JSON.stringify(suggestions));
+        
+        // Ensure we have exactly 3 suggestions
+        if (!Array.isArray(suggestions) || suggestions.length < 3) {
+          console.log('⚠️ [DEBUG] Invalid suggestions format or count:', JSON.stringify(suggestions));
+          throw new Error('Invalid suggestions format');
+        }
+        
+        // Limit to first 3 suggestions
+        suggestions = suggestions.slice(0, 3);
+        
+        console.log('✅ [DEBUG] Returning final suggestions:', JSON.stringify(suggestions));
+        return res.status(200).json({ suggestions });
+      } catch (parseError) {
+        console.error('❌ [ERROR] Failed to parse suggestions:', parseError);
+        console.log('⚠️ [DEBUG] Attempting text-based extraction fallback');
+        
+        // Fallback: extract text-based suggestions from the response
+        const lines = text.split('\n').filter(line => 
+          line.trim().length > 0 && 
+          !line.includes('```') &&
+          !line.includes('[') &&
+          !line.includes(']')
+        );
+        
+        console.log('🔍 [DEBUG] Filtered text lines:', lines);
+        
+        const extractedSuggestions = lines.slice(0, 3).map(line => {
+          return line.replace(/^\d+\.\s*/, '')  // Remove numbering
+                    .replace(/^["']|["']$/g, ''); // Remove quotes
+        });
+        
+        console.log('🔍 [DEBUG] Extracted suggestions:', extractedSuggestions);
+        
+        if (extractedSuggestions.length >= 3) {
+          console.log('✅ [DEBUG] Using text-extracted suggestions');
+          return res.status(200).json({ suggestions: extractedSuggestions });
+        }
+        
+        // Last resort fallback
+        console.log('⚠️ [DEBUG] Using last resort fallback suggestions');
+        return res.status(200).json({ 
+          suggestions: [
+            "Option 1: Consider your unique strengths and positioning in the market.",
+            "Option 2: Think about what specific problems you solve for your clients.",
+            "Option 3: Focus on what differentiates you from competitors."
+          ] 
+        });
+      }
+    } catch (apiError) {
+      console.error('❌ [ERROR] Gemini API call failed:', apiError);
+      throw apiError; // Re-throw to be caught by outer try-catch
     }
   } catch (error) {
-    console.error('Error generating suggestions:', error);
+    console.error('❌ [ERROR] Error generating suggestions:', error);
     return res.status(500).json({ 
       error: 'Failed to generate suggestions', 
       message: error.message

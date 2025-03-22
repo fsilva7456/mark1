@@ -726,6 +726,8 @@ Please share:
 
   // Modify the useEffect hook for generating suggestions
   useEffect(() => {
+    console.log("📱 [CLIENT] Messages changed, current count:", messages.length);
+    
     // Update current question index based on message count and generate suggestions immediately
     if (messages.length > 0 && messages.length % 2 === 1) {
       // AI messages are at odd indices (1, 3, 5, etc.)
@@ -734,17 +736,22 @@ Please share:
       
       // Calculate which question number this is (1-indexed)
       const questionNumber = Math.ceil(currentAIMessageIndex / 2);
+      console.log(`📱 [CLIENT] AI message detected at index ${currentAIMessageIndex}, question #${questionNumber}`);
       setCurrentQuestionIndex(questionNumber);
       
-      console.log(`Generating suggestions for question #${questionNumber}:`, currentQuestion);
+      console.log(`📱 [CLIENT] Preparing to generate suggestions for question #${questionNumber}:`, currentQuestion);
       
       // Clear previous suggestions first to avoid showing old suggestions
       setAiSuggestions([]);
       
       // Add a small delay to ensure the UI updates before generating new suggestions
+      console.log("📱 [CLIENT] Setting timeout to generate suggestions");
       setTimeout(() => {
+        console.log(`📱 [CLIENT] Timeout triggered, calling generateAISuggestionsForChat for question #${questionNumber}`);
         generateAISuggestionsForChat(currentQuestion, questionNumber);
       }, 100);
+    } else {
+      console.log("📱 [CLIENT] No AI message detected or even-numbered message count, skipping suggestion generation");
     }
   }, [messages]);
 
@@ -752,14 +759,16 @@ Please share:
   const generateAISuggestionsForChat = async (latestQuestion, questionNumber) => {
     // Skip generating suggestions for name question (first question)
     if (questionNumber === 0) {
+      console.log("📱 [CLIENT] Skipping suggestions for name question");
       setAiSuggestions([]);
       return;
     }
     
     setIsLoadingSuggestions(true);
+    console.log("📱 [CLIENT] Starting to generate suggestions for question #", questionNumber);
     
     try {
-      console.log("Generating suggestions for question:", latestQuestion);
+      console.log("📱 [CLIENT] Question content:", latestQuestion);
       
       // Extract previous user answers from messages
       const previousAnswers = [];
@@ -769,40 +778,50 @@ Please share:
         }
       }
       
+      console.log("📱 [CLIENT] Previous answers collected:", previousAnswers);
       const businessContext = previousAnswers.length > 0 ? previousAnswers[0] : "fitness business";
+      console.log("📱 [CLIENT] Business context:", businessContext);
       
       // Call API to generate suggestions with explicit question number
+      console.log("📱 [CLIENT] Calling suggestion API with questionIndex:", questionNumber);
+      const requestBody = {
+        question: latestQuestion,
+        businessContext: businessContext,
+        previousAnswers: previousAnswers,
+        questionIndex: questionNumber
+      };
+      console.log("📱 [CLIENT] Request body:", JSON.stringify(requestBody));
+      
       const response = await fetch('/api/strategy/generate-suggestions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          question: latestQuestion,
-          businessContext: businessContext,
-          previousAnswers: previousAnswers,
-          questionIndex: questionNumber
-        }),
+        body: JSON.stringify(requestBody),
       });
       
+      console.log("📱 [CLIENT] API response status:", response.status);
       if (!response.ok) {
-        console.error("API error", response.status);
+        console.error("📱 [CLIENT] API error", response.status);
         throw new Error(`API error: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log("Received suggestions:", data);
+      console.log("📱 [CLIENT] Received API response data:", data);
       
       if (data.suggestions && Array.isArray(data.suggestions)) {
+        console.log("📱 [CLIENT] Valid suggestions received, count:", data.suggestions.length);
         setAiSuggestions(data.suggestions);
       } else {
-        console.error("Invalid suggestions format:", data);
+        console.error("📱 [CLIENT] Invalid suggestions format:", data);
         throw new Error('Invalid suggestions format');
       }
     } catch (error) {
-      console.error('Error generating suggestions:', error);
+      console.error('📱 [CLIENT] Error generating suggestions:', error);
       // Provide fallback suggestions based on question context
+      console.log("📱 [CLIENT] Using fallback suggestions for question index:", questionNumber);
       const fallbackSuggestions = generateFallbackSuggestions(latestQuestion, questionNumber);
+      console.log("📱 [CLIENT] Fallback suggestions:", fallbackSuggestions);
       setAiSuggestions(fallbackSuggestions);
     } finally {
       setIsLoadingSuggestions(false);
