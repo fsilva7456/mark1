@@ -25,6 +25,9 @@ export default function NewStrategy() {
     keyMessages: []
   });
   
+  // Add state for audience regeneration
+  const [regeneratingAudience, setRegeneratingAudience] = useState(null);
+  
   // Feedback popup state
   const [feedbackPopup, setFeedbackPopup] = useState({
     visible: false,
@@ -719,28 +722,83 @@ Please share:
     setSuggestions(mockSuggestions[section] || []);
   };
   
+  // Add function to handle audience feedback
+  const handleAudienceFeedback = (audienceIndex) => {
+    const audience = matrix.enhancedStrategy.audiences[audienceIndex];
+    setFeedbackPopup({
+      visible: true,
+      section: 'audience',
+      index: audienceIndex,
+      text: '',
+      currentValue: audience.segment
+    });
+  };
+
+  // Add function to regenerate audience
+  const handleRegenerateAudience = async (audienceIndex) => {
+    setRegeneratingAudience(audienceIndex);
+    
+    try {
+      // Get the current audience segment name for the prompt
+      const audienceSegment = matrix.enhancedStrategy.audiences[audienceIndex].segment;
+      
+      const response = await fetch('/api/strategy/regenerate-audience', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          audienceIndex: audienceIndex,
+          currentAudience: audienceSegment,
+          userData: {
+            name: userData.name,
+            location: userData.location,
+            business: userData.answers[2] || '',
+            audience: userData.answers[3] || ''
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.audience) {
+        // Update the matrix with the new audience data
+        const updatedMatrix = { ...matrix };
+        updatedMatrix.enhancedStrategy.audiences[audienceIndex] = data.audience;
+        setMatrix(updatedMatrix);
+        toast.success('Audience regenerated successfully!');
+      } else {
+        throw new Error('Invalid audience data returned');
+      }
+    } catch (error) {
+      console.error('Error regenerating audience:', error);
+      toast.error('Failed to regenerate audience. Please try again.');
+    } finally {
+      setRegeneratingAudience(null);
+    }
+  };
+  
+  // Update handleSaveFeedback to handle audience feedback
   const handleSaveFeedback = () => {
     // Update the matrix with new value
     if (feedbackPopup.text.trim()) {
       const updatedMatrix = { ...matrix };
-      updatedMatrix[feedbackPopup.section][feedbackPopup.index] = feedbackPopup.text;
+      
+      // Handle different sections
+      if (feedbackPopup.section === 'audience') {
+        // Update audience segment name
+        updatedMatrix.enhancedStrategy.audiences[feedbackPopup.index].segment = feedbackPopup.text;
+      } else {
+        // Original functionality for other sections
+        updatedMatrix[feedbackPopup.section][feedbackPopup.index] = feedbackPopup.text;
+      }
+      
       setMatrix(updatedMatrix);
     }
-    
-    // Close the popup
-    setFeedbackPopup({
-      visible: false,
-      section: '',
-      index: null,
-      text: '',
-      currentValue: ''
-    });
-  };
-  
-  const handleSuggestionClick = (suggestion) => {
-    const updatedMatrix = { ...matrix };
-    updatedMatrix[feedbackPopup.section][feedbackPopup.index] = suggestion;
-    setMatrix(updatedMatrix);
     
     // Close the popup
     setFeedbackPopup({
@@ -942,6 +1000,31 @@ Please share:
     }, 800);
   };
 
+  // Add the suggestion click handler for feedback popup
+  const handleSuggestionClick = (suggestion) => {
+    const updatedMatrix = { ...matrix };
+    
+    // Handle different sections
+    if (feedbackPopup.section === 'audience') {
+      // Update audience segment name
+      updatedMatrix.enhancedStrategy.audiences[feedbackPopup.index].segment = suggestion;
+    } else {
+      // Original functionality for other sections
+      updatedMatrix[feedbackPopup.section][feedbackPopup.index] = suggestion;
+    }
+    
+    setMatrix(updatedMatrix);
+    
+    // Close the popup
+    setFeedbackPopup({
+      visible: false,
+      section: '',
+      index: null,
+      text: '',
+      currentValue: ''
+    });
+  };
+
   // Add this function to handle changes in the feedback textarea
   const handleFeedbackChange = (e) => {
     setFeedbackPopup({
@@ -1053,9 +1136,30 @@ Please share:
       <div className={styles.enhancedMatrix}>
         {matrix.enhancedStrategy.audiences.map((audience, audienceIndex) => (
           <div key={audienceIndex} className={styles.audienceSection}>
-            <h3 className={styles.audienceTitle}>
-              {audience.segment}
-            </h3>
+            <div className={styles.audienceTitleRow}>
+              <h3 className={styles.audienceTitle}>
+                {audience.segment}
+              </h3>
+              
+              <div className={styles.audienceActions}>
+                <button 
+                  className={styles.actionButton}
+                  onClick={() => handleAudienceFeedback(audienceIndex)}
+                  title="Add feedback for this audience"
+                >
+                  Add Feedback
+                </button>
+                
+                <button 
+                  className={`${styles.actionButton} ${regeneratingAudience === audienceIndex ? styles.loading : ''}`}
+                  onClick={() => handleRegenerateAudience(audienceIndex)}
+                  disabled={regeneratingAudience !== null}
+                  title="Regenerate this audience section"
+                >
+                  {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Regenerate'}
+                </button>
+              </div>
+            </div>
             
             <div className={styles.audienceContent}>
               <div className={styles.objectivesColumn}>
@@ -1315,6 +1419,41 @@ Please share:
       <Head>
         <title>Create New Strategy | Mark1</title>
         <meta name="description" content="Create a new marketing strategy for your fitness business" />
+        <style jsx global>{`
+          .${styles.audienceTitleRow} {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+          }
+          
+          .${styles.audienceActions} {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+          }
+          
+          .${styles.actionButton} {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          
+          .${styles.actionButton}:hover {
+            background-color: #e0e0e0;
+          }
+          
+          .${styles.actionButton}.${styles.loading} {
+            background-color: #f3f3f3;
+            color: #888;
+            cursor: not-allowed;
+          }
+        `}</style>
       </Head>
 
       <Navbar />
@@ -1527,7 +1666,7 @@ Please share:
                     <div 
                       key={index} 
                       className={styles.suggestionItem}
-                      onClick={() => handleSuggestionClick(suggestion)}
+                      onClick={() => handleSuggestionSelect(suggestion)}
                     >
                       {suggestion}
                     </div>
