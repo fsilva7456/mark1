@@ -948,8 +948,10 @@ Please share:
       return;
     }
     
-    // Skip generating suggestions for final matrix generation message
-    if (messages.length === 15) {
+    // Check for final matrix generation message by content, not by message count
+    // This is more reliable than using a fixed message length
+    if (latestQuestion.includes("enough information to create a marketing strategy matrix") || 
+        latestQuestion.includes("marketing strategy matrix for your fitness business")) {
       console.log("📱 [CLIENT] Skipping suggestions for final matrix generation message");
       setAiSuggestions([]);
       return;
@@ -962,6 +964,21 @@ Please share:
         "Hybrid Coaching (both in person and online training)",
         "Fitness class instructor",
         "Wellness Coach"
+      ]);
+      setIsLoadingSuggestions(false);
+      // Scroll down after suggestions are set
+      setTimeout(() => scrollToBottom(), 100);
+      return;
+    }
+    
+    // Add specific suggestions for competitor question
+    if (latestQuestion.includes("top 2-3 competitors") || 
+        (latestQuestion.includes("competitors") && latestQuestion.includes("marketing approach"))) {
+      console.log("📱 [CLIENT] Using custom suggestions for competitor question");
+      setAiSuggestions([
+        "CrossFit gyms focus on community, but lack personalized nutrition guidance",
+        "Local boutique studios have stylish marketing but high prices, while I offer better value",
+        "Planet Fitness attracts beginners, but I provide more hands-on coaching"
       ]);
       setIsLoadingSuggestions(false);
       // Scroll down after suggestions are set
