@@ -1419,37 +1419,31 @@ Please share:
         id: 'professional',
         name: 'Professional & Educational',
         description: 'Expert-driven content with an emphasis on knowledge and credibility',
-        image: '/images/aesthetics/professional.jpg'
       },
       {
         id: 'motivational',
         name: 'Motivational & Energetic',
         description: 'High-energy content focused on inspiration and motivation',
-        image: '/images/aesthetics/motivational.jpg'
       },
       {
         id: 'community',
         name: 'Community & Supportive',
         description: 'Warm, inclusive content that emphasizes connection and belonging',
-        image: '/images/aesthetics/community.jpg'
       },
       {
         id: 'premium',
         name: 'Premium & Exclusive',
         description: 'Sophisticated content highlighting premium quality and exclusivity',
-        image: '/images/aesthetics/premium.jpg'
       },
       {
         id: 'authentic',
         name: 'Authentic & Raw',
         description: 'Real, unfiltered content showcasing genuine moments and transformations',
-        image: '/images/aesthetics/authentic.jpg'
       },
       {
         id: 'custom',
         name: 'Custom Style',
         description: 'Describe your own unique aesthetic',
-        image: '/images/aesthetics/custom.jpg'
       }
     ];
     
@@ -1497,9 +1491,6 @@ Please share:
                   className={`${styles.aestheticCard} ${selected === option.id ? styles.selectedAesthetic : ''}`}
                   onClick={() => handleSelect(option.id)}
                 >
-                  <div className={styles.aestheticImage}>
-                    <img src={option.image} alt={option.name} />
-                  </div>
                   <div className={styles.aestheticInfo}>
                     <h4>{option.name}</h4>
                     <p>{option.description}</p>
