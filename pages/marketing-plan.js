@@ -153,7 +153,7 @@ export default function MarketingPlanDashboard() {
   // Navigate to entity detail page
   const navigateToEntity = (type, id) => {
     if (type === 'strategy') {
-      router.push(`/strategy/view/${id}`);
+      router.push(`/strategy/${id}`);
     } else if (type === 'outline') {
       router.push(`/content/new?strategy=${id}`);
     } else if (type === 'calendar') {

@@ -24,7 +24,7 @@ export default function WorkflowDiagram({ workflowData }) {
             <div className={styles.nodeHeader}>
               <h3 className={styles.nodeTitle}>{item.strategy.name}</h3>
               <div className={styles.nodeActions}>
-                <Link href={`/strategy/view/${item.strategy.id}`} className={styles.nodeActionBtn}>
+                <Link href={`/strategy/${item.strategy.id}`} className={styles.nodeActionBtn}>
                   View
                 </Link>
               </div>

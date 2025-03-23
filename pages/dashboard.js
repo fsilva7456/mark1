@@ -179,7 +179,7 @@ export default function Dashboard() {
                     <div 
                       key={strategy.id} 
                       className={styles.strategyCard}
-                      onClick={() => router.push(`/strategy/view/${strategy.id}`)}
+                      onClick={() => router.push(`/strategy/${strategy.id}`)}
                     >
                       <div className={styles.cardHeader}>
                         <h3>{strategy.name || 'Unnamed Strategy'}</h3>
@@ -187,7 +187,7 @@ export default function Dashboard() {
                       <p className={styles.lastUpdated}>Last updated: {strategy.lastUpdated || 'Not available'}</p>
                       <div className={styles.cardActions}>
                         <Link 
-                          href={`/strategy/view/${strategy.id}`} 
+                          href={`/strategy/${strategy.id}`} 
                           className={styles.actionButton}
                         >
                           View Strategy
