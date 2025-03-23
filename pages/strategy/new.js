@@ -1720,30 +1720,25 @@ Please share:
           .${styles.timelinePhase} ul,
           .${styles.gapsColumn} ul,
           .${styles.abTests} ul {
-            list-style-type: none;
+            list-style-type: none !important;
             padding-left: 0;
           }
           
-          /* Hide marker pseudo-elements */
-          .${styles.objectivesColumn} li::marker,
-          .${styles.messagesColumn} li::marker,
-          .${styles.timelinePhase} li::marker,
-          .${styles.gapsColumn} li::marker,
-          .${styles.abTests} li::marker {
-            content: none;
-            display: none;
+          /* Add direct styling to ul elements in the strategy matrix */
+          ul {
+            list-style-type: none;
           }
           
-          /* Ensure all list items don't display markers */
-          .${styles.objectiveItem},
-          .${styles.messageItem},
-          .${styles.objectivesColumn} li,
-          .${styles.messagesColumn} li,
-          .${styles.timelinePhase} li,
-          .${styles.gapsColumn} li,
-          .${styles.abTests} li {
-            list-style: none;
-            margin-bottom: 10px;
+          /* Direct targeting of ul elements in each section for higher specificity */
+          .${styles.enhancedMatrix} ul,
+          .${styles.matrix} ul,
+          .${styles.matrixColumn} ul,
+          .${styles.objectivesColumn} ul,
+          .${styles.messagesColumn} ul,
+          .${styles.audienceContent} ul {
+            list-style-type: none !important;
+            margin-left: 0;
+            padding-left: 0;
           }
         `}</style>
       </Head>
