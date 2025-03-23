@@ -1225,7 +1225,7 @@ Please share:
               
               <div className={styles.audienceActions}>
                 <button 
-                  className={`${styles.actionButton} ${regeneratingAudience === audienceIndex ? styles.loading : ''}`}
+                  className={`${styles.saveButton} ${regeneratingAudience === audienceIndex ? styles.loading : ''}`}
                   onClick={() => handleOpenFeedbackModal(audienceIndex)}
                   disabled={regeneratingAudience !== null}
                   title="Add feedback and regenerate this audience"

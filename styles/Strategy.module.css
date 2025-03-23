@@ -206,6 +206,15 @@
   box-shadow: none;
 }
 
+/* Loading state for buttons */
+.loading {
+  background-color: #a8ccf0 !important;
+  color: white !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .cancelButton {
   background-color: white;
   color: #718096;
