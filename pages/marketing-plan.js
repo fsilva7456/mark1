@@ -334,20 +334,6 @@ export default function MarketingPlanDashboard() {
           postsPublished={calendars.reduce((acc, cal) => acc + (cal.posts_published || 0), 0)}
         />
         
-        {/* Simplified actions - no workflow progress indicator */}
-        {strategies.length > 0 && contentOutlines.length === 0 && (
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <p>Create a content outline based on your strategy</p>
-            <button
-              className={contextualStyles.actionButton}
-              onClick={() => handleShowAestheticModal(strategies[0].id)}
-            >
-              <span>📝</span>
-              Create Content Outline
-            </button>
-          </div>
-        )}
-        
         <div className={styles.content}>
           {viewMode === 'workflow' ? (
             <div className={styles.workflowView}>
@@ -357,10 +343,7 @@ export default function MarketingPlanDashboard() {
                 <div className={styles.emptyState}>
                   <div className={styles.emptyIcon}>📊</div>
                   <h2>No marketing plans yet</h2>
-                  <p>Start by creating a marketing strategy</p>
-                  <Link href="/strategy/new" className={styles.createButton}>
-                    Create Strategy
-                  </Link>
+                  <p>Contact an administrator to create a marketing strategy</p>
                 </div>
               )}
             </div>
