@@ -1255,6 +1255,7 @@ Please share:
                       key={objIndex} 
                       className={styles.objectiveItem}
                       onClick={() => handleOpenObjectiveModal(audienceIndex, objIndex)}
+                      style={{ listStyleType: 'none' }}
                     >
                       <div className={styles.objectiveHeader}>
                         {obj.objective}
@@ -1278,6 +1279,7 @@ Please share:
                       key={msgIndex} 
                       className={styles.messageItem}
                       onClick={() => handleOpenMessageModal(audienceIndex, msgIndex)}
+                      style={{ listStyleType: 'none' }}
                     >
                       {message}
                     </li>
@@ -1305,7 +1307,7 @@ Please share:
                 <h4>Days 1-30</h4>
                 <ul>
                   {matrix.enhancedStrategy.implementationTimeline.phase1_days1_30.map((task, index) => (
-                    <li key={index}>{task}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
                   ))}
                 </ul>
               </div>
@@ -1313,7 +1315,7 @@ Please share:
                 <h4>Days 31-60</h4>
                 <ul>
                   {matrix.enhancedStrategy.implementationTimeline.phase2_days31_60.map((task, index) => (
-                    <li key={index}>{task}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
                   ))}
                 </ul>
               </div>
@@ -1321,7 +1323,7 @@ Please share:
                 <h4>Days 61-90</h4>
                 <ul>
                   {matrix.enhancedStrategy.implementationTimeline.phase3_days61_90.map((task, index) => (
-                    <li key={index}>{task}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
                   ))}
                 </ul>
               </div>
@@ -1335,7 +1337,7 @@ Please share:
                 <h4>Identified Gaps</h4>
                 <ul>
                   {matrix.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, index) => (
-                    <li key={index}>{gap}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{gap}</li>
                   ))}
                 </ul>
               </div>
@@ -1343,7 +1345,7 @@ Please share:
                 <h4>Exploitation Strategies</h4>
                 <ul>
                   {matrix.enhancedStrategy.competitiveGaps.exploitationStrategies.map((strategy, index) => (
-                    <li key={index}>{strategy}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{strategy}</li>
                   ))}
                 </ul>
               </div>
@@ -1375,7 +1377,7 @@ Please share:
                 <h4>Recommended A/B Tests</h4>
                 <ul>
                   {matrix.enhancedStrategy.contentStrategy.abTestRecommendations.map((test, index) => (
-                    <li key={index}>{test}</li>
+                    <li key={index} style={{ listStyleType: 'none' }}>{test}</li>
                   ))}
                 </ul>
               </div>
