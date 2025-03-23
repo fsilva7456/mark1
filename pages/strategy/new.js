@@ -87,6 +87,7 @@ export default function NewStrategy() {
     scrollAttempt(100);  // Quick initial attempt
     scrollAttempt(300);  // Medium delay attempt
     scrollAttempt(600);  // Longer delay to ensure rendering is complete
+    scrollAttempt(900);  // Extra long delay for when suggestions might be loading
   };
   
   // Initial setup - show first AI message
@@ -963,6 +964,8 @@ Please share:
         "Wellness Coach"
       ]);
       setIsLoadingSuggestions(false);
+      // Scroll down after suggestions are set
+      setTimeout(() => scrollToBottom(), 100);
       return;
     }
     
@@ -1014,6 +1017,8 @@ Please share:
       if (data.suggestions && Array.isArray(data.suggestions)) {
         console.log("📱 [CLIENT] Valid suggestions received, count:", data.suggestions.length);
         setAiSuggestions(data.suggestions);
+        // Scroll down after suggestions are loaded
+        setTimeout(() => scrollToBottom(), 200);
       } else {
         console.error("📱 [CLIENT] Invalid suggestions format:", data);
         throw new Error('Invalid suggestions format');
@@ -1025,6 +1030,8 @@ Please share:
       const fallbackSuggestions = generateFallbackSuggestions(latestQuestion, questionNumber);
       console.log("📱 [CLIENT] Fallback suggestions:", fallbackSuggestions);
       setAiSuggestions(fallbackSuggestions);
+      // Scroll down after fallback suggestions are set
+      setTimeout(() => scrollToBottom(), 200);
     } finally {
       setIsLoadingSuggestions(false);
     }
