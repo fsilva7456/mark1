@@ -9,6 +9,7 @@ import ContextualActionButtons from '../components/ContextualActionButtons';
 import ContentPipeline from '../components/ContentPipeline';
 import BreadcrumbNavigation from '../components/BreadcrumbNavigation';
 import styles from '../styles/MarketingPlan.module.css';
+import contextualStyles from '../styles/ContextualActionButtons.module.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useMarketingPlan, MarketingPlanContext } from '../contexts/MarketingPlanContext';
 import logger from '../lib/logger';
@@ -356,13 +357,17 @@ export default function MarketingPlanDashboard() {
             {workflowStep.step === 2 ? (
               // For Content Outline, show aesthetic modal
               <button
-                className={styles.workflowAction}
+                className={contextualStyles.actionButton}
                 onClick={() => handleShowAestheticModal(strategies[0].id)}
               >
+                <span>📝</span>
                 {workflowStep.actionText}
               </button>
             ) : (
-              <Link href={workflowStep.action} className={styles.workflowAction}>
+              <Link href={workflowStep.action} className={contextualStyles.actionButton}>
+                {workflowStep.step === 1 && <span>🚀</span>}
+                {workflowStep.step === 3 && <span>📅</span>}
+                {workflowStep.step === 4 && <span>📊</span>}
                 {workflowStep.actionText}
               </Link>
             )}
