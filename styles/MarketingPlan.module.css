@@ -528,18 +528,20 @@
 
 /* Guided Workflow */
 .guidedWorkflow {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-  border: 1px solid #e9ecef;
+  background: linear-gradient(to right, #f8faff, #f1f5ff);
+  border-radius: 12px;
+  padding: 32px 24px;
+  margin-bottom: 30px;
+  border: 1px solid #e0e7ff;
+  box-shadow: 0 4px 12px rgba(52, 84, 209, 0.08);
 }
 
 .workflowSteps {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  position: relative;
 }
 
 .workflowStep {
@@ -547,53 +549,114 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  z-index: 2;
+  padding: 0 10px;
+  transition: all 0.3s ease;
 }
 
 .stepNumber {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background-color: #e9ecef;
+  background-color: #f0f4ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 18px;
-  color: #6c757d;
-  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 20px;
+  color: #8c96a8;
+  margin-bottom: 12px;
+  border: 2px solid #e0e7ff;
+  box-shadow: 0 2px 6px rgba(52, 84, 209, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.stepNumber::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   border: 2px solid transparent;
+  top: -7px;
+  left: -7px;
+  transition: all 0.3s ease;
 }
 
 .stepLabel {
-  font-size: 14px;
+  font-size: 15px;
   color: #6c757d;
-  font-weight: 500;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-top: 4px;
+  text-align: center;
+  letter-spacing: 0.3px;
 }
 
 .stepConnector {
-  height: 2px;
-  background-color: #e9ecef;
-  width: 60px;
-  margin: 0 10px;
+  height: 3px;
+  background: linear-gradient(to right, #e0e7ff, #d4deff);
+  width: 80px;
+  margin: 0 -5px;
   position: relative;
-  top: -12px;
+  top: -35px;
+  z-index: 1;
+  transition: all 0.3s ease;
 }
 
 .workflowStep.active .stepNumber {
   background-color: #ffffff;
   color: #3454D1;
   border-color: #3454D1;
+  box-shadow: 0 3px 10px rgba(52, 84, 209, 0.2);
+  transform: scale(1.05);
+}
+
+.workflowStep.active .stepNumber::before {
+  border-color: rgba(52, 84, 209, 0.2);
+  animation: pulse 2s infinite;
 }
 
 .workflowStep.active .stepLabel {
   color: #3454D1;
-  font-weight: 600;
+  font-weight: 700;
+  transform: translateY(-2px);
 }
 
 .workflowStep.completed .stepNumber {
   background-color: #3454D1;
   color: white;
-  border-color: #3454D1;
+  border-color: #2a43a7;
+  box-shadow: 0 3px 8px rgba(52, 84, 209, 0.3);
+}
+
+.workflowStep.completed .stepConnector {
+  background: linear-gradient(to right, #3454D1, #4c6eeb);
+}
+
+/* Add pulse animation for active step */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* Ensure completed steps show a checkmark */
+.workflowStep.completed .stepNumber::after {
+  content: '✓';
+  position: absolute;
+  font-size: 22px;
+  font-weight: bold;
 }
 
 .workflowMessage {
