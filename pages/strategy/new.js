@@ -1502,7 +1502,8 @@ Please share:
                       borderRadius: '20px',
                       padding: '8px 16px',
                       border: '1px solid #ddd',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      margin: '0 5px'
                     }}
                   >
                     Cancel
@@ -1518,7 +1519,8 @@ Please share:
                       padding: '8px 16px',
                       border: 'none',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      margin: '0 5px'
                     }}
                   >
                     Continue
@@ -1629,7 +1631,7 @@ Please share:
           .${styles.modalFooter} {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 20px;
             margin-top: 20px;
           }
           
@@ -1675,6 +1677,14 @@ Please share:
           .${styles.sendButton}:disabled {
             background-color: #a0aae3;
             cursor: not-allowed;
+          }
+
+          /* Add global styles for all modal action buttons */
+          .${styles.modalActions}, .${styles.modalFooter} {
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+            margin-top: 20px;
           }
         `}</style>
       </Head>
@@ -1920,7 +1930,8 @@ Please share:
                     borderRadius: '20px',
                     padding: '8px 16px',
                     border: '1px solid #ddd',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    margin: '0 5px'
                   }}
                 >
                   Cancel
@@ -1936,7 +1947,8 @@ Please share:
                     padding: '8px 16px',
                     border: 'none',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    margin: '0 5px'
                   }}
                 >
                   {feedbackPopup.section === 'audience' ? 'Regenerate Audience' : 'Save Changes'}
