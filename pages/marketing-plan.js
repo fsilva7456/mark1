@@ -335,18 +335,18 @@ export default function MarketingPlanDashboard() {
         </div>
         
         {/* Guided Workflow Component */}
-        <div className={styles.guidedWorkflow}>
+        <section className={styles.guidedWorkflow}>
           <div className={styles.workflowSteps}>
             <div className={`${styles.workflowStep} ${workflowStep.step >= 1 ? styles.active : ''} ${workflowStep.step > 1 ? styles.completed : ''}`}>
               <div className={styles.stepNumber}>1</div>
-              <div className={styles.stepLabel}>Strategy</div>
+              <div className={styles.stepLabel}>Marketing Strategy</div>
             </div>
-            <div className={styles.stepConnector}></div>
+            
             <div className={`${styles.workflowStep} ${workflowStep.step >= 2 ? styles.active : ''} ${workflowStep.step > 2 ? styles.completed : ''}`}>
               <div className={styles.stepNumber}>2</div>
               <div className={styles.stepLabel}>Content Outline</div>
             </div>
-            <div className={styles.stepConnector}></div>
+            
             <div className={`${styles.workflowStep} ${workflowStep.step >= 3 ? styles.active : ''} ${workflowStep.step > 3 ? styles.completed : ''}`}>
               <div className={styles.stepNumber}>3</div>
               <div className={styles.stepLabel}>Content Calendar</div>
@@ -372,7 +372,7 @@ export default function MarketingPlanDashboard() {
               </Link>
             )}
           </div>
-        </div>
+        </section>
         
         <StatusDashboard 
           strategies={strategies.length}
