@@ -1198,44 +1198,14 @@ export default function NewContent() {
               )}
               
               {!isLoading && contentOutline.some(week => week.posts && week.posts.length > 0) && (
-                <>
-                  <div className={styles.datePickerContainer}>
-                    <h3>When would you like to start publishing?</h3>
-                    <div className={styles.datePicker}>
-                      <label htmlFor="start-date">Start Date:</label>
-                      <input
-                        type="date"
-                        id="start-date"
-                        value={startDate instanceof Date ? startDate.toISOString().split('T')[0] : ''}
-                        onChange={(e) => setStartDate(new Date(e.target.value))}
-                        className={styles.dateInput}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className={styles.actions}>
-                    <button 
-                      onClick={handleSaveCalendar} 
-                      className={styles.saveButton}
-                      disabled={contentOutline.some(week => week.loading)}
-                    >
-                      Save Content Calendar
-                    </button>
-                    <button 
-                      onClick={handleSaveContent}
-                      className={styles.calendarButton}
-                      disabled={contentOutline.some(week => week.loading)}
-                    >
-                      Save Content Plan
-                    </button>
-                    <button 
-                      onClick={() => router.push('/dashboard')} 
-                      className={styles.cancelButton}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
+                <div className={styles.actions}>
+                  <button 
+                    onClick={() => router.push('/dashboard')} 
+                    className={styles.cancelButton}
+                  >
+                    Cancel
+                  </button>
+                </div>
               )}
             </div>
           )}
