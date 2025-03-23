@@ -604,13 +604,6 @@ export default function MarketingPlanDashboard() {
             <h2>Content Pipeline</h2>
             <ContentPipeline posts={[]} /> {/* We'll need to implement post retrieval */}
           </div>
-          
-          <ContextualActionButtons 
-            strategies={strategies} 
-            outlines={contentOutlines} 
-            calendars={calendars} 
-            selectedEntity={selectedEntity}
-          />
         </div>
       </main>
       
