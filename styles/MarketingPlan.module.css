@@ -804,4 +804,60 @@
 .deleteButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* List view enhancements */
+.audiencePreview {
+  display: flex;
+  flex-direction: column;
+}
+
+.tagsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.audienceTag {
+  background-color: #edf2ff;
+  color: #4263eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.moreTag {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.objectivesPreview {
+  max-width: 250px;
+}
+
+.objectivesText {
+  font-size: 13px;
+  color: #495057;
+  line-height: 1.4;
+}
+
+.moreText {
+  display: block;
+  font-size: 12px;
+  color: #868e96;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.emptyValue {
+  color: #adb5bd;
+  font-style: italic;
+  font-size: 13px;
 } 

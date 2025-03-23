@@ -365,9 +365,9 @@ export default function MarketingPlanDashboard() {
                 <div className={styles.listTable}>
                   <div className={styles.listTableHeader}>
                     <div className={styles.listColumn}>Name</div>
+                    <div className={styles.listColumn}>Target Audience</div>
+                    <div className={styles.listColumn}>Objectives</div>
                     <div className={styles.listColumn}>Created</div>
-                    <div className={styles.listColumn}>Outlines</div>
-                    <div className={styles.listColumn}>Calendars</div>
                     <div className={styles.listColumn}>Actions</div>
                   </div>
                   
@@ -382,13 +382,41 @@ export default function MarketingPlanDashboard() {
                             <div className={styles.listItemName}>{strategy.name}</div>
                           </div>
                           <div className={styles.listColumn}>
+                            <div className={styles.audiencePreview}>
+                              {strategy.target_audience && strategy.target_audience.length > 0 ? (
+                                <div className={styles.tagsList}>
+                                  {strategy.target_audience.slice(0, 2).map((audience, index) => (
+                                    <span key={index} className={styles.audienceTag}>
+                                      {audience.length > 30 ? audience.substring(0, 27) + '...' : audience}
+                                    </span>
+                                  ))}
+                                  {strategy.target_audience.length > 2 && (
+                                    <span className={styles.moreTag}>+{strategy.target_audience.length - 2}</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className={styles.emptyValue}>No audience defined</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={styles.listColumn}>
+                            <div className={styles.objectivesPreview}>
+                              {strategy.objectives && strategy.objectives.length > 0 ? (
+                                <div className={styles.objectivesText}>
+                                  {strategy.objectives[0].length > 40 
+                                    ? strategy.objectives[0].substring(0, 37) + '...' 
+                                    : strategy.objectives[0]}
+                                  {strategy.objectives.length > 1 && (
+                                    <span className={styles.moreText}>+{strategy.objectives.length - 1} more</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className={styles.emptyValue}>No objectives defined</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className={styles.listColumn}>
                             {formatDate(strategy.created_at)}
-                          </div>
-                          <div className={styles.listColumn}>
-                            {strategyOutlines.length}
-                          </div>
-                          <div className={styles.listColumn}>
-                            {strategyCalendars.length}
                           </div>
                           <div className={styles.listColumn}>
                             <div className={styles.actionButtons}>
