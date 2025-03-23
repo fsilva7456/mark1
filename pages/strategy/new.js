@@ -792,6 +792,32 @@ Please share:
       return;
     }
     
+    // Skip generating suggestions for location question (second question)
+    if (questionNumber === 1) {
+      console.log("📱 [CLIENT] Skipping suggestions for location question");
+      setAiSuggestions([]);
+      return;
+    }
+    
+    // Skip generating suggestions for final matrix generation message
+    if (messages.length === 15) {
+      console.log("📱 [CLIENT] Skipping suggestions for final matrix generation message");
+      setAiSuggestions([]);
+      return;
+    }
+    
+    // Use hardcoded suggestions for business type question (third question)
+    if (questionNumber === 2) {
+      console.log("📱 [CLIENT] Using hardcoded suggestions for business type question");
+      setAiSuggestions([
+        "Hybrid Coaching (both in person and online training)",
+        "Fitness class instructor",
+        "Wellness Coach"
+      ]);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+    
     setIsLoadingSuggestions(true);
     console.log("📱 [CLIENT] Starting to generate suggestions for question #", questionNumber);
     
@@ -871,9 +897,9 @@ Please share:
 
     const fallbacks = {
       1: [ // Business type
-        "Personal trainer specializing in strength training",
-        "Yoga studio with classes for all levels",
-        "CrossFit box focused on community fitness"
+        "Hybrid Coaching (both in person and online training)",
+        "Fitness class instructor",
+        "Wellness Coach"
       ],
       2: [ // Target audience - improved
         "Busy professionals (30-45) seeking efficient, high-impact workouts",
