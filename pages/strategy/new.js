@@ -1502,6 +1502,68 @@ Please share:
         <title>Create New Strategy | Mark1</title>
         <meta name="description" content="Create a new marketing strategy for your fitness business" />
         <style jsx global>{`
+          /* Common button styling - apply to all buttons */
+          button {
+            border-radius: 20px; /* Pill shape */
+            border: none;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          /* Primary button style (blue) */
+          .${styles.actionButton},
+          .${styles.regenerateButton},
+          .${styles.saveButton},
+          .${styles.outlineButton},
+          .${styles.tryAgainButton} {
+            background-color: #4a90e2;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          .${styles.actionButton}:hover,
+          .${styles.regenerateButton}:hover,
+          .${styles.saveButton}:hover,
+          .${styles.outlineButton}:hover,
+          .${styles.tryAgainButton}:hover {
+            background-color: #3a80d2;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+          }
+
+          /* Cancel/secondary button style */
+          .${styles.cancelButton} {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+          }
+
+          .${styles.cancelButton}:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-1px);
+          }
+
+          /* Disabled state for all buttons */
+          .${styles.actionButton}:disabled,
+          .${styles.regenerateButton}:disabled,
+          .${styles.saveButton}:disabled,
+          .${styles.outlineButton}:disabled,
+          .${styles.tryAgainButton}:disabled {
+            background-color: #a8ccf0;
+            color: white;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+          }
+          
+          /* Interactive items */
           .${styles.audienceTitleRow} {
             display: flex;
             justify-content: space-between;
@@ -1516,28 +1578,15 @@ Please share:
             margin-top: 5px;
           }
           
-          .${styles.actionButton} {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 20px;
+          .${styles.audienceActions} button {
             padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .${styles.actionButton}:hover {
-            background-color: #3a80d2;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
           }
           
           .${styles.actionButton}.${styles.loading} {
             background-color: #a8ccf0;
             color: white;
             cursor: not-allowed;
+            transform: none;
           }
           
           .${styles.modalFooter} {
@@ -1545,44 +1594,6 @@ Please share:
             justify-content: flex-end;
             gap: 10px;
             margin-top: 20px;
-          }
-          
-          .${styles.cancelButton} {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-          }
-          
-          .${styles.cancelButton}:hover {
-            background-color: #e0e0e0;
-          }
-          
-          .${styles.regenerateButton} {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          }
-          
-          .${styles.regenerateButton}:hover {
-            background-color: #3a80d2;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
-          }
-          
-          .${styles.regenerateButton}:disabled {
-            background-color: #a8ccf0;
-            color: white;
-            cursor: not-allowed;
           }
           
           .${styles.objectiveItem}, .${styles.messageItem} {
@@ -1593,28 +1604,39 @@ Please share:
           .${styles.objectiveItem}:hover, .${styles.messageItem}:hover {
             background-color: #f5f5f5;
           }
-          
-          .${styles.saveButton} {
-            background-color: #4a90e2;
-            color: white;
-            border: none;
+
+          /* Chat suggestion pills */
+          .${styles.suggestionChip},
+          .${styles.aiSuggestionPill} {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
             border-radius: 20px;
             padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+
+          .${styles.suggestionChip}:hover,
+          .${styles.aiSuggestionPill}:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-1px);
           }
           
-          .${styles.saveButton}:hover {
+          /* Send button in chat */
+          .${styles.sendButton} {
+            background-color: #4a90e2;
+            color: white;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+          }
+          
+          .${styles.sendButton}:hover {
             background-color: #3a80d2;
             transform: translateY(-1px);
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
           }
           
-          .${styles.saveButton}:disabled {
+          .${styles.sendButton}:disabled {
             background-color: #a8ccf0;
-            color: white;
             cursor: not-allowed;
           }
         `}</style>
