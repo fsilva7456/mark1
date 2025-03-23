@@ -1,3 +1,4 @@
+// Updated WorkflowDiagram component with audience and objectives sections
 import React from 'react';
 import Link from 'next/link';
 import styles from '../styles/WorkflowDiagram.module.css';
@@ -29,10 +30,42 @@ export default function WorkflowDiagram({ workflowData }) {
               </div>
             </div>
             <div className={styles.nodeContent}>
-              <p className={styles.nodeDescription}>
-                {item.strategy.business_description?.substring(0, 100)}
-                {item.strategy.business_description?.length > 100 ? '...' : ''}
-              </p>
+              <div className={styles.audienceSection}>
+                <h4 className={styles.sectionTitle}>Target Audience:</h4>
+                <div className={styles.audienceTags}>
+                  {item.strategy.target_audience && item.strategy.target_audience.length > 0 ? (
+                    item.strategy.target_audience.slice(0, 2).map((audience, index) => (
+                      <span key={index} className={styles.audienceTag}>
+                        {audience.length > 30 ? audience.substring(0, 27) + '...' : audience}
+                      </span>
+                    ))
+                  ) : (
+                    <span className={styles.emptyValue}>No audience defined</span>
+                  )}
+                  {item.strategy.target_audience && item.strategy.target_audience.length > 2 && (
+                    <span className={styles.moreTag}>+{item.strategy.target_audience.length - 2}</span>
+                  )}
+                </div>
+              </div>
+              
+              <div className={styles.objectivesSection}>
+                <h4 className={styles.sectionTitle}>Objectives:</h4>
+                <div className={styles.objectivesText}>
+                  {item.strategy.objectives && item.strategy.objectives.length > 0 ? (
+                    <p className={styles.objectiveItem}>
+                      {item.strategy.objectives[0].length > 50 
+                        ? item.strategy.objectives[0].substring(0, 47) + '...' 
+                        : item.strategy.objectives[0]}
+                      {item.strategy.objectives.length > 1 && (
+                        <span className={styles.moreText}>+{item.strategy.objectives.length - 1} more</span>
+                      )}
+                    </p>
+                  ) : (
+                    <span className={styles.emptyValue}>No objectives defined</span>
+                  )}
+                </div>
+              </div>
+              
               <div className={styles.nodeMeta}>
                 <span className={styles.nodeMetaItem}>
                   {item.outlines.length} outlines

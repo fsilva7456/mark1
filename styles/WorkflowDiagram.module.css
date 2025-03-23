@@ -102,13 +102,6 @@
   flex: 1;
 }
 
-.nodeDescription {
-  color: #777;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
 .nodeMeta {
   display: flex;
   gap: 1rem;
