@@ -1503,7 +1503,7 @@ Please share:
                       padding: '8px 16px',
                       border: '1px solid #ddd',
                       transition: 'all 0.2s ease',
-                      margin: '0 5px'
+                      margin: '0 10px'
                     }}
                   >
                     Cancel
@@ -1520,7 +1520,7 @@ Please share:
                       border: 'none',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                       transition: 'all 0.2s ease',
-                      margin: '0 5px'
+                      margin: '0 10px'
                     }}
                   >
                     Continue
@@ -1631,7 +1631,7 @@ Please share:
           .${styles.modalFooter} {
             display: flex;
             justify-content: flex-end;
-            gap: 20px;
+            gap: 30px;
             margin-top: 20px;
           }
           
@@ -1683,7 +1683,7 @@ Please share:
           .${styles.modalActions}, .${styles.modalFooter} {
             display: flex;
             justify-content: flex-end;
-            gap: 20px;
+            gap: 30px;
             margin-top: 20px;
           }
         `}</style>
@@ -1931,7 +1931,7 @@ Please share:
                     padding: '8px 16px',
                     border: '1px solid #ddd',
                     transition: 'all 0.2s ease',
-                    margin: '0 5px'
+                    margin: '0 10px'
                   }}
                 >
                   Cancel
@@ -1948,7 +1948,7 @@ Please share:
                     border: 'none',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                     transition: 'all 0.2s ease',
-                    margin: '0 5px'
+                    margin: '0 10px'
                   }}
                 >
                   {feedbackPopup.section === 'audience' ? 'Regenerate Audience' : 'Save Changes'}
