@@ -1553,7 +1553,7 @@ Please share:
           .${styles.saveButton},
           .${styles.outlineButton},
           .${styles.tryAgainButton} {
-            background-color: #4a90e2;
+            background-color: #3454D1;
             color: white;
             padding: 8px 16px;
             border-radius: 20px;
@@ -1565,7 +1565,7 @@ Please share:
           .${styles.saveButton}:hover,
           .${styles.outlineButton}:hover,
           .${styles.tryAgainButton}:hover {
-            background-color: #3a80d2;
+            background-color: #2a43a7;
             transform: translateY(-1px);
             box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
           }
@@ -1591,7 +1591,7 @@ Please share:
           .${styles.saveButton}:disabled,
           .${styles.outlineButton}:disabled,
           .${styles.tryAgainButton}:disabled {
-            background-color: #a8ccf0;
+            background-color: #a0aae3;
             color: white;
             cursor: not-allowed;
             transform: none;
@@ -1618,7 +1618,7 @@ Please share:
           }
           
           .${styles.actionButton}.${styles.loading} {
-            background-color: #a8ccf0;
+            background-color: #a0aae3;
             color: white;
             cursor: not-allowed;
             transform: none;
@@ -1659,19 +1659,19 @@ Please share:
           
           /* Send button in chat */
           .${styles.sendButton} {
-            background-color: #4a90e2;
+            background-color: #3454D1;
             color: white;
             border-radius: 10px;
             transition: all 0.2s ease;
           }
           
           .${styles.sendButton}:hover {
-            background-color: #3a80d2;
+            background-color: #2a43a7;
             transform: translateY(-1px);
           }
           
           .${styles.sendButton}:disabled {
-            background-color: #a8ccf0;
+            background-color: #a0aae3;
             cursor: not-allowed;
           }
         `}</style>
