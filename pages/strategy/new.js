@@ -1740,6 +1740,18 @@ Please share:
             margin-left: 0;
             padding-left: 0;
           }
+          
+          /* Direct targeting of li elements to remove bullets */
+          li.${styles.objectiveItem},
+          li.${styles.messageItem},
+          .${styles.objectivesColumn} li,
+          .${styles.messagesColumn} li,
+          .${styles.timelinePhase} li,
+          .${styles.gapsColumn} li,
+          .${styles.abTests} li {
+            list-style-type: none !important;
+            display: block !important;
+          }
         `}</style>
       </Head>
 
