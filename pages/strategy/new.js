@@ -1230,14 +1230,15 @@ Please share:
                   disabled={regeneratingAudience !== null}
                   title="Add feedback and regenerate this audience"
                   style={{
-                    backgroundColor: '#3454D1',
+                    backgroundColor: '#4f46e5',
                     color: 'white',
-                    borderRadius: '20px',
-                    padding: '10px 20px',
+                    borderRadius: '6px',
+                    padding: '10px 16px',
                     margin: '5px 0',
                     border: 'none',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease'
+                    boxShadow: 'none',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s'
                   }}
                 >
                   {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Add Feedback and Regenerate'}
@@ -1621,6 +1622,32 @@ Please share:
             padding: 10px 20px;
           }
           
+          /* Content outline feedback button style */
+          .${styles.audienceActions} button.${styles.saveButton} {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            box-shadow: none;
+            transition: background-color 0.2s;
+          }
+          
+          .${styles.audienceActions} button.${styles.saveButton}:hover {
+            background-color: #4338ca;
+            transform: none;
+            box-shadow: none;
+          }
+          
+          .${styles.audienceActions} button.${styles.saveButton}:disabled {
+            background-color: #a5a5a5;
+            cursor: not-allowed;
+          }
+          
           .${styles.actionButton}.${styles.loading} {
             background-color: #a0aae3;
             color: white;
@@ -1973,13 +2000,14 @@ Please share:
                   className={styles.saveButton}
                   disabled={!feedbackPopup.text.trim() || (feedbackPopup.section === 'audience' && regeneratingAudience !== null)}
                   style={{
-                    backgroundColor: '#3454D1',
+                    backgroundColor: '#4f46e5',
                     color: 'white',
-                    borderRadius: '20px',
-                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    padding: '10px 16px',
                     border: 'none',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    transition: 'all 0.2s ease',
+                    boxShadow: 'none',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s',
                     margin: '0 5px'
                   }}
                 >
