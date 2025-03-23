@@ -330,6 +330,7 @@ export default function MarketingPlanDashboard() {
               onViewDashboard={() => setViewMode('workflow')}
               onViewList={() => setViewMode('list')}
               activeView={viewMode}
+              hideCreateStrategy={strategies.length > 0}
             />
           </div>
         </div>
@@ -378,9 +379,11 @@ export default function MarketingPlanDashboard() {
               <div className={styles.listSection}>
                 <div className={styles.listHeader}>
                   <h2>Marketing Strategies</h2>
-                  <Link href="/strategy/new" className={styles.addButton}>
-                    New Strategy
-                  </Link>
+                  {strategies.length === 0 && (
+                    <Link href="/strategy/new" className={styles.addButton}>
+                      New Strategy
+                    </Link>
+                  )}
                 </div>
                 
                 <div className={styles.listTable}>
@@ -422,6 +425,7 @@ export default function MarketingPlanDashboard() {
                               <button
                                 className={styles.outlineButton}
                                 onClick={() => router.push(`/content/new?strategy=${strategy.id}`)}
+                                disabled={contentOutlines.length > 0}
                               >
                                 Generate Content
                               </button>
@@ -485,6 +489,7 @@ export default function MarketingPlanDashboard() {
                               <button
                                 className={styles.calendarButton}
                                 onClick={() => router.push(`/content/calendar-params?strategyId=${outline.strategy_id}&contentOutline=${encodeURIComponent(JSON.stringify(outline.outline))}`)}
+                                disabled={calendars.length > 0}
                               >
                                 Generate Calendar
                               </button>

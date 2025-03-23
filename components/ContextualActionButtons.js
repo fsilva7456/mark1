@@ -11,14 +11,72 @@ import styles from '../styles/ContextualActionButtons.module.css';
  * @param {Object} props.outline - Outline object if available
  * @param {Object} props.calendar - Calendar object if available
  * @param {Object} props.post - Post object if available
+ * @param {boolean} props.hideCreateStrategy - Whether to hide the Create Strategy button
+ * @param {function} props.onCreateStrategy - Callback function to create a new strategy
+ * @param {function} props.onViewDashboard - Callback function to view the dashboard
+ * @param {function} props.onViewList - Callback function to view the list
+ * @param {string} props.activeView - The active view (workflow or list)
  */
 export default function ContextualActionButtons({
   currentContext,
   strategy,
   outline,
   calendar,
-  post
+  post,
+  hideCreateStrategy = false,
+  onCreateStrategy,
+  onViewDashboard,
+  onViewList,
+  activeView
 }) {
+  // Support for dashboard-specific version
+  if (onCreateStrategy || onViewDashboard || onViewList) {
+    const dashboardActions = [];
+    
+    // Only show create strategy if not hidden
+    if (!hideCreateStrategy) {
+      dashboardActions.push({
+        label: 'Create Strategy',
+        onClick: onCreateStrategy,
+        primary: true,
+        icon: '🚀'
+      });
+    }
+    
+    // Add view toggles
+    dashboardActions.push(
+      {
+        label: 'Workflow View',
+        onClick: onViewDashboard,
+        primary: false,
+        icon: '📊',
+        active: activeView === 'workflow'
+      },
+      {
+        label: 'List View',
+        onClick: onViewList,
+        primary: false,
+        icon: '📋',
+        active: activeView === 'list'
+      }
+    );
+    
+    return (
+      <div className={styles.actionButtonsContainer}>
+        {dashboardActions.map((action, index) => (
+          <button
+            key={index}
+            onClick={action.onClick}
+            className={`${styles.actionButton} ${action.active ? styles.activeButton : ''}`}
+          >
+            <span>{action.icon}</span>
+            {action.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   // Determine what actions to show based on context
   const getContextualActions = () => {
     switch (currentContext) {
