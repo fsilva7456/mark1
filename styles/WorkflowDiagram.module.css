@@ -275,4 +275,72 @@
 
 .createButton:hover {
   background: #1976d2;
+}
+
+/* Strategy node enhanced content */
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.audienceSection, 
+.objectivesSection {
+  margin-bottom: 1rem;
+}
+
+.audienceTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.audienceTag {
+  background-color: #edf2ff;
+  color: #4263eb;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.objectivesText {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.objectiveItem {
+  margin: 0;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #4caf50;
+}
+
+.moreText {
+  display: block;
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.moreTag {
+  background-color: #e9ecef;
+  color: #495057;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.emptyValue {
+  color: #aaa;
+  font-style: italic;
+  font-size: 0.85rem;
 } 
