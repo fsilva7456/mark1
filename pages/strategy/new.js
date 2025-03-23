@@ -1229,6 +1229,15 @@ Please share:
                   onClick={() => handleOpenFeedbackModal(audienceIndex)}
                   disabled={regeneratingAudience !== null}
                   title="Add feedback and regenerate this audience"
+                  style={{
+                    backgroundColor: '#4a90e2',
+                    color: 'white',
+                    borderRadius: '20px',
+                    padding: '8px 16px',
+                    border: 'none',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Add Feedback and Regenerate'}
                 </button>
@@ -1782,6 +1791,15 @@ Please share:
                     onClick={handleSaveStrategy}
                     className={styles.saveButton}
                     disabled={isProcessing}
+                    style={{
+                      backgroundColor: '#4a90e2',
+                      color: 'white',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      border: 'none',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease'
+                    }}
                   >
                     {isProcessing ? 'Saving...' : 'Save Strategy'}
                   </button>
@@ -1796,6 +1814,15 @@ Please share:
                     }}
                     className={styles.outlineButton}
                     disabled={isProcessing}
+                    style={{
+                      backgroundColor: '#4a90e2',
+                      color: 'white',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      border: 'none',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease'
+                    }}
                   >
                     Generate Content Outline
                   </button>
@@ -1859,6 +1886,14 @@ Please share:
                 <button 
                   className={styles.cancelButton}
                   onClick={() => setFeedbackPopup({...feedbackPopup, visible: false})}
+                  style={{
+                    backgroundColor: '#f0f0f0',
+                    color: '#333',
+                    borderRadius: '20px',
+                    padding: '8px 16px',
+                    border: '1px solid #ddd',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   Cancel
                 </button>
@@ -1866,6 +1901,15 @@ Please share:
                   onClick={handleSaveFeedback}
                   className={styles.regenerateButton}
                   disabled={!feedbackPopup.text.trim() || (feedbackPopup.section === 'audience' && regeneratingAudience !== null)}
+                  style={{
+                    backgroundColor: '#4a90e2',
+                    color: 'white',
+                    borderRadius: '20px',
+                    padding: '8px 16px',
+                    border: 'none',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   {feedbackPopup.section === 'audience' ? 'Regenerate Audience' : 'Save Changes'}
                 </button>
