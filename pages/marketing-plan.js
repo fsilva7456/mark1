@@ -324,15 +324,6 @@ export default function MarketingPlanDashboard() {
         
         <div className={styles.header}>
           <h1>Marketing Plan Dashboard</h1>
-          <div className={styles.actionButtons}>
-            <ContextualActionButtons 
-              onCreateStrategy={() => router.push('/strategy/new')}
-              onViewDashboard={() => setViewMode('workflow')}
-              onViewList={() => setViewMode('list')}
-              activeView={viewMode}
-              hideCreateStrategy={strategies.length > 0}
-            />
-          </div>
         </div>
         
         <StatusDashboard 
