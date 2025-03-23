@@ -333,7 +333,7 @@ export default function CalendarView() {
               if (strategyId) {
                 router.push(`/content/new?strategy=${strategyId}`);
               } else {
-                router.push('/dashboard');
+                router.push('/marketing-plan');
               }
             }}
           >

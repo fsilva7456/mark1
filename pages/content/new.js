@@ -672,7 +672,7 @@ export default function NewContent() {
       toast.success('Calendar created successfully!');
       
       // Temporarily redirect to dashboard instead of calendar page
-      router.push('/dashboard?success=calendar-created');
+      router.push('/marketing-plan?success=calendar-created');
       
       // To debug, log the calendar ID
       console.log("Created calendar with ID:", calendarId);
@@ -1008,7 +1008,7 @@ export default function NewContent() {
               <h3>Error</h3>
               <p>{error}</p>
               <button 
-                onClick={() => router.push('/dashboard')} 
+                onClick={() => router.push('/marketing-plan')} 
                 className={styles.returnButton}
               >
                 Return to Dashboard
@@ -1200,7 +1200,7 @@ export default function NewContent() {
               {!isLoading && contentOutline.some(week => week.posts && week.posts.length > 0) && (
                 <div className={styles.actions}>
                   <button 
-                    onClick={() => router.push('/dashboard')} 
+                    onClick={() => router.push('/marketing-plan')} 
                     className={styles.cancelButton}
                   >
                     Cancel

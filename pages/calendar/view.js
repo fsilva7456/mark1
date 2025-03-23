@@ -275,7 +275,7 @@ export default function CalendarView() {
               <h3>Error</h3>
               <p>{error}</p>
               <button 
-                onClick={() => router.push('/dashboard')} 
+                onClick={() => router.push('/marketing-plan')} 
                 className={styles.returnButton}
               >
                 Return to Dashboard
@@ -379,7 +379,7 @@ export default function CalendarView() {
                   Back to Content Outline
                 </button>
                 <Link 
-                  href="/dashboard" 
+                  href="/marketing-plan" 
                   className={styles.dashboardButton}
                 >
                   Return to Dashboard

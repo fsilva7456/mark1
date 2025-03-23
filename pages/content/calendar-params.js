@@ -379,7 +379,7 @@ export default function CalendarParams() {
                 if (strategyId) {
                   router.push(`/content/new?strategy=${strategyId}`);
                 } else {
-                  router.push('/dashboard');
+                  router.push('/marketing-plan');
                 }
               }} 
               className={styles.returnButton}
@@ -596,7 +596,7 @@ export default function CalendarParams() {
                   if (strategyId) {
                     router.push(`/content/new?strategy=${strategyId}`);
                   } else {
-                    router.back();
+                    router.push('/marketing-plan');
                   }
                 }} 
                 className={styles.backButton}

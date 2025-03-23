@@ -190,7 +190,7 @@ export default function Setup() {
                 
                 <div className={styles.actionButtons}>
                   <button 
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push('/marketing-plan')}
                     className={styles.primaryButton}
                   >
                     Go to Dashboard

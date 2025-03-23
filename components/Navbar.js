@@ -18,9 +18,7 @@ export default function Navbar() {
     switchProject 
   } = useProject();
   
-  const isDashboard = router.pathname === '/dashboard';
   const isAuthedPath = user && (
-    router.pathname === '/dashboard' || 
     router.pathname === '/marketing-plan' || 
     router.pathname.startsWith('/strategy/') || 
     router.pathname.startsWith('/content/') ||
@@ -123,12 +121,6 @@ export default function Navbar() {
 
             <div className={styles.navLinks}>
               <Link 
-                href="/dashboard" 
-                className={router.pathname === '/dashboard' ? styles.activeLink : styles.navLink}
-              >
-                Dashboard
-              </Link>
-              <Link 
                 href="/marketing-plan" 
                 className={router.pathname === '/marketing-plan' ? styles.activeLink : styles.navLink}
               >
@@ -139,12 +131,6 @@ export default function Navbar() {
         )}
 
         <div className={styles.navControls}>
-          <button className={styles.menuButton} onClick={toggleMenu}>
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-
           {/* Only show these auth buttons when not logged in */}
           {!user && router.pathname !== '/' && router.pathname !== '/signup' && (
             <div className={styles.authButtons}>
@@ -157,8 +143,8 @@ export default function Navbar() {
             </div>
           )}
           
-          {/* Show logout when user is logged in AND not on dashboard */}
-          {user && !isDashboard && (
+          {/* Show logout when user is logged in */}
+          {user && (
             <button 
               onClick={signOut}
               className={dashboardStyles.logoutButton}
@@ -169,27 +155,10 @@ export default function Navbar() {
         </div>
 
         <div className={`${styles.menu} ${menuOpen ? styles.active : ''}`}>
-          <Link href="/features" className={router.pathname === '/features' ? styles.active : ''}>
-            Features
-          </Link>
-          <Link href="/pricing" className={router.pathname === '/pricing' ? styles.active : ''}>
-            Pricing
-          </Link>
-          <Link href="/blog" className={router.pathname === '/blog' ? styles.active : ''}>
-            Blog
-          </Link>
-          <Link href="/about" className={router.pathname === '/about' ? styles.active : ''}>
-            About
-          </Link>
           {user && (
-            <>
-              <Link href="/dashboard" className={router.pathname === '/dashboard' ? styles.active : ''}>
-                Dashboard
-              </Link>
-              <Link href="/marketing-plan" className={router.pathname === '/marketing-plan' ? styles.active : ''}>
-                Marketing Plan
-              </Link>
-            </>
+            <Link href="/marketing-plan" className={router.pathname === '/marketing-plan' ? styles.active : ''}>
+              Marketing Plan
+            </Link>
           )}
         </div>
       </div>

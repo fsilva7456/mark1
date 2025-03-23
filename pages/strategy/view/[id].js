@@ -133,7 +133,7 @@ export default function ViewStrategy() {
                 <h3>Error</h3>
                 <p>{error}</p>
                 <button 
-                  onClick={() => router.push('/dashboard')} 
+                  onClick={() => router.push('/marketing-plan')} 
                   className={styles.returnButton}
                 >
                   Return to Dashboard
@@ -196,7 +196,7 @@ export default function ViewStrategy() {
                     </button>
                     
                     <button
-                      onClick={() => router.push('/dashboard')}
+                      onClick={() => router.push('/marketing-plan')}
                       className={styles.cancelButton}
                     >
                       Back to Dashboard

@@ -102,7 +102,7 @@ export default function ViewStrategy() {
                     Create Content Outline
                   </button>
                   <button 
-                    onClick={() => router.push('/dashboard')} 
+                    onClick={() => router.push('/marketing-plan')} 
                     className={styles.cancelButton}
                   >
                     Back to Dashboard

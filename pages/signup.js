@@ -19,7 +19,7 @@ export default function Signup() {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      router.push('/dashboard');
+      router.push('/marketing-plan');
     }
   }, [user, loading, router]);
 
