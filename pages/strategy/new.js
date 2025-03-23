@@ -1230,7 +1230,7 @@ Please share:
                   disabled={regeneratingAudience !== null}
                   title="Add feedback and regenerate this audience"
                   style={{
-                    backgroundColor: '#4a90e2',
+                    backgroundColor: '#3454D1',
                     color: 'white',
                     borderRadius: '20px',
                     padding: '8px 16px',
@@ -1483,20 +1483,46 @@ Please share:
             {selected === 'custom' && (
               <div className={styles.customAestheticInput}>
                 <label htmlFor="customAesthetic">Describe your preferred content style:</label>
-                <textarea
-                  id="customAesthetic"
+                <input
+                  type="text"
+                  placeholder="Describe your custom aesthetic style..."
                   value={customAesthetic}
                   onChange={(e) => setCustomAesthetic(e.target.value)}
-                  placeholder="e.g., Modern with earthy tones, focusing on authentic moments and educational overlays..."
-                  className={styles.feedbackTextarea}
+                  className={styles.customInput}
                 />
-                <button 
-                  onClick={handleCustomSubmit}
-                  className={styles.saveButton}
-                  disabled={!customAesthetic.trim()}
-                >
-                  Apply Custom Style
-                </button>
+                
+                <div className={styles.modalActions}>
+                  <button 
+                    onClick={onClose} 
+                    className={styles.cancelButton}
+                    style={{
+                      backgroundColor: '#f0f0f0',
+                      color: '#333',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      border: '1px solid #ddd',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleCustomSubmit} 
+                    className={styles.saveButton}
+                    disabled={!customAesthetic.trim()}
+                    style={{
+                      backgroundColor: '#3454D1',
+                      color: 'white',
+                      borderRadius: '20px',
+                      padding: '8px 16px',
+                      border: 'none',
+                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -1792,7 +1818,7 @@ Please share:
                     className={styles.saveButton}
                     disabled={isProcessing}
                     style={{
-                      backgroundColor: '#4a90e2',
+                      backgroundColor: '#3454D1',
                       color: 'white',
                       borderRadius: '20px',
                       padding: '8px 16px',
@@ -1815,7 +1841,7 @@ Please share:
                     className={styles.outlineButton}
                     disabled={isProcessing}
                     style={{
-                      backgroundColor: '#4a90e2',
+                      backgroundColor: '#3454D1',
                       color: 'white',
                       borderRadius: '20px',
                       padding: '8px 16px',
@@ -1899,10 +1925,10 @@ Please share:
                 </button>
                 <button 
                   onClick={handleSaveFeedback}
-                  className={styles.regenerateButton}
+                  className={styles.saveButton}
                   disabled={!feedbackPopup.text.trim() || (feedbackPopup.section === 'audience' && regeneratingAudience !== null)}
                   style={{
-                    backgroundColor: '#4a90e2',
+                    backgroundColor: '#3454D1',
                     color: 'white',
                     borderRadius: '20px',
                     padding: '8px 16px',
