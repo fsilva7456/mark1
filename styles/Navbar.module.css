@@ -290,4 +290,10 @@
 .manageProjectsButton:hover {
   text-decoration: underline;
   color: #3454D1;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 } 

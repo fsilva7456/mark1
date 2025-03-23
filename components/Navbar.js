@@ -120,12 +120,7 @@ export default function Navbar() {
             )}
 
             <div className={styles.navLinks}>
-              <Link 
-                href="/marketing-plan" 
-                className={router.pathname === '/marketing-plan' ? styles.activeLink : styles.navLink}
-              >
-                Marketing Plan
-              </Link>
+              {/* Remove the Marketing Plan link from here */}
             </div>
           </>
         )}
@@ -143,14 +138,22 @@ export default function Navbar() {
             </div>
           )}
           
-          {/* Show logout when user is logged in */}
+          {/* Show Marketing Plan and Logout buttons side by side when user is logged in */}
           {user && (
-            <button 
-              onClick={signOut}
-              className={dashboardStyles.logoutButton}
-            >
-              Logout
-            </button>
+            <div className={styles.buttonGroup}>
+              <Link 
+                href="/marketing-plan" 
+                className={dashboardStyles.logoutButton}
+              >
+                Marketing Plan
+              </Link>
+              <button 
+                onClick={signOut}
+                className={dashboardStyles.logoutButton}
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
 
