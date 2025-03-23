@@ -118,7 +118,7 @@ export default function ContextualActionButtons({
           },
           {
             label: 'View Strategy',
-            href: `/strategy/${strategy.id}`,
+            href: `/strategy/view/${strategy.id}`,
             primary: false,
             icon: '👆'
           }

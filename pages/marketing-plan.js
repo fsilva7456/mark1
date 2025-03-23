@@ -152,20 +152,12 @@ export default function MarketingPlanDashboard() {
 
   // Navigate to entity detail page
   const navigateToEntity = (type, id) => {
-    log.debug('Navigating to entity page', { type, id });
-    
-    switch (type) {
-      case 'strategy':
-        router.push(`/strategy/${id}`);
-        break;
-      case 'outline':
-        router.push(`/content/new?strategy=${id}`);
-        break;
-      case 'calendar':
-        router.push(`/calendar/${id}`);
-        break;
-      default:
-        log.warn('Invalid entity type for navigation', { type });
+    if (type === 'strategy') {
+      router.push(`/strategy/view/${id}`);
+    } else if (type === 'outline') {
+      router.push(`/content/new?strategy=${id}`);
+    } else if (type === 'calendar') {
+      router.push(`/calendar/${id}`);
     }
   };
 
