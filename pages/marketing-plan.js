@@ -343,7 +343,9 @@ export default function MarketingPlanDashboard() {
                 <div className={styles.emptyState}>
                   <div className={styles.emptyIcon}>📊</div>
                   <h2>No marketing plans yet</h2>
-                  <p>Contact an administrator to create a marketing strategy</p>
+                  <Link href="/strategy/new" className={styles.createButton}>
+                    Create Strategy
+                  </Link>
                 </div>
               )}
             </div>
