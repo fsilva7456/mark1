@@ -126,17 +126,7 @@ export default function StatusDashboard({ strategies, outlines, calendars, posts
         </div>
       )}
       
-      <div className={styles.quickActions}>
-        <Link href="/strategy/new" className={styles.actionButton}>
-          New Strategy
-        </Link>
-        <Link href="/content/new" className={styles.actionButton}>
-          Create Outline
-        </Link>
-        <Link href="/calendar/new" className={styles.actionButton}>
-          Create Calendar
-        </Link>
-      </div>
+      {/* Quick actions removed as requested */}
     </div>
   );
 } 
