@@ -1525,10 +1525,13 @@ Please share:
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           }
           
           .${styles.actionButton}:hover {
             background-color: #3a80d2;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
           }
           
           .${styles.actionButton}.${styles.loading} {
@@ -1566,10 +1569,19 @@ Please share:
             padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          .${styles.regenerateButton}:hover {
+            background-color: #3a80d2;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
           }
           
           .${styles.regenerateButton}:disabled {
             background-color: #a8ccf0;
+            color: white;
             cursor: not-allowed;
           }
           
@@ -1580,6 +1592,30 @@ Please share:
           
           .${styles.objectiveItem}:hover, .${styles.messageItem}:hover {
             background-color: #f5f5f5;
+          }
+          
+          .${styles.saveButton} {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          .${styles.saveButton}:hover {
+            background-color: #3a80d2;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+          }
+          
+          .${styles.saveButton}:disabled {
+            background-color: #a8ccf0;
+            color: white;
+            cursor: not-allowed;
           }
         `}</style>
       </Head>
