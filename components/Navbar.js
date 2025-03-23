@@ -155,11 +155,7 @@ export default function Navbar() {
         </div>
 
         <div className={`${styles.menu} ${menuOpen ? styles.active : ''}`}>
-          {user && (
-            <Link href="/marketing-plan" className={router.pathname === '/marketing-plan' ? styles.active : ''}>
-              Marketing Plan
-            </Link>
-          )}
+          {/* Mobile menu Marketing Plan link removed */}
         </div>
       </div>
     </nav>
