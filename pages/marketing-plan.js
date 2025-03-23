@@ -61,6 +61,13 @@ export default function MarketingPlanDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ type: '', id: '', name: '' });
   
+  // Add state for aesthetic modal
+  const [aestheticModal, setAestheticModal] = useState({
+    visible: false,
+    value: '',
+    strategyId: null
+  });
+  
   // Create ref at the component level, not inside a hook
   const isInitialMount = useRef(true);
 
@@ -281,6 +288,23 @@ export default function MarketingPlanDashboard() {
     };
   });
 
+  // Handle the aesthetic selection
+  const handleAestheticSubmit = (value) => {
+    if (!aestheticModal.strategyId) return;
+    
+    // Navigate to content outline with aesthetic parameter
+    router.push(`/content/new?strategy=${aestheticModal.strategyId}&aesthetic=${encodeURIComponent(value)}`);
+  };
+
+  // Show aesthetic modal for content outline creation
+  const handleShowAestheticModal = (strategyId) => {
+    setAestheticModal({
+      visible: true,
+      value: '',
+      strategyId
+    });
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -329,9 +353,19 @@ export default function MarketingPlanDashboard() {
           </div>
           <div className={styles.workflowMessage}>
             <p>{workflowStep.message}</p>
-            <Link href={workflowStep.action} className={styles.workflowAction}>
-              {workflowStep.actionText}
-            </Link>
+            {workflowStep.step === 2 ? (
+              // For Content Outline, show aesthetic modal
+              <button
+                className={styles.workflowAction}
+                onClick={() => handleShowAestheticModal(strategies[0].id)}
+              >
+                {workflowStep.actionText}
+              </button>
+            ) : (
+              <Link href={workflowStep.action} className={styles.workflowAction}>
+                {workflowStep.actionText}
+              </Link>
+            )}
           </div>
         </div>
         
@@ -601,7 +635,18 @@ export default function MarketingPlanDashboard() {
         </div>
       </main>
       
-      {/* Confirmation Modal */}
+      {/* Add Aesthetic Selection Modal */}
+      <AestheticSelectionModal
+        isOpen={aestheticModal.visible}
+        onClose={() => setAestheticModal({...aestheticModal, visible: false})}
+        onSelect={(value) => {
+          setAestheticModal({value: value, visible: false, strategyId: aestheticModal.strategyId});
+          handleAestheticSubmit(value);
+        }}
+        selectedValue={aestheticModal.value}
+      />
+      
+      {/* Delete Confirmation Modal */}
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
@@ -801,4 +846,125 @@ function EntityDetailsPanel({ entity, type, onNavigate }) {
     default:
       return <div className={styles.emptyDetails}>No details available for this entity type</div>;
   }
-} 
+}
+
+// Aesthetic Selection Modal Component
+const AestheticSelectionModal = ({ isOpen, onClose, onSelect, selectedValue }) => {
+  const aestheticOptions = [
+    {
+      id: 'professional',
+      name: 'Professional & Educational',
+      description: 'Expert-driven content with an emphasis on knowledge and credibility',
+    },
+    {
+      id: 'motivational',
+      name: 'Motivational & Energetic',
+      description: 'High-energy content focused on inspiration and motivation',
+    },
+    {
+      id: 'community',
+      name: 'Community & Supportive',
+      description: 'Warm, inclusive content that emphasizes connection and belonging',
+    },
+    {
+      id: 'premium',
+      name: 'Premium & Exclusive',
+      description: 'Sophisticated content highlighting premium quality and exclusivity',
+    },
+    {
+      id: 'authentic',
+      name: 'Authentic & Raw',
+      description: 'Real, unfiltered content showcasing genuine moments and transformations',
+    },
+    {
+      id: 'custom',
+      name: 'Custom Style',
+      description: 'Describe your own unique aesthetic',
+    }
+  ];
+  
+  const [customAesthetic, setCustomAesthetic] = useState('');
+  const [selected, setSelected] = useState(selectedValue || '');
+  
+  if (!isOpen) return null;
+  
+  const handleSelect = (aestheticId) => {
+    setSelected(aestheticId);
+    if (aestheticId !== 'custom') {
+      const option = aestheticOptions.find(o => o.id === aestheticId);
+      onSelect(option.name);
+    }
+  };
+  
+  const handleCustomSubmit = () => {
+    if (customAesthetic.trim()) {
+      onSelect(customAesthetic);
+    }
+  };
+  
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.aestheticModal}>
+        <div className={styles.modalHeader}>
+          <h3>Select Your Content Aesthetic</h3>
+          <button 
+            className={styles.closeButton}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
+        
+        <div className={styles.modalBody}>
+          <p className={styles.modalDescription}>
+            Choose the visual style and tone that best represents your brand
+          </p>
+          
+          <div className={styles.aestheticGrid}>
+            {aestheticOptions.map(option => (
+              <div 
+                key={option.id}
+                className={`${styles.aestheticCard} ${selected === option.id ? styles.selectedAesthetic : ''}`}
+                onClick={() => handleSelect(option.id)}
+              >
+                <div className={styles.aestheticInfo}>
+                  <h4>{option.name}</h4>
+                  <p>{option.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {selected === 'custom' && (
+            <div className={styles.customAestheticInput}>
+              <label htmlFor="customAesthetic">Describe your preferred content style:</label>
+              <input
+                type="text"
+                placeholder="Describe your custom aesthetic style..."
+                value={customAesthetic}
+                onChange={(e) => setCustomAesthetic(e.target.value)}
+                className={styles.customInput}
+              />
+              
+              <div className={styles.modalActions}>
+                <button 
+                  onClick={onClose} 
+                  className={styles.cancelButton}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCustomSubmit} 
+                  className={styles.saveButton}
+                  disabled={!customAesthetic.trim()}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}; 

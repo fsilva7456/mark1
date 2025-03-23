@@ -624,4 +624,106 @@
 .workflowAction:hover {
   background-color: #2a43a7;
   text-decoration: none;
+}
+
+/* Aesthetic Modal Styles */
+.aestheticModal {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 80%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1001;
+}
+
+.modalDescription {
+  margin-bottom: 20px;
+  color: #666;
+  text-align: center;
+}
+
+.aestheticGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.aestheticCard {
+  border: 2px solid #eaeaea;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aestheticCard:hover {
+  border-color: #3454D1;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.selectedAesthetic {
+  border-color: #3454D1;
+  background-color: rgba(52, 84, 209, 0.05);
+}
+
+.aestheticInfo h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+}
+
+.aestheticInfo p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.customAestheticInput {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eaeaea;
+}
+
+.customAestheticInput label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.customInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.customInput:focus {
+  outline: none;
+  border-color: #3454D1;
+  box-shadow: 0 0 0 2px rgba(52, 84, 209, 0.2);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .aestheticGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .aestheticModal {
+    width: 95%;
+    max-height: 80vh;
+  }
 } 
