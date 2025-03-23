@@ -738,6 +738,42 @@ Please share:
       currentValue: audience.segment
     });
   };
+  
+  // Function to open the feedback modal for an objective
+  const handleOpenObjectiveModal = (audienceIndex, objectiveIndex) => {
+    const audience = matrix.enhancedStrategy.audiences[audienceIndex];
+    if (!audience || !audience.objectives[objectiveIndex]) {
+      toast.error("Objective not found in strategy matrix.");
+      return;
+    }
+    
+    setFeedbackPopup({
+      visible: true,
+      section: 'objective',
+      audienceIndex: audienceIndex,
+      objectiveIndex: objectiveIndex,
+      text: audience.objectives[objectiveIndex].objective,
+      currentValue: audience.objectives[objectiveIndex].objective
+    });
+  };
+  
+  // Function to open the feedback modal for a key message
+  const handleOpenMessageModal = (audienceIndex, messageIndex) => {
+    const audience = matrix.enhancedStrategy.audiences[audienceIndex];
+    if (!audience || !audience.keyMessages[messageIndex]) {
+      toast.error("Key message not found in strategy matrix.");
+      return;
+    }
+    
+    setFeedbackPopup({
+      visible: true,
+      section: 'keyMessage',
+      audienceIndex: audienceIndex,
+      messageIndex: messageIndex,
+      text: audience.keyMessages[messageIndex],
+      currentValue: audience.keyMessages[messageIndex]
+    });
+  };
 
   // Function to handle regeneration with feedback
   const handleRegenerateWithFeedback = async () => {
@@ -805,7 +841,7 @@ Please share:
     }
   };
   
-  // Update handleSaveFeedback to call the regeneration function
+  // Update handleSaveFeedback to handle all section types
   const handleSaveFeedback = () => {
     // If no feedback provided, just close the popup
     if (!feedbackPopup.text.trim()) {
@@ -819,8 +855,41 @@ Please share:
       return;
     }
     
-    // Handle regeneration with feedback
-    handleRegenerateWithFeedback();
+    // Handle different sections
+    if (feedbackPopup.section === 'audience') {
+      // Handle regeneration with feedback for audience
+      handleRegenerateWithFeedback();
+    } else if (feedbackPopup.section === 'objective') {
+      // Handle objective update
+      const updatedMatrix = { ...matrix };
+      updatedMatrix.enhancedStrategy.audiences[feedbackPopup.audienceIndex].objectives[feedbackPopup.objectiveIndex].objective = feedbackPopup.text;
+      setMatrix(updatedMatrix);
+      
+      // Close the popup
+      setFeedbackPopup({
+        visible: false,
+        section: '',
+        index: null,
+        text: '',
+        currentValue: ''
+      });
+      toast.success('Objective updated successfully!');
+    } else if (feedbackPopup.section === 'keyMessage') {
+      // Handle key message update
+      const updatedMatrix = { ...matrix };
+      updatedMatrix.enhancedStrategy.audiences[feedbackPopup.audienceIndex].keyMessages[feedbackPopup.messageIndex] = feedbackPopup.text;
+      setMatrix(updatedMatrix);
+      
+      // Close the popup
+      setFeedbackPopup({
+        visible: false,
+        section: '',
+        index: null,
+        text: '',
+        currentValue: ''
+      });
+      toast.success('Key message updated successfully!');
+    }
   };
 
   // Add handleFeedbackChange function
@@ -1171,7 +1240,11 @@ Please share:
                 <h4>Objectives</h4>
                 <ul>
                   {audience.objectives.map((obj, objIndex) => (
-                    <li key={objIndex} className={styles.objectiveItem}>
+                    <li 
+                      key={objIndex} 
+                      className={styles.objectiveItem}
+                      onClick={() => handleOpenObjectiveModal(audienceIndex, objIndex)}
+                    >
                       <div className={styles.objectiveHeader}>
                         {obj.objective}
                       </div>
@@ -1190,7 +1263,11 @@ Please share:
                 <h4>Key Messages</h4>
                 <ul>
                   {audience.keyMessages.map((message, msgIndex) => (
-                    <li key={msgIndex} className={styles.messageItem}>
+                    <li 
+                      key={msgIndex} 
+                      className={styles.messageItem}
+                      onClick={() => handleOpenMessageModal(audienceIndex, msgIndex)}
+                    >
                       {message}
                     </li>
                   ))}
@@ -1440,22 +1517,23 @@ Please share:
           }
           
           .${styles.actionButton} {
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 5px 10px;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s ease;
           }
           
           .${styles.actionButton}:hover {
-            background-color: #e0e0e0;
+            background-color: #3a80d2;
           }
           
           .${styles.actionButton}.${styles.loading} {
-            background-color: #f3f3f3;
-            color: #888;
+            background-color: #a8ccf0;
+            color: white;
             cursor: not-allowed;
           }
           
@@ -1469,17 +1547,22 @@ Please share:
           .${styles.cancelButton} {
             background-color: #f0f0f0;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 20px;
             padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s ease;
+          }
+          
+          .${styles.cancelButton}:hover {
+            background-color: #e0e0e0;
           }
           
           .${styles.regenerateButton} {
             background-color: #4a90e2;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 20px;
             padding: 8px 16px;
             font-size: 14px;
             cursor: pointer;
@@ -1488,6 +1571,15 @@ Please share:
           .${styles.regenerateButton}:disabled {
             background-color: #a8ccf0;
             cursor: not-allowed;
+          }
+          
+          .${styles.objectiveItem}, .${styles.messageItem} {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+          }
+          
+          .${styles.objectiveItem}:hover, .${styles.messageItem}:hover {
+            background-color: #f5f5f5;
           }
         `}</style>
       </Head>
@@ -1672,18 +1764,35 @@ Please share:
             
             <div className={styles.modalBody}>
               <div className={styles.currentValue}>
-                <strong>Current Audience Segment:</strong>
+                <strong>
+                  {feedbackPopup.section === 'audience' ? 'Current Audience Segment:' : 
+                   feedbackPopup.section === 'objective' ? 'Current Objective:' : 
+                   feedbackPopup.section === 'keyMessage' ? 'Current Key Message:' : 
+                   'Current Value:'}
+                </strong>
                 <p>{feedbackPopup.currentValue}</p>
               </div>
               
               <div className={styles.feedbackInputContainer}>
-                <label htmlFor="feedback">Please provide specific feedback on what you'd like to change or improve:</label>
+                <label htmlFor="feedback">
+                  {feedbackPopup.section === 'audience' 
+                    ? "Please provide specific feedback on what you'd like to change or improve:" 
+                    : feedbackPopup.section === 'objective'
+                      ? "Edit this objective:"
+                      : "Edit this key message:"}
+                </label>
                 <textarea
                   id="feedback"
                   ref={feedbackInputRef}
                   value={feedbackPopup.text}
                   onChange={handleFeedbackChange}
-                  placeholder="For example: Make this audience more specific, focus on a different age group, add more detail about their lifestyle..."
+                  placeholder={
+                    feedbackPopup.section === 'audience' 
+                      ? "For example: Make this audience more specific, focus on a different age group, add more detail about their lifestyle..." 
+                      : feedbackPopup.section === 'objective'
+                        ? "Enter your updated objective here..."
+                        : "Enter your updated key message here..."
+                  }
                   className={styles.feedbackTextarea}
                 />
               </div>
@@ -1698,9 +1807,9 @@ Please share:
                 <button 
                   onClick={handleSaveFeedback}
                   className={styles.regenerateButton}
-                  disabled={!feedbackPopup.text.trim() || regeneratingAudience !== null}
+                  disabled={!feedbackPopup.text.trim() || (feedbackPopup.section === 'audience' && regeneratingAudience !== null)}
                 >
-                  Regenerate Audience
+                  {feedbackPopup.section === 'audience' ? 'Regenerate Audience' : 'Save Changes'}
                 </button>
               </div>
             </div>
