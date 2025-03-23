@@ -60,6 +60,23 @@ export default function ViewStrategy() {
           console.error("Warning: Strategy has an invalid ID format:", data.id);
         }
         
+        // Check if we have enhanced_data, if not try to parse it from the original strategy data
+        if (!data.enhanced_data && data.strategy_data) {
+          try {
+            // Some older strategies might have the enhanced data nested in strategy_data
+            const strategyData = typeof data.strategy_data === 'string' 
+              ? JSON.parse(data.strategy_data) 
+              : data.strategy_data;
+              
+            if (strategyData.enhancedStrategy) {
+              data.enhanced_data = strategyData.enhancedStrategy;
+              console.log("Found enhanced strategy data in strategy_data");
+            }
+          } catch (parseError) {
+            console.error("Error parsing strategy_data:", parseError);
+          }
+        }
+        
         setStrategy(data);
       } else {
         setError('Strategy not found.');
@@ -150,34 +167,181 @@ export default function ViewStrategy() {
             <div className={styles.matrixLayout}>
               <div className={styles.matrixContainer}>
                 <h2>Your Marketing Strategy</h2>
-                <div className={styles.matrix}>
-                  <div className={styles.matrixSection}>
-                    <h3>Target Audience</h3>
-                    <ul>
-                      {strategy.target_audience?.map((audience, index) => (
-                        <li key={index}>{audience}</li>
-                      ))}
-                    </ul>
+                {strategy.enhanced_data ? (
+                  // Enhanced matrix display when enhanced_data is available
+                  <div className={styles.enhancedMatrix}>
+                    {strategy.enhanced_data.audiences.map((audience, audienceIndex) => (
+                      <div key={audienceIndex} className={styles.audienceSection}>
+                        <div>
+                          <h3 className={styles.audienceTitle}>
+                            {audience.segment}
+                          </h3>
+                        </div>
+                        
+                        <div className={styles.audienceContent}>
+                          <div className={styles.objectivesColumn}>
+                            <h4>Objectives</h4>
+                            <ul>
+                              {audience.objectives.map((obj, objIndex) => (
+                                <li 
+                                  key={objIndex} 
+                                  className={styles.objectiveItem}
+                                  style={{ listStyleType: 'none' }}
+                                >
+                                  <div className={styles.objectiveHeader}>
+                                    {obj.objective}
+                                  </div>
+                                  <div className={styles.objectiveMeta}>
+                                    <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
+                                  </div>
+                                  <div className={styles.objectiveMeta}>
+                                    <span className={styles.metaLabel}>Content Types:</span> {obj.contentTypes.join(', ')}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div className={styles.messagesColumn}>
+                            <h4>Key Messages</h4>
+                            <ul>
+                              {audience.keyMessages.map((message, msgIndex) => (
+                                <li 
+                                  key={msgIndex} 
+                                  className={styles.messageItem}
+                                  style={{ listStyleType: 'none' }}
+                                >
+                                  {message}
+                                </li>
+                              ))}
+                            </ul>
+                            
+                            <div className={styles.channelsInfo}>
+                              <h4>Primary Channels</h4>
+                              <div className={styles.channelsList}>
+                                {audience.channels.map((channel, chIndex) => (
+                                  <span key={chIndex} className={styles.channelTag}>{channel}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {strategy.enhanced_data.implementationPlan && (
+                      <div className={styles.strategySection}>
+                        <div className={styles.timelineSection}>
+                          <h3>90-Day Implementation Plan</h3>
+                          <div className={styles.timelinePhases}>
+                            {strategy.enhanced_data.implementationPlan.map((phase, phaseIndex) => (
+                              <div key={phaseIndex} className={styles.timelinePhase}>
+                                <h4>{phase.title}</h4>
+                                <ul>
+                                  {phase.tasks.map((task, taskIndex) => (
+                                    <li key={taskIndex} style={{ listStyleType: 'none' }}>{task}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {strategy.enhanced_data.competitiveAnalysis && (
+                      <div className={styles.strategySection}>
+                        <div className={styles.competitiveSection}>
+                          <h3>Competitive Gap Analysis</h3>
+                          <div className={styles.gapsGrid}>
+                            <div className={styles.gapsColumn}>
+                              <h4>Identified Gaps</h4>
+                              <ul>
+                                {strategy.enhanced_data.competitiveAnalysis.gaps.map((gap, gapIndex) => (
+                                  <li key={gapIndex} style={{ listStyleType: 'none' }}>{gap}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className={styles.gapsColumn}>
+                              <h4>Exploitation Strategies</h4>
+                              <ul>
+                                {strategy.enhanced_data.competitiveAnalysis.exploitations.map((ex, exIndex) => (
+                                  <li key={exIndex} style={{ listStyleType: 'none' }}>{ex}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {strategy.enhanced_data.contentStrategy && (
+                      <div className={styles.strategySection}>
+                        <div className={styles.contentStrategySection}>
+                          <h3>Content Strategy Guidelines</h3>
+                          <div className={styles.contentStrategyInfo}>
+                            <div className={styles.strategyInfoRow}>
+                              <span className={styles.strategyLabel}>Tone & Style:</span>
+                              <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.tone}</span>
+                            </div>
+                            <div className={styles.strategyInfoRow}>
+                              <span className={styles.strategyLabel}>Posting Frequency:</span>
+                              <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.frequency}</span>
+                            </div>
+                            
+                            <div className={styles.ctaLibrary}>
+                              <h4>Call-to-Action Library</h4>
+                              <div className={styles.ctaList}>
+                                {strategy.enhanced_data.contentStrategy.ctas.map((cta, ctaIndex) => (
+                                  <div key={ctaIndex} className={styles.ctaItem}>{cta}</div>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className={styles.abTests}>
+                              <h4>Recommended A/B Tests</h4>
+                              <ul>
+                                {strategy.enhanced_data.contentStrategy.abTests.map((test, testIndex) => (
+                                  <li key={testIndex} style={{ listStyleType: 'none' }}>{test}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  <div className={styles.matrixSection}>
-                    <h3>Objectives</h3>
-                    <ul>
-                      {strategy.objectives?.map((objective, index) => (
-                        <li key={index}>{objective}</li>
-                      ))}
-                    </ul>
+                ) : (
+                  // Fallback to simple matrix when no enhanced data is available
+                  <div className={styles.matrix}>
+                    <div className={styles.matrixSection}>
+                      <h3>Target Audience</h3>
+                      <ul>
+                        {strategy.target_audience?.map((audience, index) => (
+                          <li key={index}>{audience}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className={styles.matrixSection}>
+                      <h3>Objectives</h3>
+                      <ul>
+                        {strategy.objectives?.map((objective, index) => (
+                          <li key={index}>{objective}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className={styles.matrixSection}>
+                      <h3>Key Messages</h3>
+                      <ul>
+                        {strategy.key_messages?.map((message, index) => (
+                          <li key={index}>{message}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  
-                  <div className={styles.matrixSection}>
-                    <h3>Key Messages</h3>
-                    <ul>
-                      {strategy.key_messages?.map((message, index) => (
-                        <li key={index}>{message}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+                )}
                 
                 <div className={styles.matrixActions}>
                   {/* Debug output */}
