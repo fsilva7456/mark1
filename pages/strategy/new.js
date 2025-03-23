@@ -1697,8 +1697,25 @@ Please share:
             padding-left: 0;
           }
           
+          /* Hide marker pseudo-elements */
+          .${styles.objectivesColumn} li::marker,
+          .${styles.messagesColumn} li::marker,
+          .${styles.timelinePhase} li::marker,
+          .${styles.gapsColumn} li::marker,
+          .${styles.abTests} li::marker {
+            content: none;
+            display: none;
+          }
+          
+          /* Ensure all list items don't display markers */
+          .${styles.objectiveItem},
+          .${styles.messageItem},
           .${styles.objectivesColumn} li,
-          .${styles.messagesColumn} li {
+          .${styles.messagesColumn} li,
+          .${styles.timelinePhase} li,
+          .${styles.gapsColumn} li,
+          .${styles.abTests} li {
+            list-style: none;
             margin-bottom: 10px;
           }
         `}</style>
