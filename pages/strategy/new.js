@@ -28,7 +28,7 @@ export default function NewStrategy() {
   // Add state for audience regeneration
   const [regeneratingAudience, setRegeneratingAudience] = useState(null);
   
-  // Feedback popup state
+  // Update feedback popup state to match content outline pattern
   const [feedbackPopup, setFeedbackPopup] = useState({
     visible: false,
     section: '',
@@ -721,10 +721,15 @@ Please share:
     
     setSuggestions(mockSuggestions[section] || []);
   };
-  
-  // Add function to handle audience feedback
-  const handleAudienceFeedback = (audienceIndex) => {
+
+  // Function to open the feedback modal for an audience
+  const handleOpenFeedbackModal = (audienceIndex) => {
     const audience = matrix.enhancedStrategy.audiences[audienceIndex];
+    if (!audience) {
+      toast.error("Audience not found in strategy matrix.");
+      return;
+    }
+    
     setFeedbackPopup({
       visible: true,
       section: 'audience',
@@ -734,8 +739,25 @@ Please share:
     });
   };
 
-  // Add function to regenerate audience
-  const handleRegenerateAudience = async (audienceIndex) => {
+  // Function to handle regeneration with feedback
+  const handleRegenerateWithFeedback = async () => {
+    if (feedbackPopup.section !== 'audience' || feedbackPopup.index === null || !feedbackPopup.text.trim()) {
+      return;
+    }
+    
+    const audienceIndex = feedbackPopup.index;
+    const feedbackText = feedbackPopup.text;
+    
+    // Close the popup
+    setFeedbackPopup({
+      visible: false,
+      section: '',
+      index: null,
+      text: '',
+      currentValue: ''
+    });
+    
+    // Set regenerating state
     setRegeneratingAudience(audienceIndex);
     
     try {
@@ -750,6 +772,7 @@ Please share:
         body: JSON.stringify({
           audienceIndex: audienceIndex,
           currentAudience: audienceSegment,
+          feedback: feedbackText,
           userData: {
             name: userData.name,
             location: userData.location,
@@ -770,7 +793,7 @@ Please share:
         const updatedMatrix = { ...matrix };
         updatedMatrix.enhancedStrategy.audiences[audienceIndex] = data.audience;
         setMatrix(updatedMatrix);
-        toast.success('Audience regenerated successfully!');
+        toast.success('Audience regenerated successfully with your feedback!');
       } else {
         throw new Error('Invalid audience data returned');
       }
@@ -782,31 +805,29 @@ Please share:
     }
   };
   
-  // Update handleSaveFeedback to handle audience feedback
+  // Update handleSaveFeedback to call the regeneration function
   const handleSaveFeedback = () => {
-    // Update the matrix with new value
-    if (feedbackPopup.text.trim()) {
-      const updatedMatrix = { ...matrix };
-      
-      // Handle different sections
-      if (feedbackPopup.section === 'audience') {
-        // Update audience segment name
-        updatedMatrix.enhancedStrategy.audiences[feedbackPopup.index].segment = feedbackPopup.text;
-      } else {
-        // Original functionality for other sections
-        updatedMatrix[feedbackPopup.section][feedbackPopup.index] = feedbackPopup.text;
-      }
-      
-      setMatrix(updatedMatrix);
+    // If no feedback provided, just close the popup
+    if (!feedbackPopup.text.trim()) {
+      setFeedbackPopup({
+        visible: false,
+        section: '',
+        index: null,
+        text: '',
+        currentValue: ''
+      });
+      return;
     }
     
-    // Close the popup
+    // Handle regeneration with feedback
+    handleRegenerateWithFeedback();
+  };
+
+  // Add handleFeedbackChange function
+  const handleFeedbackChange = (e) => {
     setFeedbackPopup({
-      visible: false,
-      section: '',
-      index: null,
-      text: '',
-      currentValue: ''
+      ...feedbackPopup,
+      text: e.target.value
     });
   };
 
@@ -1025,14 +1046,6 @@ Please share:
     });
   };
 
-  // Add this function to handle changes in the feedback textarea
-  const handleFeedbackChange = (e) => {
-    setFeedbackPopup({
-      ...feedbackPopup,
-      text: e.target.value
-    });
-  };
-
   // Add this function to handle aesthetic input changes
   const handleAestheticChange = (e) => {
     setAestheticModal({
@@ -1143,20 +1156,12 @@ Please share:
               
               <div className={styles.audienceActions}>
                 <button 
-                  className={styles.actionButton}
-                  onClick={() => handleAudienceFeedback(audienceIndex)}
-                  title="Add feedback for this audience"
-                >
-                  Add Feedback
-                </button>
-                
-                <button 
                   className={`${styles.actionButton} ${regeneratingAudience === audienceIndex ? styles.loading : ''}`}
-                  onClick={() => handleRegenerateAudience(audienceIndex)}
+                  onClick={() => handleOpenFeedbackModal(audienceIndex)}
                   disabled={regeneratingAudience !== null}
-                  title="Regenerate this audience section"
+                  title="Add feedback and regenerate this audience"
                 >
-                  {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Regenerate'}
+                  {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Add Feedback and Regenerate'}
                 </button>
               </div>
             </div>
@@ -1453,6 +1458,37 @@ Please share:
             color: #888;
             cursor: not-allowed;
           }
+          
+          .${styles.modalFooter} {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+          }
+          
+          .${styles.cancelButton} {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+          }
+          
+          .${styles.regenerateButton} {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+          }
+          
+          .${styles.regenerateButton}:disabled {
+            background-color: #a8ccf0;
+            cursor: not-allowed;
+          }
         `}</style>
       </Head>
 
@@ -1625,7 +1661,7 @@ Please share:
         <div className={styles.modalOverlay}>
           <div className={styles.feedbackModal}>
             <div className={styles.modalHeader}>
-              <h3>Refine Your Strategy</h3>
+              <h3>Add Feedback and Regenerate</h3>
               <button 
                 className={styles.closeButton}
                 onClick={() => setFeedbackPopup({...feedbackPopup, visible: false})}
@@ -1636,42 +1672,36 @@ Please share:
             
             <div className={styles.modalBody}>
               <div className={styles.currentValue}>
-                <strong>Current Value:</strong>
+                <strong>Current Audience Segment:</strong>
                 <p>{feedbackPopup.currentValue}</p>
               </div>
               
               <div className={styles.feedbackInputContainer}>
-                <label htmlFor="feedback">Your feedback:</label>
+                <label htmlFor="feedback">Please provide specific feedback on what you'd like to change or improve:</label>
                 <textarea
                   id="feedback"
                   ref={feedbackInputRef}
                   value={feedbackPopup.text}
                   onChange={handleFeedbackChange}
-                  placeholder="Enter your customized text..."
+                  placeholder="For example: Make this audience more specific, focus on a different age group, add more detail about their lifestyle..."
                   className={styles.feedbackTextarea}
                 />
-                <button 
-                  onClick={handleSaveFeedback}
-                  className={styles.saveButton}
-                  disabled={!feedbackPopup.text.trim()}
-                >
-                  Save Changes
-                </button>
               </div>
               
-              <div className={styles.suggestionsContainer}>
-                <h4>AI Suggestions</h4>
-                <div className={styles.suggestionsList}>
-                  {suggestions.map((suggestion, index) => (
-                    <div 
-                      key={index} 
-                      className={styles.suggestionItem}
-                      onClick={() => handleSuggestionSelect(suggestion)}
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
+              <div className={styles.modalFooter}>
+                <button 
+                  className={styles.cancelButton}
+                  onClick={() => setFeedbackPopup({...feedbackPopup, visible: false})}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveFeedback}
+                  className={styles.regenerateButton}
+                  disabled={!feedbackPopup.text.trim() || regeneratingAudience !== null}
+                >
+                  Regenerate Audience
+                </button>
               </div>
             </div>
           </div>
