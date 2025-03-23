@@ -397,13 +397,6 @@ export default function MarketingPlanDashboard() {
                                 View
                               </button>
                               <button
-                                className={styles.outlineButton}
-                                onClick={() => router.push(`/content/new?strategy=${strategy.id}`)}
-                                disabled={contentOutlines.length > 0}
-                              >
-                                Generate Content
-                              </button>
-                              <button
                                 className={styles.deleteButton}
                                 data-testid={`delete-strategy-${strategy.id}`}
                                 onClick={() => handleDeleteClick('strategy', strategy.id, strategy.name)}
@@ -459,13 +452,6 @@ export default function MarketingPlanDashboard() {
                                 onClick={() => navigateToEntity('outline', outline.strategy_id)}
                               >
                                 View
-                              </button>
-                              <button
-                                className={styles.calendarButton}
-                                onClick={() => router.push(`/content/calendar-params?strategyId=${outline.strategy_id}&contentOutline=${encodeURIComponent(JSON.stringify(outline.outline))}`)}
-                                disabled={calendars.length > 0}
-                              >
-                                Generate Calendar
                               </button>
                               <button
                                 className={styles.deleteButton}
@@ -695,12 +681,6 @@ function EntityDetailsPanel({ entity, type, onNavigate }) {
               onClick={() => onNavigate('strategy', entity.id)}
             >
               View Strategy
-            </button>
-            <button
-              className={styles.detailActionButton}
-              onClick={() => onNavigate('outline', entity.id)}
-            >
-              Generate Content
             </button>
           </div>
         </div>
