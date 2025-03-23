@@ -68,35 +68,94 @@ export default function ViewStrategy() {
             <div className={styles.matrixLayout}>
               <div className={styles.matrixContainer}>
                 <h2>Your Marketing Strategy</h2>
-                <div className={styles.matrix}>
-                  <div className={styles.matrixColumn}>
-                    <h3>Target Audience</h3>
-                    <ul>
-                      {strategy.target_audience.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className={styles.matrixColumn}>
-                    <h3>Objectives</h3>
-                    <ul>
-                      {strategy.objectives.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className={styles.matrixColumn}>
-                    <h3>Key Messages</h3>
-                    <ul>
-                      {strategy.key_messages.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
+                
+                {/* Target Audience Sections */}
+                <div className={styles.audienceContainer}>
+                  {strategy.target_audience.map((audience, index) => (
+                    <div key={index} className={styles.audienceSection}>
+                      <div className={styles.audienceHeader}>
+                        <h3>Target Audience: {audience}</h3>
+                      </div>
+                      <div className={styles.audienceContent}>
+                        {/* Campaign Objectives */}
+                        <div className={styles.campaignObjectives}>
+                          <h4>Campaign Objectives</h4>
+                          <div className={styles.objectivesGrid}>
+                            <div className={styles.objectiveItem}>
+                              <div className={styles.objectiveType}>Awareness</div>
+                              <p>Increase brand visibility and recognition among {audience}</p>
+                            </div>
+                            <div className={styles.objectiveItem}>
+                              <div className={styles.objectiveType}>Consideration</div>
+                              <p>Drive engagement and information-seeking behavior</p>
+                            </div>
+                            <div className={styles.objectiveItem}>
+                              <div className={styles.objectiveType}>Conversion</div>
+                              <p>Convert prospects into paying customers</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Key Messages for this audience */}
+                        <div className={styles.keyMessages}>
+                          <h4>Key Messages</h4>
+                          <div className={styles.messagesList}>
+                            {strategy.key_messages.slice(index, index + 1).map((message, i) => (
+                              <div key={i} className={styles.messageItem}>
+                                {message}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Channels and Metrics */}
+                      <div className={styles.channelsMetricsSection}>
+                        <div className={styles.channelsSection}>
+                          <h4>Recommended Channels</h4>
+                          <div className={styles.channelsList}>
+                            {["Instagram", "Facebook", "Email"].map((channel, i) => (
+                              <span key={i} className={styles.channelTag}>{channel}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <div className={styles.metricsSection}>
+                          <h4>Success Metrics</h4>
+                          <div className={styles.metricsList}>
+                            <div className={styles.metricItem}>
+                              <span className={styles.metricName}>Engagement Rate</span>
+                              <span className={styles.metricValue}>{">"} 3%</span>
+                            </div>
+                            <div className={styles.metricItem}>
+                              <span className={styles.metricName}>Click-through Rate</span>
+                              <span className={styles.metricValue}>{">"} 2%</span>
+                            </div>
+                            <div className={styles.metricItem}>
+                              <span className={styles.metricName}>Conversion Rate</span>
+                              <span className={styles.metricValue}>{">"} 1%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Overall Strategy Objectives */}
+                <div className={styles.overallObjectives}>
+                  <h3>Overall Marketing Objectives</h3>
+                  <div className={styles.objectivesList}>
+                    {strategy.objectives.map((objective, index) => (
+                      <div key={index} className={styles.overallObjectiveItem}>
+                        {objective}
+                      </div>
+                    ))}
                   </div>
                 </div>
+                
                 <div className={styles.matrixActions}>
                   <button 
-                    onClick={() => router.push(`/content/new?strategy=${encodeURIComponent(strategy.name)}`)} 
+                    onClick={() => router.push(`/content/new?strategy=${strategy.id}`)} 
                     className={styles.outlineButton}
                   >
                     Create Content Outline

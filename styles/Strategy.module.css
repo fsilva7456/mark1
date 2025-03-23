@@ -1160,4 +1160,231 @@
   .aestheticGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Enhanced Strategy Layout Styles */
+.audienceContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.audienceSection {
+  background-color: #f8fafc;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.audienceHeader {
+  background-color: #3454D1;
+  color: white;
+  padding: 1rem 1.5rem;
+}
+
+.audienceHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.audienceContent {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.campaignObjectives {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.campaignObjectives h4,
+.keyMessages h4,
+.channelsSection h4,
+.metricsSection h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #1A2B3C;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.objectivesGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.objectiveItem {
+  background-color: #f8fafc;
+  border-radius: 6px;
+  padding: 1rem;
+  border-left: 3px solid;
+}
+
+.objectiveItem:nth-child(1) {
+  border-left-color: #3498db; /* Awareness - Blue */
+}
+
+.objectiveItem:nth-child(2) {
+  border-left-color: #9b59b6; /* Consideration - Purple */
+}
+
+.objectiveItem:nth-child(3) {
+  border-left-color: #2ecc71; /* Conversion - Green */
+}
+
+.objectiveType {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: #1A2B3C;
+}
+
+.objectiveItem:nth-child(1) .objectiveType {
+  color: #3498db;
+}
+
+.objectiveItem:nth-child(2) .objectiveType {
+  color: #9b59b6;
+}
+
+.objectiveItem:nth-child(3) .objectiveType {
+  color: #2ecc71;
+}
+
+.objectiveItem p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4A5568;
+}
+
+.keyMessages {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.messageItem {
+  padding: 0.8rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #4A5568;
+  border-left: 3px solid #3454D1;
+}
+
+.channelsMetricsSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  background-color: #f8fafc;
+}
+
+.channelsSection, 
+.metricsSection {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.channelsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.channelTag {
+  background-color: #e9f5ff;
+  color: #2196f3;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.metricsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.metricItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.metricName {
+  color: #4A5568;
+}
+
+.metricValue {
+  font-weight: 600;
+  color: #2ecc71;
+}
+
+.overallObjectives {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.overallObjectives h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #1A2B3C;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.objectivesList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.overallObjectiveItem {
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #4A5568;
+  border-left: 3px solid #3454D1;
+}
+
+@media (max-width: 768px) {
+  .audienceContent,
+  .channelsMetricsSection {
+    grid-template-columns: 1fr;
+  }
+  
+  .objectivesList {
+    grid-template-columns: 1fr;
+  }
 } 
