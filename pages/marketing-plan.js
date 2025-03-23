@@ -334,46 +334,6 @@ export default function MarketingPlanDashboard() {
           </div>
         </div>
         
-        {/* Guided Workflow Component */}
-        <section className={styles.guidedWorkflow}>
-          <div className={styles.workflowSteps}>
-            <div className={`${styles.workflowStep} ${workflowStep.step >= 1 ? styles.active : ''} ${workflowStep.step > 1 ? styles.completed : ''}`}>
-              <div className={styles.stepNumber}>1</div>
-              <div className={styles.stepLabel}>Marketing Strategy</div>
-            </div>
-            
-            <div className={`${styles.workflowStep} ${workflowStep.step >= 2 ? styles.active : ''} ${workflowStep.step > 2 ? styles.completed : ''}`}>
-              <div className={styles.stepNumber}>2</div>
-              <div className={styles.stepLabel}>Content Outline</div>
-            </div>
-            
-            <div className={`${styles.workflowStep} ${workflowStep.step >= 3 ? styles.active : ''} ${workflowStep.step > 3 ? styles.completed : ''}`}>
-              <div className={styles.stepNumber}>3</div>
-              <div className={styles.stepLabel}>Content Calendar</div>
-            </div>
-          </div>
-          <div className={styles.workflowMessage}>
-            <p>{workflowStep.message}</p>
-            {workflowStep.step === 2 ? (
-              // For Content Outline, show aesthetic modal
-              <button
-                className={contextualStyles.actionButton}
-                onClick={() => handleShowAestheticModal(strategies[0].id)}
-              >
-                <span>📝</span>
-                {workflowStep.actionText}
-              </button>
-            ) : (
-              <Link href={workflowStep.action} className={contextualStyles.actionButton}>
-                {workflowStep.step === 1 && <span>🚀</span>}
-                {workflowStep.step === 3 && <span>📅</span>}
-                {workflowStep.step === 4 && <span>📊</span>}
-                {workflowStep.actionText}
-              </Link>
-            )}
-          </div>
-        </section>
-        
         <StatusDashboard 
           strategies={strategies.length}
           outlines={contentOutlines.length}
@@ -381,6 +341,20 @@ export default function MarketingPlanDashboard() {
           postsScheduled={calendars.reduce((acc, cal) => acc + (cal.posts_scheduled || 0), 0)}
           postsPublished={calendars.reduce((acc, cal) => acc + (cal.posts_published || 0), 0)}
         />
+        
+        {/* Simplified actions - no workflow progress indicator */}
+        {strategies.length > 0 && contentOutlines.length === 0 && (
+          <div style={{ textAlign: 'center', margin: '20px 0' }}>
+            <p>Create a content outline based on your strategy</p>
+            <button
+              className={contextualStyles.actionButton}
+              onClick={() => handleShowAestheticModal(strategies[0].id)}
+            >
+              <span>📝</span>
+              Create Content Outline
+            </button>
+          </div>
+        )}
         
         <div className={styles.content}>
           {viewMode === 'workflow' ? (
