@@ -1686,6 +1686,21 @@ Please share:
             gap: 20px;
             margin-top: 20px;
           }
+          
+          /* Remove list bullets from objectives and key messages */
+          .${styles.objectivesColumn} ul,
+          .${styles.messagesColumn} ul,
+          .${styles.timelinePhase} ul,
+          .${styles.gapsColumn} ul,
+          .${styles.abTests} ul {
+            list-style-type: none;
+            padding-left: 0;
+          }
+          
+          .${styles.objectivesColumn} li,
+          .${styles.messagesColumn} li {
+            margin-bottom: 10px;
+          }
         `}</style>
       </Head>
 
