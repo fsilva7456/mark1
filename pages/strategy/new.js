@@ -1233,7 +1233,8 @@ Please share:
                     backgroundColor: '#3454D1',
                     color: 'white',
                     borderRadius: '20px',
-                    padding: '8px 16px',
+                    padding: '10px 20px',
+                    margin: '5px 0',
                     border: 'none',
                     boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                     transition: 'all 0.2s ease'
@@ -1603,18 +1604,19 @@ Please share:
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
           }
           
           .${styles.audienceActions} {
             display: flex;
             gap: 10px;
-            margin-top: 5px;
+            margin-top: 10px;
+            margin-bottom: 5px;
           }
           
           .${styles.audienceActions} button {
-            padding: 8px 16px;
+            padding: 10px 20px;
           }
           
           .${styles.actionButton}.${styles.loading} {
