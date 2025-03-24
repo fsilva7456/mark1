@@ -27,6 +27,9 @@ export default function WorkflowDiagram({ workflowData }) {
                 <Link href={`/strategy/${item.strategy.id}`} className={styles.nodeActionBtn}>
                   View
                 </Link>
+                <Link href={`/strategy/${item.strategy.id}?enhanced=true`} className={styles.nodeActionBtn} style={{ backgroundColor: '#4a69bd', marginLeft: '5px' }}>
+                  Enhanced
+                </Link>
               </div>
             </div>
             <div className={styles.nodeContent}>
