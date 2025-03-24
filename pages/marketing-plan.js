@@ -420,10 +420,10 @@ export default function MarketingPlanDashboard() {
                               </button>
                               <button
                                 className={styles.viewButton}
-                                onClick={() => router.push(`/content/new?strategy=${strategy.id}`)}
+                                onClick={() => router.push(`/strategy/${strategy.id}?enhanced=true`)}
                                 style={{ backgroundColor: '#4a69bd', marginLeft: '5px' }}
                               >
-                                Content Builder
+                                Enhanced View
                               </button>
                               <button
                                 className={styles.deleteButton}
