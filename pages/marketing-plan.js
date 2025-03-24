@@ -418,6 +418,13 @@ export default function MarketingPlanDashboard() {
                               >
                                 View
                               </button>
+                              <a
+                                href={`/strategy/${strategy.id}`}
+                                className={styles.viewButton}
+                                style={{ textDecoration: 'none', display: 'inline-block', marginLeft: '5px' }}
+                              >
+                                Enhanced View
+                              </a>
                               <button
                                 className={styles.deleteButton}
                                 data-testid={`delete-strategy-${strategy.id}`}

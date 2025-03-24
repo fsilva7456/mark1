@@ -10,15 +10,23 @@ import { toast } from 'react-hot-toast';
 
 export default function ViewStrategy() {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, enhanced } = router.query;
   const { user, loading } = useAuth();
   const [strategy, setStrategy] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [forceEnhancedView, setForceEnhancedView] = useState(false);
   const [aestheticModal, setAestheticModal] = useState({
     visible: false,
     value: ''
   });
+  
+  useEffect(() => {
+    // Set force enhanced view based on query parameter
+    if (enhanced === 'true') {
+      setForceEnhancedView(true);
+    }
+  }, [enhanced]);
   
   useEffect(() => {
     // Redirect if not logged in
@@ -227,14 +235,15 @@ export default function ViewStrategy() {
             <div className={styles.matrixLayout}>
               <div className={styles.matrixContainer}>
                 <h2>Your Marketing Strategy</h2>
-                {strategy.enhanced_data ? (
-                  // Enhanced matrix display when enhanced_data is available
+                {(strategy.enhanced_data || forceEnhancedView) ? (
+                  // Enhanced matrix display when enhanced_data is available or forced
                   <div className={styles.enhancedMatrix}>
-                    {strategy.enhanced_data.audiences && strategy.enhanced_data.audiences.map((audience, audienceIndex) => (
-                      <div key={audienceIndex} className={styles.audienceSection}>
+                    {!strategy.enhanced_data && forceEnhancedView ? (
+                      // Fallback for when forceEnhancedView is true but no enhanced_data exists
+                      <div className={styles.audienceSection}>
                         <div>
                           <h3 className={styles.audienceTitle}>
-                            {audience.segment || `Audience ${audienceIndex + 1}`}
+                            Target Audience
                           </h3>
                         </div>
                         
@@ -242,25 +251,9 @@ export default function ViewStrategy() {
                           <div className={styles.objectivesColumn}>
                             <h4>Objectives</h4>
                             <ul>
-                              {audience.objectives && audience.objectives.map((obj, objIndex) => (
-                                <li 
-                                  key={objIndex} 
-                                  className={styles.objectiveItem}
-                                  style={{ listStyleType: 'none' }}
-                                >
-                                  <div className={styles.objectiveHeader}>
-                                    {typeof obj === 'string' ? obj : obj.objective || 'No objective specified'}
-                                  </div>
-                                  {typeof obj !== 'string' && obj.successMetrics && (
-                                    <div className={styles.objectiveMeta}>
-                                      <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
-                                    </div>
-                                  )}
-                                  {typeof obj !== 'string' && obj.contentTypes && (
-                                    <div className={styles.objectiveMeta}>
-                                      <span className={styles.metaLabel}>Content Types:</span> {Array.isArray(obj.contentTypes) ? obj.contentTypes.join(', ') : obj.contentTypes}
-                                    </div>
-                                  )}
+                              {strategy.objectives && strategy.objectives.map((obj, index) => (
+                                <li key={index} className={styles.objectiveItem} style={{ listStyleType: 'none' }}>
+                                  <div className={styles.objectiveHeader}>{obj}</div>
                                 </li>
                               ))}
                             </ul>
@@ -269,124 +262,177 @@ export default function ViewStrategy() {
                           <div className={styles.messagesColumn}>
                             <h4>Key Messages</h4>
                             <ul>
-                              {audience.keyMessages && audience.keyMessages.map((message, msgIndex) => (
-                                <li 
-                                  key={msgIndex} 
-                                  className={styles.messageItem}
-                                  style={{ listStyleType: 'none' }}
-                                >
+                              {strategy.key_messages && strategy.key_messages.map((message, index) => (
+                                <li key={index} className={styles.messageItem} style={{ listStyleType: 'none' }}>
                                   {message}
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Standard enhanced view when the data exists
+                      <>
+                        {strategy.enhanced_data && strategy.enhanced_data.audiences && strategy.enhanced_data.audiences.map((audience, audienceIndex) => (
+                          <div key={audienceIndex} className={styles.audienceSection}>
+                            <div>
+                              <h3 className={styles.audienceTitle}>
+                                {audience.segment || `Audience ${audienceIndex + 1}`}
+                              </h3>
+                            </div>
                             
-                            {audience.channels && (
-                              <div className={styles.channelsInfo}>
-                                <h4>Primary Channels</h4>
-                                <div className={styles.channelsList}>
-                                  {audience.channels.map((channel, chIndex) => (
-                                    <span key={chIndex} className={styles.channelTag}>{channel}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {strategy.enhanced_data.implementationPlan && (
-                      <div className={styles.strategySection}>
-                        <div className={styles.timelineSection}>
-                          <h3>90-Day Implementation Plan</h3>
-                          <div className={styles.timelinePhases}>
-                            {strategy.enhanced_data.implementationPlan.map((phase, phaseIndex) => (
-                              <div key={phaseIndex} className={styles.timelinePhase}>
-                                <h4>{phase.title || `Phase ${phaseIndex + 1}`}</h4>
+                            <div className={styles.audienceContent}>
+                              <div className={styles.objectivesColumn}>
+                                <h4>Objectives</h4>
                                 <ul>
-                                  {phase.tasks && phase.tasks.map((task, taskIndex) => (
-                                    <li key={taskIndex} style={{ listStyleType: 'none' }}>{task}</li>
+                                  {audience.objectives && audience.objectives.map((obj, objIndex) => (
+                                    <li 
+                                      key={objIndex} 
+                                      className={styles.objectiveItem}
+                                      style={{ listStyleType: 'none' }}
+                                    >
+                                      <div className={styles.objectiveHeader}>
+                                        {typeof obj === 'string' ? obj : obj.objective || 'No objective specified'}
+                                      </div>
+                                      {typeof obj !== 'string' && obj.successMetrics && (
+                                        <div className={styles.objectiveMeta}>
+                                          <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
+                                        </div>
+                                      )}
+                                      {typeof obj !== 'string' && obj.contentTypes && (
+                                        <div className={styles.objectiveMeta}>
+                                          <span className={styles.metaLabel}>Content Types:</span> {Array.isArray(obj.contentTypes) ? obj.contentTypes.join(', ') : obj.contentTypes}
+                                        </div>
+                                      )}
+                                    </li>
                                   ))}
                                 </ul>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {strategy.enhanced_data.competitiveAnalysis && (
-                      <div className={styles.strategySection}>
-                        <div className={styles.competitiveSection}>
-                          <h3>Competitive Gap Analysis</h3>
-                          <div className={styles.gapsGrid}>
-                            {strategy.enhanced_data.competitiveAnalysis.gaps && (
-                              <div className={styles.gapsColumn}>
-                                <h4>Identified Gaps</h4>
+                              
+                              <div className={styles.messagesColumn}>
+                                <h4>Key Messages</h4>
                                 <ul>
-                                  {strategy.enhanced_data.competitiveAnalysis.gaps.map((gap, gapIndex) => (
-                                    <li key={gapIndex} style={{ listStyleType: 'none' }}>{gap}</li>
+                                  {audience.keyMessages && audience.keyMessages.map((message, msgIndex) => (
+                                    <li 
+                                      key={msgIndex} 
+                                      className={styles.messageItem}
+                                      style={{ listStyleType: 'none' }}
+                                    >
+                                      {message}
+                                    </li>
                                   ))}
                                 </ul>
+                                
+                                {audience.channels && (
+                                  <div className={styles.channelsInfo}>
+                                    <h4>Primary Channels</h4>
+                                    <div className={styles.channelsList}>
+                                      {audience.channels.map((channel, chIndex) => (
+                                        <span key={chIndex} className={styles.channelTag}>{channel}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            {strategy.enhanced_data.competitiveAnalysis.exploitations && (
-                              <div className={styles.gapsColumn}>
-                                <h4>Exploitation Strategies</h4>
-                                <ul>
-                                  {strategy.enhanced_data.competitiveAnalysis.exploitations.map((ex, exIndex) => (
-                                    <li key={exIndex} style={{ listStyleType: 'none' }}>{ex}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {strategy.enhanced_data.contentStrategy && (
-                      <div className={styles.strategySection}>
-                        <div className={styles.contentStrategySection}>
-                          <h3>Content Strategy Guidelines</h3>
-                          <div className={styles.contentStrategyInfo}>
-                            {strategy.enhanced_data.contentStrategy.tone && (
-                              <div className={styles.strategyInfoRow}>
-                                <span className={styles.strategyLabel}>Tone & Style:</span>
-                                <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.tone}</span>
+                        ))}
+                        
+                        {strategy.enhanced_data && strategy.enhanced_data.implementationPlan && (
+                          <div className={styles.strategySection}>
+                            <div className={styles.timelineSection}>
+                              <h3>90-Day Implementation Plan</h3>
+                              <div className={styles.timelinePhases}>
+                                {strategy.enhanced_data.implementationPlan.map((phase, phaseIndex) => (
+                                  <div key={phaseIndex} className={styles.timelinePhase}>
+                                    <h4>{phase.title || `Phase ${phaseIndex + 1}`}</h4>
+                                    <ul>
+                                      {phase.tasks && phase.tasks.map((task, taskIndex) => (
+                                        <li key={taskIndex} style={{ listStyleType: 'none' }}>{task}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                            {strategy.enhanced_data.contentStrategy.frequency && (
-                              <div className={styles.strategyInfoRow}>
-                                <span className={styles.strategyLabel}>Posting Frequency:</span>
-                                <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.frequency}</span>
-                              </div>
-                            )}
-                            
-                            {strategy.enhanced_data.contentStrategy.ctas && (
-                              <div className={styles.ctaLibrary}>
-                                <h4>Call-to-Action Library</h4>
-                                <div className={styles.ctaList}>
-                                  {strategy.enhanced_data.contentStrategy.ctas.map((cta, ctaIndex) => (
-                                    <div key={ctaIndex} className={styles.ctaItem}>{cta}</div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {strategy.enhanced_data.contentStrategy.abTests && (
-                              <div className={styles.abTests}>
-                                <h4>Recommended A/B Tests</h4>
-                                <ul>
-                                  {strategy.enhanced_data.contentStrategy.abTests.map((test, testIndex) => (
-                                    <li key={testIndex} style={{ listStyleType: 'none' }}>{test}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        )}
+                        
+                        {strategy.enhanced_data && strategy.enhanced_data.competitiveAnalysis && (
+                          <div className={styles.strategySection}>
+                            <div className={styles.competitiveSection}>
+                              <h3>Competitive Gap Analysis</h3>
+                              <div className={styles.gapsGrid}>
+                                {strategy.enhanced_data.competitiveAnalysis.gaps && (
+                                  <div className={styles.gapsColumn}>
+                                    <h4>Identified Gaps</h4>
+                                    <ul>
+                                      {strategy.enhanced_data.competitiveAnalysis.gaps.map((gap, gapIndex) => (
+                                        <li key={gapIndex} style={{ listStyleType: 'none' }}>{gap}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {strategy.enhanced_data.competitiveAnalysis.exploitations && (
+                                  <div className={styles.gapsColumn}>
+                                    <h4>Exploitation Strategies</h4>
+                                    <ul>
+                                      {strategy.enhanced_data.competitiveAnalysis.exploitations.map((ex, exIndex) => (
+                                        <li key={exIndex} style={{ listStyleType: 'none' }}>{ex}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {strategy.enhanced_data && strategy.enhanced_data.contentStrategy && (
+                          <div className={styles.strategySection}>
+                            <div className={styles.contentStrategySection}>
+                              <h3>Content Strategy Guidelines</h3>
+                              <div className={styles.contentStrategyInfo}>
+                                {strategy.enhanced_data.contentStrategy.tone && (
+                                  <div className={styles.strategyInfoRow}>
+                                    <span className={styles.strategyLabel}>Tone & Style:</span>
+                                    <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.tone}</span>
+                                  </div>
+                                )}
+                                {strategy.enhanced_data.contentStrategy.frequency && (
+                                  <div className={styles.strategyInfoRow}>
+                                    <span className={styles.strategyLabel}>Posting Frequency:</span>
+                                    <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.frequency}</span>
+                                  </div>
+                                )}
+                                
+                                {strategy.enhanced_data.contentStrategy.ctas && (
+                                  <div className={styles.ctaLibrary}>
+                                    <h4>Call-to-Action Library</h4>
+                                    <div className={styles.ctaList}>
+                                      {strategy.enhanced_data.contentStrategy.ctas.map((cta, ctaIndex) => (
+                                        <div key={ctaIndex} className={styles.ctaItem}>{cta}</div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {strategy.enhanced_data.contentStrategy.abTests && (
+                                  <div className={styles.abTests}>
+                                    <h4>Recommended A/B Tests</h4>
+                                    <ul>
+                                      {strategy.enhanced_data.contentStrategy.abTests.map((test, testIndex) => (
+                                        <li key={testIndex} style={{ listStyleType: 'none' }}>{test}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ) : (

@@ -192,6 +192,13 @@ export default function Dashboard() {
                         >
                           View Strategy
                         </Link>
+                        <Link 
+                          href={`/strategy/${strategy.id}?enhanced=true`} 
+                          className={styles.actionButton}
+                          style={{ backgroundColor: '#4a69bd' }}
+                        >
+                          Enhanced View
+                        </Link>
                         <StrategyContentLink 
                           strategy={strategy} 
                           className={styles.actionButton} 
