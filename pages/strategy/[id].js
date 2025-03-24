@@ -61,21 +61,81 @@ export default function ViewStrategy() {
         }
         
         // Check if we have enhanced_data, if not try to parse it from the original strategy data
-        if (!data.enhanced_data && data.strategy_data) {
+        if (!data.enhanced_data) {
           try {
-            // Some older strategies might have the enhanced data nested in strategy_data
-            const strategyData = typeof data.strategy_data === 'string' 
-              ? JSON.parse(data.strategy_data) 
-              : data.strategy_data;
-              
-            if (strategyData.enhancedStrategy) {
-              data.enhanced_data = strategyData.enhancedStrategy;
-              console.log("Found enhanced strategy data in strategy_data");
+            console.log("No enhanced_data found, attempting to extract from other fields");
+            
+            // Try to extract from strategy_data
+            if (data.strategy_data) {
+              const strategyData = typeof data.strategy_data === 'string' 
+                ? JSON.parse(data.strategy_data) 
+                : data.strategy_data;
+                
+              // Option 1: enhancedStrategy directly in strategy_data
+              if (strategyData.enhancedStrategy) {
+                data.enhanced_data = strategyData.enhancedStrategy;
+                console.log("Found enhanced strategy data in strategy_data.enhancedStrategy");
+              } 
+              // Option 2: matrix.enhancedStrategy in strategy_data
+              else if (strategyData.matrix && strategyData.matrix.enhancedStrategy) {
+                data.enhanced_data = strategyData.matrix.enhancedStrategy;
+                console.log("Found enhanced strategy data in strategy_data.matrix.enhancedStrategy");
+              }
+              // Option 3: Try to reconstruct from simple matrix data if no enhanced data exists
+              else if (data.target_audience && data.objectives && data.key_messages) {
+                console.log("Reconstructing enhanced_data from simple matrix data");
+                
+                // Create a basic enhanced data structure from the simple fields
+                data.enhanced_data = {
+                  audiences: [
+                    {
+                      segment: "Target Audience",
+                      objectives: data.objectives.map(obj => ({
+                        objective: obj,
+                        successMetrics: "Not specified in simple format",
+                        contentTypes: ["Not specified in simple format"]
+                      })),
+                      keyMessages: data.key_messages,
+                      channels: ["Not specified in simple format"]
+                    }
+                  ]
+                };
+              }
+            }
+            
+            // If we still don't have enhanced_data, try to parse from the "matrix" field directly
+            if (!data.enhanced_data && data.matrix) {
+              const matrixData = typeof data.matrix === 'string'
+                ? JSON.parse(data.matrix)
+                : data.matrix;
+                
+              if (matrixData.enhancedStrategy) {
+                data.enhanced_data = matrixData.enhancedStrategy;
+                console.log("Found enhanced strategy data in matrix.enhancedStrategy");
+              }
+            }
+            
+            // Log if we found enhanced data
+            if (data.enhanced_data) {
+              console.log("Successfully extracted enhanced data structure");
+            } else {
+              console.log("Could not extract enhanced data structure, will use simple view");
             }
           } catch (parseError) {
-            console.error("Error parsing strategy_data:", parseError);
+            console.error("Error parsing strategy data:", parseError);
+            console.log("Will fallback to simple view");
           }
         }
+        
+        // Add console logging of the data structure to help with debugging
+        console.log("Strategy data structure:", {
+          hasEnhancedData: !!data.enhanced_data,
+          hasTargetAudience: !!data.target_audience,
+          hasObjectives: !!data.objectives,
+          hasKeyMessages: !!data.key_messages,
+          hasStrategyData: !!data.strategy_data,
+          strategyDataType: data.strategy_data ? typeof data.strategy_data : 'none'
+        });
         
         setStrategy(data);
       } else {
@@ -170,11 +230,11 @@ export default function ViewStrategy() {
                 {strategy.enhanced_data ? (
                   // Enhanced matrix display when enhanced_data is available
                   <div className={styles.enhancedMatrix}>
-                    {strategy.enhanced_data.audiences.map((audience, audienceIndex) => (
+                    {strategy.enhanced_data.audiences && strategy.enhanced_data.audiences.map((audience, audienceIndex) => (
                       <div key={audienceIndex} className={styles.audienceSection}>
                         <div>
                           <h3 className={styles.audienceTitle}>
-                            {audience.segment}
+                            {audience.segment || `Audience ${audienceIndex + 1}`}
                           </h3>
                         </div>
                         
@@ -182,21 +242,25 @@ export default function ViewStrategy() {
                           <div className={styles.objectivesColumn}>
                             <h4>Objectives</h4>
                             <ul>
-                              {audience.objectives.map((obj, objIndex) => (
+                              {audience.objectives && audience.objectives.map((obj, objIndex) => (
                                 <li 
                                   key={objIndex} 
                                   className={styles.objectiveItem}
                                   style={{ listStyleType: 'none' }}
                                 >
                                   <div className={styles.objectiveHeader}>
-                                    {obj.objective}
+                                    {typeof obj === 'string' ? obj : obj.objective || 'No objective specified'}
                                   </div>
-                                  <div className={styles.objectiveMeta}>
-                                    <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
-                                  </div>
-                                  <div className={styles.objectiveMeta}>
-                                    <span className={styles.metaLabel}>Content Types:</span> {obj.contentTypes.join(', ')}
-                                  </div>
+                                  {typeof obj !== 'string' && obj.successMetrics && (
+                                    <div className={styles.objectiveMeta}>
+                                      <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
+                                    </div>
+                                  )}
+                                  {typeof obj !== 'string' && obj.contentTypes && (
+                                    <div className={styles.objectiveMeta}>
+                                      <span className={styles.metaLabel}>Content Types:</span> {Array.isArray(obj.contentTypes) ? obj.contentTypes.join(', ') : obj.contentTypes}
+                                    </div>
+                                  )}
                                 </li>
                               ))}
                             </ul>
@@ -205,7 +269,7 @@ export default function ViewStrategy() {
                           <div className={styles.messagesColumn}>
                             <h4>Key Messages</h4>
                             <ul>
-                              {audience.keyMessages.map((message, msgIndex) => (
+                              {audience.keyMessages && audience.keyMessages.map((message, msgIndex) => (
                                 <li 
                                   key={msgIndex} 
                                   className={styles.messageItem}
@@ -216,14 +280,16 @@ export default function ViewStrategy() {
                               ))}
                             </ul>
                             
-                            <div className={styles.channelsInfo}>
-                              <h4>Primary Channels</h4>
-                              <div className={styles.channelsList}>
-                                {audience.channels.map((channel, chIndex) => (
-                                  <span key={chIndex} className={styles.channelTag}>{channel}</span>
-                                ))}
+                            {audience.channels && (
+                              <div className={styles.channelsInfo}>
+                                <h4>Primary Channels</h4>
+                                <div className={styles.channelsList}>
+                                  {audience.channels.map((channel, chIndex) => (
+                                    <span key={chIndex} className={styles.channelTag}>{channel}</span>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -236,9 +302,9 @@ export default function ViewStrategy() {
                           <div className={styles.timelinePhases}>
                             {strategy.enhanced_data.implementationPlan.map((phase, phaseIndex) => (
                               <div key={phaseIndex} className={styles.timelinePhase}>
-                                <h4>{phase.title}</h4>
+                                <h4>{phase.title || `Phase ${phaseIndex + 1}`}</h4>
                                 <ul>
-                                  {phase.tasks.map((task, taskIndex) => (
+                                  {phase.tasks && phase.tasks.map((task, taskIndex) => (
                                     <li key={taskIndex} style={{ listStyleType: 'none' }}>{task}</li>
                                   ))}
                                 </ul>
@@ -254,22 +320,26 @@ export default function ViewStrategy() {
                         <div className={styles.competitiveSection}>
                           <h3>Competitive Gap Analysis</h3>
                           <div className={styles.gapsGrid}>
-                            <div className={styles.gapsColumn}>
-                              <h4>Identified Gaps</h4>
-                              <ul>
-                                {strategy.enhanced_data.competitiveAnalysis.gaps.map((gap, gapIndex) => (
-                                  <li key={gapIndex} style={{ listStyleType: 'none' }}>{gap}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className={styles.gapsColumn}>
-                              <h4>Exploitation Strategies</h4>
-                              <ul>
-                                {strategy.enhanced_data.competitiveAnalysis.exploitations.map((ex, exIndex) => (
-                                  <li key={exIndex} style={{ listStyleType: 'none' }}>{ex}</li>
-                                ))}
-                              </ul>
-                            </div>
+                            {strategy.enhanced_data.competitiveAnalysis.gaps && (
+                              <div className={styles.gapsColumn}>
+                                <h4>Identified Gaps</h4>
+                                <ul>
+                                  {strategy.enhanced_data.competitiveAnalysis.gaps.map((gap, gapIndex) => (
+                                    <li key={gapIndex} style={{ listStyleType: 'none' }}>{gap}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {strategy.enhanced_data.competitiveAnalysis.exploitations && (
+                              <div className={styles.gapsColumn}>
+                                <h4>Exploitation Strategies</h4>
+                                <ul>
+                                  {strategy.enhanced_data.competitiveAnalysis.exploitations.map((ex, exIndex) => (
+                                    <li key={exIndex} style={{ listStyleType: 'none' }}>{ex}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -280,32 +350,40 @@ export default function ViewStrategy() {
                         <div className={styles.contentStrategySection}>
                           <h3>Content Strategy Guidelines</h3>
                           <div className={styles.contentStrategyInfo}>
-                            <div className={styles.strategyInfoRow}>
-                              <span className={styles.strategyLabel}>Tone & Style:</span>
-                              <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.tone}</span>
-                            </div>
-                            <div className={styles.strategyInfoRow}>
-                              <span className={styles.strategyLabel}>Posting Frequency:</span>
-                              <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.frequency}</span>
-                            </div>
-                            
-                            <div className={styles.ctaLibrary}>
-                              <h4>Call-to-Action Library</h4>
-                              <div className={styles.ctaList}>
-                                {strategy.enhanced_data.contentStrategy.ctas.map((cta, ctaIndex) => (
-                                  <div key={ctaIndex} className={styles.ctaItem}>{cta}</div>
-                                ))}
+                            {strategy.enhanced_data.contentStrategy.tone && (
+                              <div className={styles.strategyInfoRow}>
+                                <span className={styles.strategyLabel}>Tone & Style:</span>
+                                <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.tone}</span>
                               </div>
-                            </div>
+                            )}
+                            {strategy.enhanced_data.contentStrategy.frequency && (
+                              <div className={styles.strategyInfoRow}>
+                                <span className={styles.strategyLabel}>Posting Frequency:</span>
+                                <span className={styles.strategyValue}>{strategy.enhanced_data.contentStrategy.frequency}</span>
+                              </div>
+                            )}
                             
-                            <div className={styles.abTests}>
-                              <h4>Recommended A/B Tests</h4>
-                              <ul>
-                                {strategy.enhanced_data.contentStrategy.abTests.map((test, testIndex) => (
-                                  <li key={testIndex} style={{ listStyleType: 'none' }}>{test}</li>
-                                ))}
-                              </ul>
-                            </div>
+                            {strategy.enhanced_data.contentStrategy.ctas && (
+                              <div className={styles.ctaLibrary}>
+                                <h4>Call-to-Action Library</h4>
+                                <div className={styles.ctaList}>
+                                  {strategy.enhanced_data.contentStrategy.ctas.map((cta, ctaIndex) => (
+                                    <div key={ctaIndex} className={styles.ctaItem}>{cta}</div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {strategy.enhanced_data.contentStrategy.abTests && (
+                              <div className={styles.abTests}>
+                                <h4>Recommended A/B Tests</h4>
+                                <ul>
+                                  {strategy.enhanced_data.contentStrategy.abTests.map((test, testIndex) => (
+                                    <li key={testIndex} style={{ listStyleType: 'none' }}>{test}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
