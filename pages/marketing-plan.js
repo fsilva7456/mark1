@@ -418,13 +418,13 @@ export default function MarketingPlanDashboard() {
                               >
                                 View
                               </button>
-                              <a
-                                href={`/strategy/${strategy.id}`}
+                              <button
                                 className={styles.viewButton}
-                                style={{ textDecoration: 'none', display: 'inline-block', marginLeft: '5px' }}
+                                onClick={() => router.push(`/strategy/${strategy.id}?enhanced=true`)}
+                                style={{ backgroundColor: '#4a69bd', marginLeft: '5px' }}
                               >
                                 Enhanced View
-                              </a>
+                              </button>
                               <button
                                 className={styles.deleteButton}
                                 data-testid={`delete-strategy-${strategy.id}`}
