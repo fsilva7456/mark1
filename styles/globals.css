@@ -71,7 +71,7 @@
     @apply border-[hsl(var(--border))];
   }
   body {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
     background-color: hsl(var(--background));
   }
 }
