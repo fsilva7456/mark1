@@ -53,18 +53,16 @@
 }
 
 .matrixLayout {
-  display: flex;
-  justify-content: center;
-  padding: 2rem 0;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .matrixContainer {
-  width: 100%;
-  max-width: 1000px;
   background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
 }
 
 .matrixContainer h2 {
@@ -76,10 +74,161 @@
   letter-spacing: -0.02em;
 }
 
-.matrix {
+.matrixDisplay {
+  margin: 2rem 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .matrixDisplay {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.matrixSection {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+}
+
+.matrixSection h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.matrixSection ul {
+  padding-left: 1.5rem;
+  margin-bottom: 0;
+}
+
+.matrixSection li {
+  margin-bottom: 0.5rem;
+}
+
+.matrixActions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.saveButton, 
+.primaryButton, 
+.outlineButton {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton {
+  background-color: #3454D1;
+  color: white;
+  border: none;
+}
+
+.primaryButton {
+  background-color: #10B981;
+  color: white;
+  border: none;
+}
+
+.outlineButton {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.saveButton:hover, 
+.primaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.outlineButton:hover {
+  background-color: #e5e5e5;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.feedbackModal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.modalBody {
+  padding: 1.5rem;
+}
+
+.feedbackInputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feedbackTextarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+@media (max-width: 375px) {
+  .timelinePhases {
+    grid-template-columns: 1fr;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+  
+  .timelinePhase {
+    min-width: 280px;
+  }
 }
 
 .matrixColumn {
@@ -152,211 +301,6 @@
 
 .interactiveCell:hover:after {
   opacity: 1;
-}
-
-.matrixActions {
-  margin-top: 2rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.saveButton, .outlineButton {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  min-width: 160px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.saveButton {
-  background-color: #3454D1;
-  color: white;
-  border: none;
-}
-
-.saveButton:hover {
-  background-color: #2a43a7;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
-}
-
-.outlineButton {
-  background-color: white;
-  color: #3454D1;
-  border: 1px solid #3454D1;
-}
-
-.outlineButton:hover {
-  background-color: #f8fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.saveButton:disabled, .outlineButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Loading state for buttons */
-.loading {
-  background-color: #a8ccf0 !important;
-  color: white !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.cancelButton {
-  background-color: white;
-  color: #718096;
-  border: 1px solid #E2E8F0;
-  padding: 0.875rem 1.75rem;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s;
-  font-size: 1rem;
-}
-
-.cancelButton:hover {
-  background-color: #F8FAFC;
-  transform: translateY(-2px);
-}
-
-.feedbackModal {
-  background-color: white;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #E2E8F0;
-}
-
-.modalHeader h3 {
-  margin: 0;
-  color: #1A2B3C;
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.closeButton {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-  color: #718096;
-}
-
-.modalBody {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.currentValue {
-  background-color: #F8FAFC;
-  border-radius: 8px;
-  padding: 1rem;
-}
-
-.currentValue strong {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #4A5568;
-}
-
-.currentValue p {
-  margin: 0;
-  color: #1A2B3C;
-}
-
-.feedbackInputContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.feedbackInputContainer label {
-  font-weight: 600;
-  color: #4A5568;
-}
-
-.feedbackTextarea {
-  min-height: 120px;
-  padding: 0.875rem;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  resize: vertical;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.feedbackTextarea:focus {
-  outline: none;
-  border-color: #3454D1;
-}
-
-.suggestionsContainer {
-  margin-top: 1.5rem;
-  background-color: #f8fafc;
-  border-radius: 8px;
-  padding: 1rem;
-  border: 1px solid #e2e8f0;
-}
-
-.suggestionsContainer h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  color: #4a5568;
-}
-
-.suggestionsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.suggestionButton {
-  background-color: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.9rem;
-  color: #1a202c;
-}
-
-.suggestionButton:hover {
-  background-color: #edf2f7;
-  border-color: #cbd5e0;
-  transform: translateY(-1px);
 }
 
 .loadingSpinner {

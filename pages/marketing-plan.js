@@ -420,7 +420,7 @@ export default function MarketingPlanDashboard() {
                               </button>
                               <button
                                 className={styles.viewButton}
-                                onClick={() => router.push(`/strategy/${strategy.id}?enhanced=true`)}
+                                onClick={() => router.push(`/strategy/${strategy.id}`)}
                                 style={{ backgroundColor: '#4a69bd', marginLeft: '5px' }}
                               >
                                 Enhanced View
