@@ -47,7 +47,7 @@
 - **Purpose**: View and manage a specific strategy
 - **Connected to**:
   - Marketing plan dashboard `/marketing-plan`
-  - Content creation `/content/new?strategy=[id]`
+  - Content creation `/content/new?strategy=[id]` (with option to include aesthetic parameter)
 - **Key features**: Strategy details, generation of content outline based on strategy
 
 ## Content Pages
@@ -93,20 +93,27 @@
 ## API Endpoints
 
 ### Strategy API Endpoints
-- `/api/strategy/generate-matrix.js`: Generates a strategy matrix
+- `/api/strategy/generate-matrix.js`: Generates a strategy matrix based on user inputs
 - `/api/strategy/generate-content.js`: Generates content based on strategy
 - `/api/strategy/check-api.js`: Verifies API connectivity
 - `/api/strategy/check-api-key.js`: Validates API keys
 - `/api/strategy/generate-direct.js`: Direct strategy generation
 - `/api/strategy/test-gemini.js`: Tests Gemini API integration
+- `/api/strategy/generate-with-insights.js`: Enhanced strategy generation with insights
+- `/api/strategy/generate-suggestions.js`: Generates strategy suggestions
+- `/api/strategy/generate-question.js`: Generates strategic questions
+- `/api/strategy/analyze-competitors.js`: Analyzes competitor strategies
 
 ### Content API Endpoints
-- Located in `/pages/api/content/`
-- Manages content generation, saving, and retrieval
+- `/api/content/generate-outline.js`: Generates content outlines
+- `/api/content/generate-calendar.js`: Creates a content calendar
+- `/api/content/generate-daily-engagement.js`: Generates daily engagement content
+- `/api/content/multi-stage/`: Contains endpoints for multi-stage content generation
+- `/api/content/simple-test.js` and `/api/content/test-gemini.js`: Test endpoints
 
 ### Setup & Admin API Endpoints
-- Located in `/pages/api/setup/` and `/pages/api/admin/`
-- Handles application setup and administrative functions
+- `/api/setup/analyze-website.js`: Analyzes website for marketing insights
+- `/api/admin/setup-database.js`: Sets up the database structure
 
 ## Navigation Flow
 
@@ -132,4 +139,7 @@
 - **BreadcrumbNavigation**: Shows user's location in the application hierarchy
 - **StatusDashboard**: Displays metrics about strategies, outlines, calendars
 - **WorkflowDiagram**: Visual representation of the marketing workflow
-- **ContentPipeline**: Shows content in various stages 
+- **ContentPipeline**: Shows content in various stages
+- **ContextualActionButtons**: Context-aware action buttons based on user's current workflow stage
+- **ProjectSelectorModal**: Enables switching between different projects
+- **StatusBadge**: Visual indicator of content/strategy status 
