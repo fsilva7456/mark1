@@ -34,13 +34,40 @@ export default function StrategyDetail() {
     try {
       setIsLoading(true);
       
+      // First try from strategies table
       const { data, error } = await supabase
         .from('strategies')
         .select('*')
         .eq('id', strategyId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.log("Supabase error:", error);
+        // If not found in main table, try the matrix table
+        const { data: matrixData, error: matrixError } = await supabase
+          .from('strategy_matrix')
+          .select('*')
+          .eq('strategy_id', strategyId)
+          .single();
+          
+        if (matrixError) {
+          throw new Error("Strategy not found in any table");
+        }
+        
+        if (matrixData) {
+          console.log("Strategy matrix data loaded:", matrixData);
+          // Convert matrix data to strategy format
+          setStrategy({
+            id: matrixData.strategy_id,
+            name: matrixData.name || "Marketing Strategy",
+            matrix: matrixData,
+            target_audience: matrixData.audiences || [],
+            objectives: matrixData.objectives || [],
+            key_messages: matrixData.key_messages || matrixData.keyMessages || []
+          });
+          return;
+        }
+      }
       
       if (data) {
         console.log("Strategy data loaded:", data);

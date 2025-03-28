@@ -1383,4 +1383,16 @@
   cursor: pointer;
   margin-top: 1.5rem;
   transition: all 0.2s ease;
+}
+
+/* Add empty state styling for strategy sections */
+.emptyState {
+  color: #718096;
+  font-style: italic;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  text-align: center;
+  background-color: #f7fafc;
+  border-radius: 6px;
+  margin: 0;
 } 

@@ -16,13 +16,7 @@ export default function StrategyDisplay({
 
   useEffect(() => {
     if (strategy) {
-      console.log('Strategy data structure:', {
-        id: strategy.id,
-        name: strategy.name,
-        audiences: strategy.target_audience || strategy.audiences,
-        objectives: strategy.objectives,
-        keyMessages: strategy.key_messages || strategy.keyMessages
-      });
+      console.log('Strategy data structure:', strategy);
     }
   }, [strategy]);
 
@@ -34,39 +28,110 @@ export default function StrategyDisplay({
     setShowAestheticModal(false);
   };
 
+  // Helper function to extract target audiences from any strategy format
+  const getAudiences = () => {
+    if (!strategy) return [];
+    
+    // Check all possible field names
+    if (Array.isArray(strategy.target_audience)) return strategy.target_audience;
+    if (Array.isArray(strategy.audiences)) return strategy.audiences;
+    if (Array.isArray(strategy.audience)) return strategy.audience;
+    
+    // Handle matrix format
+    if (strategy.matrix && Array.isArray(strategy.matrix.audiences)) {
+      return strategy.matrix.audiences;
+    }
+    
+    // Handle data structure from new.js
+    if (typeof strategy.target_audience === 'string') {
+      return strategy.target_audience.split(',').map(item => item.trim());
+    }
+    
+    // Return empty array as fallback
+    return [];
+  };
+
+  // Similar helpers for objectives and messages
+  const getObjectives = () => {
+    if (!strategy) return [];
+    
+    if (Array.isArray(strategy.objectives)) return strategy.objectives;
+    if (Array.isArray(strategy.objective)) return strategy.objective;
+    
+    if (strategy.matrix && Array.isArray(strategy.matrix.objectives)) {
+      return strategy.matrix.objectives;
+    }
+    
+    if (typeof strategy.objectives === 'string') {
+      return strategy.objectives.split(',').map(item => item.trim());
+    }
+    
+    return [];
+  };
+
+  const getKeyMessages = () => {
+    if (!strategy) return [];
+    
+    if (Array.isArray(strategy.key_messages)) return strategy.key_messages;
+    if (Array.isArray(strategy.keyMessages)) return strategy.keyMessages;
+    if (Array.isArray(strategy.messages)) return strategy.messages;
+    
+    if (strategy.matrix && Array.isArray(strategy.matrix.keyMessages)) {
+      return strategy.matrix.keyMessages;
+    }
+    
+    if (typeof strategy.key_messages === 'string') {
+      return strategy.key_messages.split(',').map(item => item.trim());
+    }
+    
+    return [];
+  };
+
   return (
     <div className={styles.matrixLayout}>
       <div className={styles.matrixContainer}>
-        <h2>{isNew ? 'New Strategy Preview' : 'Strategy Details'}</h2>
+        <h2>{isNew ? 'New Strategy Preview' : (strategy?.name || 'Strategy Details')}</h2>
         
         <div className={styles.matrixDisplay}>
           {strategy && (
             <>
               <div className={styles.matrixSection}>
                 <h3>Target Audiences</h3>
-                <ul>
-                  {(strategy.target_audience || strategy.audiences || []).map((audience, i) => (
-                    <li key={i}>{audience}</li>
-                  ))}
-                </ul>
+                {getAudiences().length > 0 ? (
+                  <ul>
+                    {getAudiences().map((audience, i) => (
+                      <li key={i}>{audience}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyState}>No target audiences defined</p>
+                )}
               </div>
               
               <div className={styles.matrixSection}>
                 <h3>Key Objectives</h3>
-                <ul>
-                  {(strategy.objectives || []).map((objective, i) => (
-                    <li key={i}>{objective}</li>
-                  ))}
-                </ul>
+                {getObjectives().length > 0 ? (
+                  <ul>
+                    {getObjectives().map((objective, i) => (
+                      <li key={i}>{objective}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyState}>No objectives defined</p>
+                )}
               </div>
               
               <div className={styles.matrixSection}>
                 <h3>Key Messages</h3>
-                <ul>
-                  {(strategy.key_messages || strategy.keyMessages || []).map((message, i) => (
-                    <li key={i}>{message}</li>
-                  ))}
-                </ul>
+                {getKeyMessages().length > 0 ? (
+                  <ul>
+                    {getKeyMessages().map((message, i) => (
+                      <li key={i}>{message}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyState}>No key messages defined</p>
+                )}
               </div>
             </>
           )}
