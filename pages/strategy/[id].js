@@ -43,6 +43,7 @@ export default function StrategyDetail() {
       if (error) throw error;
       
       if (data) {
+        console.log("Strategy data loaded:", data);
         setStrategy(data);
       } else {
         setError('Strategy not found.');

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from '../styles/Strategy.module.css';
 
@@ -13,6 +13,18 @@ export default function StrategyDisplay({
   const [showAestheticModal, setShowAestheticModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [aestheticValue, setAestheticValue] = useState('');
+
+  useEffect(() => {
+    if (strategy) {
+      console.log('Strategy data structure:', {
+        id: strategy.id,
+        name: strategy.name,
+        audiences: strategy.target_audience || strategy.audiences,
+        objectives: strategy.objectives,
+        keyMessages: strategy.key_messages || strategy.keyMessages
+      });
+    }
+  }, [strategy]);
 
   const handleAestheticSubmit = (value) => {
     router.push(`/content/new?strategy=${strategy.id}&aesthetic=${encodeURIComponent(value)}`);
@@ -33,7 +45,7 @@ export default function StrategyDisplay({
               <div className={styles.matrixSection}>
                 <h3>Target Audiences</h3>
                 <ul>
-                  {strategy.target_audience?.map((audience, i) => (
+                  {(strategy.target_audience || strategy.audiences || []).map((audience, i) => (
                     <li key={i}>{audience}</li>
                   ))}
                 </ul>
@@ -42,7 +54,7 @@ export default function StrategyDisplay({
               <div className={styles.matrixSection}>
                 <h3>Key Objectives</h3>
                 <ul>
-                  {strategy.objectives?.map((objective, i) => (
+                  {(strategy.objectives || []).map((objective, i) => (
                     <li key={i}>{objective}</li>
                   ))}
                 </ul>
@@ -51,7 +63,7 @@ export default function StrategyDisplay({
               <div className={styles.matrixSection}>
                 <h3>Key Messages</h3>
                 <ul>
-                  {strategy.key_messages?.map((message, i) => (
+                  {(strategy.key_messages || strategy.keyMessages || []).map((message, i) => (
                     <li key={i}>{message}</li>
                   ))}
                 </ul>
