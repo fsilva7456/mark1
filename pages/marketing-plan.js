@@ -414,16 +414,9 @@ export default function MarketingPlanDashboard() {
                             <div className={styles.actionButtons}>
                               <button
                                 className={styles.viewButton}
-                                onClick={() => navigateToEntity('strategy', strategy.id)}
+                                onClick={() => router.push(`/strategy/${strategy.id}`)}
                               >
                                 View
-                              </button>
-                              <button
-                                className={styles.viewButton}
-                                onClick={() => router.push(`/strategy/${strategy.id}`)}
-                                style={{ backgroundColor: '#4a69bd', marginLeft: '5px' }}
-                              >
-                                Enhanced View
                               </button>
                               <button
                                 className={styles.deleteButton}
