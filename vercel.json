@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "builds": [
     {
       "src": "package.json",
@@ -18,6 +19,11 @@
     "JEST_JUNIT_OUTPUT_DIR": "./test-results",
     "JEST_JUNIT_OUTPUT_NAME": "junit.xml",
     "JEST_JUNIT_CLASSNAME": "Mark1Tests",
-    "JEST_JUNIT_TITLE": "Mark1 Test Results"
+    "JEST_JUNIT_TITLE": "Mark1 Test Results",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://example.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+  },
+  "github": {
+    "enabled": true
   }
 } 

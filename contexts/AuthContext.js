@@ -38,6 +38,8 @@ export function AuthProvider({ children }) {
       supabase.auth.signUp({ email, password }),
     signIn: (email, password) => 
       supabase.auth.signInWithPassword({ email, password }),
+    signInWithOAuth: (options) =>
+      supabase.auth.signInWithOAuth(options),
     signOut: async () => {
       await supabase.auth.signOut()
       // Only run router.push on the client side

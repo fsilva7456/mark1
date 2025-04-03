@@ -25,28 +25,38 @@ export default function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    
+    // Validate passwords match first
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return; // Don't proceed if passwords mismatch
+    }
+    
     setIsLoading(true);
     setError('');
     setMessage('');
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setIsLoading(false);
-      return;
-    }
-    
+
     try {
-      const { error } = await signUp(email, password);
-      
+      const { data, error } = await signUp(email, password);
+
       if (error) {
-        setError(error.message);
-      } else {
+        setError(error.message); // Set error from Supabase
+      } else if (data.user && data.user.identities?.length === 0) {
+        // Handle case where user exists but email is not confirmed
+        setError('User already exists, but email not confirmed. Please check your email or try logging in.');
+      } else if (data.user) {
         setMessage('Signup successful! Please check your email to confirm your account.');
+        // Optionally clear form fields
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        // Handle unexpected cases or specific scenarios if needed
+        setError('An unexpected issue occurred during signup.')
       }
     } catch (err) {
       setError('Failed to sign up. Please try again.');
-      console.error(err);
+      console.error('Signup error:', err);
     } finally {
       setIsLoading(false);
     }

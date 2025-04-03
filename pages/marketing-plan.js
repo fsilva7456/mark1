@@ -76,35 +76,19 @@ export default function MarketingPlanDashboard() {
   useEffect(() => {
     console.log('Marketing plan page mounted, user:', user?.id);
     
-    if (user && isInitialMount.current) {
+    if (user && isInitialMount.current && projects?.length > 0) {
       console.log('Setting showProjectSelector to true on initial mount');
       setShowProjectSelector(true);
       isInitialMount.current = false;
     }
-  }, [user]);
+  }, [user, projects, setShowProjectSelector]);
 
-  // Early return for unauthenticated users - this will run immediately on render
-  if (!authLoading && !user) {
-    // Instead of redirecting, show loading until auth state is resolved
-    return (
-      <div className={styles.container}>
-        <Head>
-          <title>Marketing Plan Dashboard | Mark1</title>
-          <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
-        </Head>
-        <main className={styles.main}>
-          <div className={styles.loading}>
-            <div className={styles.spinner}></div>
-            <p>Loading...</p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // Check for user login (still keep this for effect-based redirect)
+  // Redirect if not authenticated
   useEffect(() => {
-    // No redirect needed - we'll handle auth in the project context
+    if (!authLoading && !user) {
+      log.info('User not authenticated, redirecting to login.');
+      router.push('/login');
+    }
   }, [user, authLoading, router]);
   
   // Log page view
@@ -221,8 +205,8 @@ export default function MarketingPlanDashboard() {
   
   const workflowStep = determineWorkflowStep();
 
-  // Loading state
-  if (authLoading || isLoading) {
+  // Loading state: Wait for auth and initial data fetch
+  if (authLoading || (!user && !authLoading)) {
     return (
       <div className={styles.container}>
         <Head>
@@ -235,7 +219,7 @@ export default function MarketingPlanDashboard() {
         <main className={styles.main}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
-            <p>Loading your marketing plan data...</p>
+            <p>Loading...</p>
           </div>
         </main>
       </div>

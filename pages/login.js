@@ -3,9 +3,11 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import styles from '../styles/Login.module.css';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const { signIn, signInWithOAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,45 +19,47 @@ export default function Login() {
     setError('');
     
     try {
-      // Mock authentication - we'll replace with Supabase later
-      console.log('Logging in with:', email, password);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For mock purposes, any non-empty email/password works
-      if (email && password) {
-        // Save mock user to localStorage
-        localStorage.setItem('user', JSON.stringify({ email }));
-        router.push('/marketing-plan'); // Redirect to marketing plan page after login
+      const { error } = await signIn(email, password);
+
+      if (error) {
+        setError(error.message);
       } else {
-        setError('Please enter both email and password');
+        router.push('/marketing-plan');
       }
     } catch (err) {
-      setError('Failed to sign in. Please try again.');
-      console.error(err);
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError('');
-    
-    // Mock Google authentication - we'll replace with Supabase later
-    console.log('Logging in with Google');
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      // Save mock user to localStorage
-      localStorage.setItem('user', JSON.stringify({ 
-        email: 'user@example.com',
-        provider: 'google'
-      }));
-      router.push('/marketing-plan'); // Redirect to marketing plan page after login
-      setIsLoading(false);
-    }, 1000);
+
+    try {
+      const { error } = await signInWithOAuth({ 
+        provider: 'google', 
+        options: {
+          // Optional: Specify redirect URL if needed, otherwise uses Supabase config
+          // redirectTo: `${window.location.origin}/marketing-plan`
+        }
+      });
+
+      if (error) {
+        setError(error.message);
+      }
+      // Supabase handles redirection for OAuth, so no explicit router.push here usually
+      // If redirect doesn't happen automatically, uncomment and adjust redirectTo above
+      
+    } catch (err) {
+      setError('Failed to sign in with Google. Please try again.');
+      console.error('Google login error:', err);
+    } finally {
+      // Keep loading true if OAuth redirect is expected
+      // setIsLoading(false); // Comment out or adjust based on OAuth flow
+    }
   };
 
   return (

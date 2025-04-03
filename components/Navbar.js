@@ -47,6 +47,18 @@ export default function Navbar() {
     };
   }, [projectMenuOpen]);
 
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Redirect is handled within signOut in AuthContext
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally display an error message to the user
+      alert("Logout failed. Please try again."); 
+    }
+  };
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.container}>
@@ -143,13 +155,13 @@ export default function Navbar() {
             <div className={styles.buttonGroup}>
               <Link 
                 href="/marketing-plan" 
-                className={dashboardStyles.logoutButton}
+                className={styles.navButton}
               >
                 Marketing Plan
               </Link>
               <button 
-                onClick={signOut}
-                className={dashboardStyles.logoutButton}
+                onClick={handleLogout}
+                className={styles.navButton}
               >
                 Logout
               </button>
