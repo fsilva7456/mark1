@@ -12,23 +12,30 @@ export default function Home() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  // Redirect if already logged in (or after OAuth callback is processed)
+  console.log('Home component rendering client-side. Auth State:', { loading, user: !!user });
+
+  // Client-side redirect logic after authentication state is resolved
   useEffect(() => {
-    if (user && !loading) {
-      router.push('/marketing-plan');
+    console.log('Home component useEffect running. Auth State:', { loading, user: !!user });
+    // Wait until the auth state is determined
+    if (!loading) {
+      if (user) {
+        console.log('Home useEffect: User found, redirecting to /projects/select');
+        router.push('/projects/select');
+      } else {
+        console.log('Home useEffect: No user found, redirecting to /login');
+        router.push('/login');
+      }
     }
   }, [user, loading, router]);
 
-  // Render nothing substantial, just a container or null 
-  // while checking auth state or if not logged in yet.
-  // A simple loading indicator can also be placed here.
+  // Render a loading indicator while auth state is being checked client-side
   return (
-    <div style={{ minHeight: '100vh', background: '#ffffff' }}>
+    <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <Head>
-        <title>Loading...</title> {/* Simple title */}
+        <title>Loading...</title>
       </Head>
-      {/* Optional: Add a subtle loading indicator here if desired */}
-      <p style={{ textAlign: 'center', paddingTop: '2rem', color: '#ccc' }}>Loading application...</p>
+      <p style={{ color: '#555', fontSize: '1.1rem' }}>Loading application...</p> 
     </div>
   );
 }
