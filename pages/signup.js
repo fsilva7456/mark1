@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
-import styles from '../styles/Home.module.css';
+import styles from '../styles/Login.module.css';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Signup() {
@@ -63,70 +63,68 @@ export default function Signup() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.formSection} style={{ minHeight: '100vh', background: '#f7f7f7' }}>
       <Head>
         <title>Sign Up</title>
         <meta name="description" content="Create a new account" />
       </Head>
 
-      <main className={styles.main}>
-        <div className={styles.loginBox}>
-          <h1 className={styles.title}>Create Account</h1>
+      <div className={styles.loginBox}>
+        <h2 className={styles.title}>Create Account</h2>
+        
+        {error && <p className={styles.error}>{error}</p>}
+        {message && <p className={styles.message}>{message}</p>}
+        
+        <form onSubmit={handleSignup} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+            />
+          </div>
           
-          {error && <p className={styles.error}>{error}</p>}
-          {message && <p className={styles.message}>{message}</p>}
+          <div className={styles.inputGroup}>
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
           
-          <form onSubmit={handleSignup} className={styles.form}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                required
-              />
-            </div>
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            
-            <button 
-              type="submit" 
-              className={styles.loginButton}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating account...' : 'Sign Up'}
-            </button>
-          </form>
+          <div className={styles.inputGroup}>
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
           
-          <p className={styles.signupText}>
-            Already have an account? <Link href="/login">Log in</Link>
-          </p>
-        </div>
-      </main>
+          <button 
+            type="submit" 
+            className={styles.loginButton}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Creating account...' : 'Sign Up'}
+          </button>
+        </form>
+        
+        <p className={styles.signupText}>
+          Already have an account? <Link href="/login">Log in</Link>
+        </p>
+      </div>
     </div>
   );
 } 
