@@ -95,9 +95,13 @@ export default function MarketingPlanDashboard() {
   useEffect(() => {
     if (user) {
       log.info('Marketing plan dashboard viewed', { userId: user.id });
-      logAction('view_marketing_dashboard', { timestamp: new Date().toISOString() });
+      if (typeof logAction === 'function') {
+        logAction('view_marketing_dashboard', { timestamp: new Date().toISOString() });
+      } else {
+        console.warn('MarketingPlanPage: logAction is not a function during page view log effect.', { logActionType: typeof logAction });
+      }
     }
-  }, [user]);
+  }, [user, logAction]);
 
   // Handle entity selection
   const handleEntitySelect = (type, id) => {
