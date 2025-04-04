@@ -63,15 +63,29 @@ export default function Login() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.splitContainer}>
       <Head>
-        <title>Login</title>
-        <meta name="description" content="Login to your account" />
+        <title>Login | Mark1</title>
+        <meta name="description" content="Login to your Mark1 account" />
       </Head>
 
-      <main className={styles.main}>
+      <div className={styles.brandingSection}>
+        <img 
+          src="/images/fitness-background.jpg" 
+          alt="Fitness background" 
+          className={styles.backgroundImage}
+        />
+        <div className={styles.overlay}></div>
+        <div className={styles.brandingContent}>
+          <h1>Mark1</h1>
+          <p>Your all-in-one digital marketing solution for fitness instructors.</p>
+          <p className={styles.tagline}>Join thousands of fitness professionals growing their business with Mark1.</p>
+        </div>
+      </div>
+
+      <div className={styles.formSection}>
         <div className={styles.loginBox}>
-          <h1 className={styles.title}>Login</h1>
+          <h2 className={styles.title}>Login</h2>
           
           {error && <p className={styles.error}>{error}</p>}
           
@@ -130,7 +144,8 @@ export default function Login() {
             Don't have an account? <Link href="/signup">Sign up</Link>
           </p>
         </div>
-      </main>
+      </div>
+
     </div>
   );
 } 
