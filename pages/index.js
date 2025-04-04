@@ -29,4 +29,12 @@ export default function Home() {
       {/* e.g., <p style={{ textAlign: 'center', paddingTop: '2rem' }}>Loading...</p> */}
     </div>
   );
+}
+
+// Add getServerSideProps to force SSR and prevent build errors
+export async function getServerSideProps() {
+  // No data fetching needed here, just forcing SSR
+  return {
+    props: {}, 
+  };
 } 

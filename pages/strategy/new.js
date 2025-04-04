@@ -2076,4 +2076,12 @@ Please share:
       )}
     </div>
   );
+}
+
+// Add getServerSideProps correctly at the end of the file
+export async function getServerSideProps() {
+  // No data fetching needed here, just forcing SSR
+  return {
+    props: {}, 
+  };
 } 

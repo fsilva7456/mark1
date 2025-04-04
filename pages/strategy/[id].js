@@ -134,3 +134,13 @@ export default function StrategyDetail() {
     </div>
   );
 }
+
+// Add getServerSideProps to force SSR and prevent build errors
+// This is especially important for dynamic routes that need auth context
+export async function getServerSideProps(context) {
+  // You might want to fetch strategy data based on context.params.id here
+  // But for now, just forcing SSR is enough
+  return {
+    props: { strategyId: context.params.id }, // Pass id if needed
+  };
+}
