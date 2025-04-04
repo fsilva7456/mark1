@@ -24,7 +24,7 @@ export default function Login() {
       if (error) {
         setError(error.message);
       } else {
-        router.push('/project-picker');
+        router.push('/projects/select');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -39,7 +39,7 @@ export default function Login() {
     setError('');
 
     try {
-      const redirectUrl = `${window.location.origin}/project-picker`;
+      const redirectUrl = `${window.location.origin}/projects/select`;
 
       const { error } = await signInWithOAuth({ 
         provider: 'google', 
