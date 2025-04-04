@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase'; // Need Supabase client for server-side check
+import { parse } from 'cookie'; // Helper to parse cookies
 
 // Optional: A simple CSS module for the blank page if needed, or inline styles.
 // import styles from '../styles/BlankIndex.module.css'; 
@@ -26,14 +28,47 @@ export default function Home() {
         <title>Loading...</title> {/* Simple title */}
       </Head>
       {/* Optional: Add a subtle loading indicator here if desired */}
-      {/* e.g., <p style={{ textAlign: 'center', paddingTop: '2rem' }}>Loading...</p> */}
+      <p style={{ textAlign: 'center', paddingTop: '2rem', color: '#ccc' }}>Loading application...</p>
     </div>
   );
 }
 
-// Add getServerSideProps to force SSR and prevent build errors
-export async function getServerSideProps() {
-  // No data fetching needed here, just forcing SSR
+// Check auth state server-side and redirect if logged in
+export async function getServerSideProps(context) {
+  const { req } = context;
+  const cookies = parse(req.headers.cookie || '');
+  
+  // Construct the key Supabase uses for the auth token cookie
+  // Note: This might vary slightly depending on Supabase version or config,
+  // check browser dev tools -> Application -> Cookies to confirm the exact name.
+  // It often looks like sb-<project_ref>-auth-token
+  const supabaseTokenCookieName = `sb-${process.env.NEXT_PUBLIC_SUPABASE_PROJECT_REF}-auth-token`; 
+  const token = cookies[supabaseTokenCookieName];
+
+  let user = null;
+  if (token) {
+    try {
+       // Verify the token server-side
+       const { data: { user: supabaseUser }, error } = await supabase.auth.getUser(token);
+       if (!error && supabaseUser) {
+           user = supabaseUser;
+       }
+    } catch (e) {
+        console.error("Error verifying token in index SSR:", e);
+    }
+  }
+
+  // If user is found via server-side check, redirect immediately
+  if (user) {
+    return {
+      redirect: {
+        destination: '/projects/select', // Redirect to project selection
+        permanent: false,
+      },
+    };
+  }
+
+  // If no user, render the basic page (which likely leads to /login via AuthContext later)
   return {
     props: {}, 
   };
