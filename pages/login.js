@@ -24,7 +24,7 @@ export default function Login() {
       if (error) {
         setError(error.message);
       } else {
-        router.push('/marketing-plan');
+        router.push('/projects/select');
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -39,26 +39,24 @@ export default function Login() {
     setError('');
 
     try {
+      const redirectUrl = `${window.location.origin}/projects/select`;
+
       const { error } = await signInWithOAuth({ 
         provider: 'google', 
         options: {
-          // Optional: Specify redirect URL if needed, otherwise uses Supabase config
-          // redirectTo: `${window.location.origin}/marketing-plan`
+          redirectTo: redirectUrl
         }
       });
 
       if (error) {
         setError(error.message);
+        setIsLoading(false);
       }
-      // Supabase handles redirection for OAuth, so no explicit router.push here usually
-      // If redirect doesn't happen automatically, uncomment and adjust redirectTo above
       
     } catch (err) {
       setError('Failed to sign in with Google. Please try again.');
       console.error('Google login error:', err);
-    } finally {
-      // Keep loading true if OAuth redirect is expected
-      // setIsLoading(false); // Comment out or adjust based on OAuth flow
+      setIsLoading(false);
     }
   };
 
