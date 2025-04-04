@@ -5,21 +5,27 @@ import { MarketingPlanProvider } from '../contexts/MarketingPlanContext'
 import { useState } from 'react'
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
-import ProjectSelectorModal from '../components/ProjectSelectorModal'
 
 function MyApp({ Component, pageProps }) {
+  console.log('MyApp component rendering...');
   const [error, setError] = useState(null)
 
   if (error) {
+    console.log('MyApp rendering error fallback UI.');
     return (
       <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
         <h1>Something went wrong</h1>
-        <p>{error.message}</p>
+        <pre style={{ whiteSpace: 'pre-wrap', background: '#f0f0f0', padding: '10px', borderRadius: '4px' }}>
+            {error.message}
+            {"\n\n"}
+            {error.stack}
+        </pre>
         <button 
           onClick={() => window.location.reload()}
           style={{
+            marginTop: '1rem',
             padding: '8px 16px',
-            background: '#3454D1',
+            background: '#0070f3',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
@@ -32,13 +38,13 @@ function MyApp({ Component, pageProps }) {
     )
   }
 
+  console.log('MyApp rendering main application structure.');
   return (
     <ErrorBoundary setError={setError}>
       <AuthProvider>
         <ProjectProvider>
           <MarketingPlanProvider>
             <Component {...pageProps} />
-            <ProjectSelectorModal />
             <Toaster position="top-right" />
           </MarketingPlanProvider>
         </ProjectProvider>
@@ -53,7 +59,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo)
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.props.setError(error)
   }
 

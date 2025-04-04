@@ -6,6 +6,7 @@ import { useProject } from '../../contexts/ProjectContext';
 import styles from '../../styles/SelectProject.module.css';
 
 export default function SelectProjectPage() {
+  console.log('SelectProjectPage rendering...');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const {
@@ -25,68 +26,99 @@ export default function SelectProjectPage() {
   const [createError, setCreateError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  console.log('SelectProjectPage state:', { authLoading, projectLoading, user: !!user, projectsCount: projects.length, currentProjectId: currentProject?.id, projectError });
+
   // Fetch projects when user is loaded and available
   useEffect(() => {
+    console.log('SelectProjectPage effect (fetchProjects): Checking user...', { userId: user?.id });
     if (user) {
+      console.log('SelectProjectPage effect (fetchProjects): User found, calling fetchProjects.');
       fetchProjects();
+    } else {
+      console.log('SelectProjectPage effect (fetchProjects): No user, skipping fetch.');
     }
+    // fetchProjects is memoized with useCallback in context, safe dependency
   }, [user, fetchProjects]);
 
   // Redirect if not logged in
   useEffect(() => {
+    console.log('SelectProjectPage effect (authRedirect): Checking auth state...', { authLoading, user: !!user });
     if (!authLoading && !user) {
+      console.log('SelectProjectPage effect (authRedirect): Not authenticated, redirecting to /login.');
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
+    console.log('handleCreateProject triggered.');
     if (!newProjectName.trim()) {
+      console.log('handleCreateProject: Validation failed - Project name required.');
       setCreateError('Project name is required.');
       return;
     }
     setIsCreating(true);
     setCreateError('');
     try {
+      console.log(`handleCreateProject: Calling createProject context function with name: ${newProjectName}`);
       const newProject = await createProject(newProjectName, newProjectDescription);
       if (newProject) {
+        console.log('handleCreateProject: createProject successful, clearing form.', newProject);
         setNewProjectName('');
         setNewProjectDescription('');
         // ProjectContext's createProject handles the redirect now
         // router.push('/marketing-plan');
       } else {
         // Use error from context if available
+        console.log('handleCreateProject: createProject returned null, checking projectError from context.');
         setCreateError(projectError || 'Failed to create project. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating project:', error);
-      setCreateError(error.message || 'An unexpected error occurred.');
+      console.error('handleCreateProject: Exception caught:', error);
+      setCreateError(error.message || 'An unexpected error occurred during creation.');
     } finally {
+      console.log('handleCreateProject: Setting isCreating to false.');
       setIsCreating(false);
     }
   };
 
   const handleSelectProject = async (projectId) => {
+    console.log(`handleSelectProject triggered for ID: ${projectId}`);
     try {
-        await switchProject(projectId);
-        // switchProject now handles the redirect in ProjectContext
-        // router.push('/marketing-plan');
+      await switchProject(projectId);
+      // switchProject now handles the redirect in ProjectContext
+      // router.push('/marketing-plan');
     } catch (error) {
-        console.error("Error switching project:", error);
-        // Handle error display if needed
+      console.error(`handleSelectProject: Exception caught for ID ${projectId}:`, error);
+      // Handle error display if needed
     }
   };
 
   const handleSetDefault = async (projectId) => {
+    console.log(`handleSetDefault triggered for ID: ${projectId}`);
     if (currentProject?.id === projectId && currentProject?.is_default) return; // Already default
-    await setDefaultProject(projectId);
-    // Optionally refetch or just update UI based on context state change
+    try {
+      await setDefaultProject(projectId);
+      // Optionally refetch or just update UI based on context state change
+    } catch (error) {
+      console.error(`handleSetDefault: Exception caught for ID ${projectId}:`, error);
+      // setPageError('Failed to set default project.');
+    }
   };
 
   const handleDelete = async (projectId, projectName) => {
+    console.log(`handleDelete triggered for ID: ${projectId}, Name: ${projectName}`);
     if (window.confirm(`Are you sure you want to delete the project "${projectName}"? This action cannot be undone.`)) {
-      await deleteProject(projectId);
-      // Context handles state update
+      console.log(`handleDelete: User confirmed deletion for ${projectId}.`);
+      try {
+        await deleteProject(projectId);
+        // Context handles state update
+      } catch (error) {
+        console.error(`handleDelete: Exception caught for ID ${projectId}:`, error);
+        // setPageError('Failed to delete project.');
+      }
+    } else {
+      console.log(`handleDelete: User cancelled deletion for ${projectId}.`);
     }
   };
 
@@ -143,6 +175,7 @@ export default function SelectProjectPage() {
                         className={styles.actionButton}
                         onClick={() => handleSelectProject(project.id)}
                         disabled={projectLoading || isCreating}
+                        aria-label={`Select project ${project.name}`}
                       >
                         Select
                       </button>
@@ -151,6 +184,7 @@ export default function SelectProjectPage() {
                           className={styles.secondaryButton}
                           onClick={() => handleSetDefault(project.id)}
                           disabled={projectLoading || isCreating}
+                          aria-label={`Set ${project.name} as default`}
                         >
                           Set as Default
                         </button>
@@ -159,6 +193,7 @@ export default function SelectProjectPage() {
                         className={styles.deleteButton}
                         onClick={() => handleDelete(project.id, project.name)}
                         disabled={projectLoading || isCreating || currentProject?.id === project.id} // Prevent deleting current project? Or handle differently
+                        aria-label={`Delete project ${project.name}`}
                       >
                         Delete
                       </button>
@@ -190,6 +225,7 @@ export default function SelectProjectPage() {
                 placeholder="e.g., My Fitness Coaching Business"
                 required
                 disabled={isCreating}
+                aria-required="true"
               />
             </div>
             <div className={styles.formGroup}>
@@ -208,6 +244,7 @@ export default function SelectProjectPage() {
               type="submit"
               className={styles.createButton}
               disabled={isCreating || projectLoading}
+              aria-disabled={isCreating || projectLoading}
             >
               {isCreating ? 'Creating...' : 'Create Project'}
             </button>

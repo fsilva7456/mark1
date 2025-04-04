@@ -16,6 +16,7 @@ export const useProject = () => {
 };
 
 export const ProjectProvider = ({ children }) => {
+  console.log('ProjectProvider rendering...');
   const { user } = useAuth();
   const router = useRouter();
   
@@ -26,17 +27,17 @@ export const ProjectProvider = ({ children }) => {
   // Removed showProjectSelector state
 
   // Fetch projects from the database
-  // Use useCallback to prevent re-creation on every render unless dependencies change
   const fetchProjects = useCallback(async () => {
-    // Only fetch if user is available
+    console.log('ProjectProvider: fetchProjects called.');
     if (!user) {
+      console.log('ProjectProvider: fetchProjects aborted, no user.');
       setProjects([]);
       setCurrentProject(null);
       setIsLoading(false);
       return;
     }
 
-    // console.log('Fetching projects for user:', user.id);
+    console.log(`ProjectProvider: Fetching projects for user: ${user.id}`);
     setIsLoading(true);
     setError(null);
     try {
@@ -47,11 +48,11 @@ export const ProjectProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        console.error('Supabase fetch error:', fetchError);
+        console.error('ProjectProvider: Supabase fetch error:', fetchError);
         throw new Error(fetchError.message || 'Failed to load projects from database.');
       }
       
-      // console.log('Fetched projects data:', data);
+      console.log('ProjectProvider: Fetched projects data:', data);
       const fetchedProjects = data || [];
       setProjects(fetchedProjects);
 
@@ -62,49 +63,51 @@ export const ProjectProvider = ({ children }) => {
           
           // Set current project only if it's not already set or different
           if (!currentProject || currentProject.id !== projectToSet.id) {
-             // console.log('Setting initial current project:', projectToSet.name);
+             console.log('ProjectProvider: Setting initial/updated current project:', projectToSet.name, projectToSet.id);
              setCurrentProject(projectToSet);
           }
       } else {
-          // No projects found, ensure currentProject is null
+          console.log('ProjectProvider: No projects found for user, setting currentProject to null.');
           setCurrentProject(null);
       }
 
     } catch (err) {
-      console.error('Error fetching projects:', err);
+      console.error('ProjectProvider: Exception during fetchProjects:', err);
       setError(err.message || 'An unexpected error occurred while fetching projects.');
       setProjects([]); // Clear projects on error
       setCurrentProject(null);
     } finally {
+      console.log('ProjectProvider: fetchProjects finished, setting loading to false.');
       setIsLoading(false);
     }
-  }, [user, currentProject]); // Include currentProject to re-evaluate if it changes elsewhere
+  }, [user, currentProject?.id]); // Depend on user and currentProject ID for stability
 
-  // Fetch projects when user object becomes available
+  // Fetch projects when user object becomes available or fetchProjects changes
   useEffect(() => {
-    // console.log('User state changed, user:', user);
+    console.log('ProjectProvider effect: User changed, calling fetchProjects. User:', user?.id);
     fetchProjects();
-  }, [user, fetchProjects]); // fetchProjects is now stable due to useCallback
+  }, [user, fetchProjects]); // fetchProjects is stable due to useCallback
 
   // Switch to a different project and redirect
   const switchProject = useCallback(async (projectId) => {
+    console.log(`ProjectProvider: switchProject called for ID: ${projectId}`);
     const project = projects.find(p => p.id === projectId);
     if (project) {
-      // console.log('Switching to project:', project.name);
+      console.log('ProjectProvider: Setting current project:', project.name);
       setCurrentProject(project);
-      // Redirect after setting the project
+      console.log('ProjectProvider: Redirecting to /marketing-plan after switch.');
       router.push('/marketing-plan');
     } else {
-      console.error('Attempted to switch to non-existent project ID:', projectId);
+      console.error('ProjectProvider: switchProject failed - project not found with ID:', projectId);
       setError('Selected project not found. Please refresh.');
-      // Optional: redirect back to select page or show error
-      // router.push('/projects/select'); 
     }
   }, [projects, router]);
 
   // Create a new project, set it as current, and redirect
   const createProject = useCallback(async (name, description = '') => {
+    console.log(`ProjectProvider: createProject called with name: ${name}`);
     if (!user) {
+        console.error("ProjectProvider: createProject failed - User not logged in.");
         setError("User not logged in. Cannot create project.");
         return null;
     }
@@ -113,58 +116,58 @@ export const ProjectProvider = ({ children }) => {
     setError(null);
     try {
       const isFirstProject = projects.length === 0;
+      console.log(`ProjectProvider: Inserting project. Is first project: ${isFirstProject}`);
       const { data, error: insertError } = await supabase
         .from('projects')
         .insert([
           { 
             user_id: user.id, 
-            name: name.trim(), // Ensure name is trimmed 
-            description: description?.trim(), // Trim description if provided
+            name: name.trim(), 
+            description: description?.trim(),
             is_default: isFirstProject 
-            // created_at and updated_at are handled by Supabase
           }
         ])
-        .select() // Select the newly created row
-        .single(); // Expecting a single object back
+        .select()
+        .single();
 
       if (insertError) {
-        console.error('Supabase insert error:', insertError);
+        console.error('ProjectProvider: Supabase insert error:', insertError);
         throw new Error(insertError.message || 'Failed to save project to database.');
       }
 
       if (data) {
-        // console.log('Project created successfully:', data);
-        // Add to local state immediately
-        setProjects(prev => [data, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))); // Add and re-sort
-        setCurrentProject(data); // Set as current
-        
-        // Redirect after successful creation and state update
+        console.log('ProjectProvider: Project created successfully:', data);
+        setProjects(prev => [data, ...prev].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))); 
+        setCurrentProject(data);
+        console.log('ProjectProvider: Redirecting to /marketing-plan after create.');
         router.push('/marketing-plan'); 
         return data;
       } else {
-        // Should not happen if insertError is null, but handle defensively
+         console.error('ProjectProvider: createProject failed - no data returned after insert.');
         throw new Error('Failed to create project, no data returned.');
       }
     } catch (err) {
-      console.error('Error creating project:', err);
+      console.error('ProjectProvider: Exception during createProject:', err);
       setError(err.message || 'An unexpected error occurred while creating the project.');
-      // Don't redirect on error
       return null; // Indicate failure
     } finally {
+      console.log('ProjectProvider: createProject finished, setting loading to false.');
       setIsLoading(false);
     }
-  }, [user, projects, router]); // Depends on user, projects list, and router
+  }, [user, projects, router]);
 
   // Set a project as default
   const setDefaultProject = useCallback(async (projectId) => {
+     console.log(`ProjectProvider: setDefaultProject called for ID: ${projectId}`);
      if (!user) {
+        console.error("ProjectProvider: setDefaultProject failed - User not logged in.");
         setError("User not logged in. Cannot set default project.");
         return false;
     }
-    setIsLoading(true); // Indicate activity
+    setIsLoading(true);
     setError(null);
     try {
-      // Transaction: Unset existing default, then set new default
+      console.log('ProjectProvider: Unsetting previous default project...');
       const { error: unsetError } = await supabase
         .from('projects')
         .update({ is_default: false })
@@ -172,54 +175,52 @@ export const ProjectProvider = ({ children }) => {
         .eq('is_default', true);
         
       if (unsetError) {
-         console.error('Error unsetting previous default project:', unsetError);
+         console.error('ProjectProvider: Error unsetting previous default project:', unsetError);
          throw new Error(unsetError.message || 'Failed to unset previous default.');
       }
-
+      
+      console.log(`ProjectProvider: Setting project ${projectId} as default...`);
       const { error: setError } = await supabase
         .from('projects')
         .update({ is_default: true })
-        .eq('user_id', user.id) // Ensure we only update the user's project
+        .eq('user_id', user.id)
         .eq('id', projectId);
 
       if (setError) {
-        console.error('Error setting new default project:', setError);
+        console.error('ProjectProvider: Error setting new default project:', setError);
         throw new Error(setError.message || 'Failed to set the new default project.');
       }
 
-      // Update local state optimistically or after confirmation
+      console.log('ProjectProvider: Updating local state for default project.');
       setProjects(prev => 
         prev.map(p => ({
           ...p,
           is_default: p.id === projectId
         }))
       );
-      // Ensure current project reflects the change if it was the one set to default
       if (currentProject?.id === projectId) {
+          console.log('ProjectProvider: Updating currentProject state to reflect default status.');
           setCurrentProject(prev => ({ ...prev, is_default: true }));
       }
-      // console.log('Project set as default:', projectId);
       return true;
     } catch (err) {
-      console.error('Error setting default project:', err);
+      console.error('ProjectProvider: Exception during setDefaultProject:', err);
       setError(err.message || 'An error occurred while setting the default project.');
       return false;
     } finally {
+      console.log('ProjectProvider: setDefaultProject finished, setting loading to false.');
       setIsLoading(false);
     }
-  }, [user, currentProject?.id]); // Depends on user and currentProject ID
+  }, [user, currentProject?.id]); 
 
   // Delete a project
   const deleteProject = useCallback(async (projectId) => {
+     console.log(`ProjectProvider: deleteProject called for ID: ${projectId}`);
      if (!user) {
+         console.error("ProjectProvider: deleteProject failed - User not logged in.");
         setError("User not logged in. Cannot delete project.");
         return false;
     }
-    // Prevent deleting the only project if needed, or handle redirect
-    // if (projects.length <= 1) {
-    //   setError("Cannot delete the last project.");
-    //   return false;
-    // }
     
     setIsLoading(true);
     setError(null);
@@ -227,43 +228,42 @@ export const ProjectProvider = ({ children }) => {
       const { error: deleteError } = await supabase
         .from('projects')
         .delete()
-        .eq('user_id', user.id) // Ensure user owns the project
+        .eq('user_id', user.id)
         .eq('id', projectId);
 
       if (deleteError) {
-        console.error('Supabase delete error:', deleteError);
+        console.error('ProjectProvider: Supabase delete error:', deleteError);
         throw new Error(deleteError.message || 'Failed to delete project from database.');
       }
 
-      // console.log('Project deleted successfully:', projectId);
-      // Update local state
+      console.log('ProjectProvider: Project deleted successfully from DB:', projectId);
       const updatedProjects = projects.filter(p => p.id !== projectId);
       setProjects(updatedProjects);
+      console.log('ProjectProvider: Local project list updated after delete.');
 
       // Handle current project if it was deleted
       if (currentProject?.id === projectId) {
+        console.log('ProjectProvider: Current project was deleted.');
         if (updatedProjects.length > 0) {
-          // Select the new default or the first remaining project
           const newDefault = updatedProjects.find(p => p.is_default) || updatedProjects[0];
+          console.log('ProjectProvider: Setting new current project:', newDefault.name);
           setCurrentProject(newDefault);
-          // console.log('Deleted current project, switched to:', newDefault.name);
         } else {
-          // No projects left, clear current project
+          console.log('ProjectProvider: No projects left, setting currentProject to null.');
           setCurrentProject(null);
-          // console.log('Deleted last project.');
-          // No redirect here, user stays on select page which will prompt creation
         }
       }
       
       return true;
     } catch (err) {
-      console.error('Error deleting project:', err);
+      console.error('ProjectProvider: Exception during deleteProject:', err);
       setError(err.message || 'An unexpected error occurred while deleting the project.');
       return false;
     } finally {
+       console.log('ProjectProvider: deleteProject finished, setting loading to false.');
       setIsLoading(false);
     }
-  }, [user, projects, currentProject, router]); // Depends on user, projects, currentProject, and router
+  }, [user, projects, currentProject, router]); 
 
   // Value provided by the context
   const value = {
@@ -278,6 +278,7 @@ export const ProjectProvider = ({ children }) => {
     deleteProject,
   };
 
+  console.log('ProjectProvider: Providing context value:', { isLoading, error: !!error, projectsCount: projects.length, currentProjectId: currentProject?.id });
   return (
     <ProjectContext.Provider value={value}>
       {children}
