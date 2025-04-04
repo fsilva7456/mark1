@@ -72,7 +72,7 @@ export default function Login() {
       <div className={styles.brandingSection}>
         <img 
           src="/images/fitness-background.jpg" 
-          alt="Fitness background" 
+          alt="Gym interior with fitness equipment"
           className={styles.backgroundImage}
         />
         <div className={styles.overlay}></div>
