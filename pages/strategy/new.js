@@ -13,6 +13,7 @@ export default function NewStrategy() {
   const [messages, setMessages] = useState([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [userData, setUserData] = useState({
     name: '',
     location: '',
@@ -46,15 +47,7 @@ export default function NewStrategy() {
   const [strategyId, setStrategyId] = useState(null);
   
   const { user } = useAuth();
-  const { currentProject, projects, setShowProjectSelector } = useProject();
-  
-  // Use effect to check if a project is selected
-  useEffect(() => {
-    if (user && (!currentProject || !projects || projects.length === 0)) {
-      // Show project selector if no project is selected
-      setShowProjectSelector(true);
-    }
-  }, [user, currentProject, projects, setShowProjectSelector]);
+  const { currentProject } = useProject();
   
   // Replace the AI suggestions code with this modified version that works with the chat flow
   const [aiSuggestions, setAiSuggestions] = useState([]);
@@ -453,6 +446,7 @@ Please share:
       }
     ];
     setMessages(updatedMessages);
+    const userInputForLogic = currentInput; // Capture before clearing
     setCurrentInput('');
     
     // Scroll to bottom after user message
@@ -464,23 +458,23 @@ Please share:
       if (messages.length === 1) {
         return {
           ...prev,
-          name: currentInput,
-          answers: [...prev.answers, currentInput]
+          name: userInputForLogic,
+          answers: [...prev.answers, userInputForLogic]
         };
       }
       // Second answer is location
       else if (messages.length === 3) {
         return {
           ...prev,
-          location: currentInput,
-          answers: [...prev.answers, currentInput]
+          location: userInputForLogic,
+          answers: [...prev.answers, userInputForLogic]
         };
       }
       // All other answers
       else {
         return {
           ...prev,
-          answers: [...prev.answers, currentInput]
+          answers: [...prev.answers, userInputForLogic]
         };
       }
     });
@@ -490,7 +484,7 @@ Please share:
     
     try {
       // Get response from hardcoded flow
-      const response = await sendToGemini(currentInput);
+      const response = await sendToGemini(userInputForLogic);
       
       // Check for matrix trigger
       if (response.includes('[READY_FOR_MATRIX]')) {
@@ -635,54 +629,56 @@ Please share:
   };
   
   const handleSaveStrategy = async () => {
+    setSaveError(null);
     if (!user) {
       toast.error('You must be logged in to save a strategy');
       return;
     }
-    
     if (!currentProject) {
-      toast.error('You must select a project to save your strategy');
-      setShowProjectSelector(true);
+      toast.error('No project selected. Please select a project first.');
       return;
     }
     
     setIsProcessing(true);
     
     try {
-      // Format data for Supabase
+      // Ensure matrix data exists and is not in error state
+      if (!matrix || matrix.error || !matrix.targetAudience || !matrix.objectives || !matrix.keyMessages) {
+          throw new Error('Cannot save, strategy matrix data is incomplete or contains errors.');
+      }
+
       const strategyData = {
-        user_id: user.id,
-        project_id: currentProject.id,
-        name: userData.name || 'Untitled Strategy',
-        business_description: userData.answers[0] || '',
-        target_audience: matrix.targetAudience,
+        user_id: user.id, 
+        project_id: currentProject.id, 
+        name: userData.name?.trim() || 'Untitled Strategy', 
+        business_description: userData.answers[2] || '',
+        target_audience: matrix.targetAudience, 
         objectives: matrix.objectives,
         key_messages: matrix.keyMessages,
-        created_at: new Date(),
-        updated_at: new Date()
       };
       
-      // Save to Supabase
+      console.log('Saving strategy data:', strategyData);
+      
       const { data, error } = await supabase
         .from('strategies')
         .insert([strategyData])
         .select();
       
-      if (error) throw error;
-      
-      // Success!
-      toast.success('Strategy saved successfully!');
-      
-      // Store the strategy ID
-      if (data && data.length > 0) {
-        setStrategyId(data[0].id);
-        
-        // Redirect to the content generation page
-        router.push(`/content/new?strategy=${data[0].id}`);
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
       }
+      
+      toast.success('Strategy saved successfully!');
+      console.log('Strategy saved, redirecting to /marketing-plan', data);
+      
+      router.push('/marketing-plan'); 
+      
     } catch (error) {
-      console.error('Error saving strategy:', error);
-      toast.error('Failed to save strategy');
+      console.error('Error saving strategy:', error); 
+      const errorMsg = error.message || 'Failed to save strategy. Please try again.';
+      setSaveError(errorMsg);
+      toast.error(errorMsg); 
     } finally {
       setIsProcessing(false);
     }

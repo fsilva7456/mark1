@@ -28,11 +28,8 @@ This document outlines the authentication and login flow for the Mark1 applicati
         *   Supabase handles the redirect to Google and back to the application (specifically to `/projects/select`).
         *   *On Success:* Google redirects back, Supabase validates the session, and the `onAuthStateChange` listener updates the global `user` state. The user lands on `/projects/select`.
         *   *On Failure:* If the OAuth process fails (e.g., popup blocked, configuration issue), the promise might reject, or Supabase might redirect with an error parameter. The handler catches errors and updates the form's error state.
-4.  **Project Selection (`/projects/select`):**
-    *   After login, users are taken to the project selection page.
-    *   The page fetches the user's projects using `fetchProjects()` from `ProjectContext`.
-    *   Users can select an existing project (calls `switchProject()`, which sets `currentProject` and redirects to `/marketing-plan`) or create a new one (calls `createProject()`, which saves, sets `currentProject`, and redirects to `/marketing-plan`).
-    *   This step is mandatory before accessing the main application functionality (e.g., `/marketing-plan`).
+4.  **Post-Login: Project Selection and Dashboard**
+    *   After login, users are redirected to `/projects/select` to choose or create a project. Upon selection, they land on `/marketing-plan` (the main dashboard). If no strategy exists for the selected project, they're redirected to `/strategy/new` to create one via a predefined chat flow with AI-generated outputs. After saving the strategy, they return to `/marketing-plan` with the strategy loaded.
 5.  **Signup Process (`/signup`):**
     *   User enters email, password, and password confirmation.
     *   The form's `onSubmit` handler (`handleSignup`) validates that passwords match. If they match, it calls `signUp(email, password)` from `useAuth()`.
