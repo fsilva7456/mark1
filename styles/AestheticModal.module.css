@@ -1,0 +1,209 @@
+/* styles/AestheticModal.module.css */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px); /* Optional blur effect */
+}
+
+.aestheticModal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px; /* Slightly larger radius */
+  width: 90%;
+  max-width: 650px; /* Increased max-width for grid */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+  max-height: 90vh; /* Limit height */
+  overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb; /* Separator */
+}
+
+.modalHeader h3 {
+  font-size: 1.5rem;
+  font-weight: 600; /* Semibold */
+  color: #1f2937; /* Dark Gray */
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: #6b7280; /* Medium Gray */
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.closeButton:hover {
+  color: #1f2937; /* Dark Gray on hover */
+}
+
+.modalBody {
+  padding-top: 0.5rem;
+}
+
+.modalDescription {
+  color: #4b5563; /* Gray */
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.aestheticGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.aestheticCard {
+  border: 2px solid #e5e7eb; /* Light Gray border */
+  padding: 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.2s ease-in-out;
+  text-align: left;
+}
+
+.aestheticCard:hover {
+  border-color: #93c5fd; /* Light Blue border on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.selectedAesthetic {
+  border-color: #2563eb; /* Primary Blue */
+  background-color: #eff6ff; /* Very Light Blue background */
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); /* Blue ring */
+}
+
+.aestheticInfo h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.aestheticInfo p {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.customAestheticInput {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.customAestheticInput label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.customInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db; /* Input border */
+  border-radius: 6px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box; /* Include padding in width */
+}
+
+.customInput:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem; /* Add space above buttons in custom section */
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.65rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.saveButton {
+  background: #2563eb; /* Primary Blue */
+  color: white;
+}
+
+.saveButton:hover {
+  background: #1d4ed8; /* Darker Blue */
+}
+
+.saveButton:disabled {
+    background-color: #9ca3af; /* Disabled gray */
+    cursor: not-allowed;
+}
+
+
+.cancelButton {
+  background: #f3f4f6; /* Light Gray background */
+  color: #374151; /* Dark Gray text */
+  border: 1px solid #d1d5db;
+}
+
+.cancelButton:hover {
+  background: #e5e7eb; /* Slightly darker gray */
+}
+
+/* Responsiveness */
+@media (max-width: 600px) {
+  .aestheticModal {
+    padding: 1.5rem;
+    max-width: 95%;
+    max-height: 85vh;
+  }
+
+  .modalHeader h3 {
+    font-size: 1.25rem;
+  }
+
+  .aestheticGrid {
+    grid-template-columns: 1fr; /* Stack cards on small screens */
+  }
+
+  .modalActions {
+    flex-direction: column-reverse; /* Stack buttons vertically */
+    gap: 0.5rem;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%; /* Make buttons full width */
+  }
+} 
