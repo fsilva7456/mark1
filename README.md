@@ -388,3 +388,5 @@ Each of these processes leverages AI technology to automate complex marketing ta
    - Separate records in the `calendar_posts` table
 
 2. When saving calendar data, ensure you're using the correct field names that exist in the database schema
+
+<!-- Trigger rebuild -->
