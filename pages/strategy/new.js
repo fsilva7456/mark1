@@ -1178,6 +1178,8 @@ Please share:
 
   // --- Corrected MatrixDisplay Component Definition ---
   const MatrixDisplay = ({ matrix, onSave, onEdit }) => {
+    console.log("Rendering MatrixDisplay, matrix.error:", matrix?.error);
+
     // Check for error state first
     if (matrix.error) {
       return (
@@ -1186,7 +1188,7 @@ Please share:
           <p>We encountered an error while generating the strategy:</p>
           <pre className={styles.errorMessage}>{matrix.errorMessage}</pre>
           <p>Please try adjusting your inputs or contact support if the issue persists.</p>
-          {/* Optionally add a button to go back or retry */}
+          {/* Button is NOT rendered here in the error case */}
         </div>
       );
     }
