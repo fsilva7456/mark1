@@ -1,20 +1,31 @@
 import React, { useState, useContext } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; // Assuming you might use an Image component for the logo
-import { AuthContext } from '../contexts/AuthContext';
-import { ProjectContext } from '../contexts/ProjectContext';
-import styles from '../styles/Header.module.css'; // We'll create this file next
-import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/outline'; // Example using Heroicons
+// import { AuthContext } from '../contexts/AuthContext'; // Remove direct context import
+// import { ProjectContext } from '../contexts/ProjectContext'; // Remove direct context import
+import { useAuth } from '../contexts/AuthContext'; // Import custom hook
+import { useProject } from '../contexts/ProjectContext'; // Import custom hook
+import styles from '../styles/Header.module.css';
+import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/outline';
 
 const Header = ({ isMenuOpen, toggleMenu }) => {
-  const { user, logout } = useContext(AuthContext);
-  const { currentProject } = useContext(ProjectContext);
+  // const { user, logout } = useContext(AuthContext); // Use custom hook instead
+  // const { currentProject } = useContext(ProjectContext); // Use custom hook instead
+  const { user, signOut } = useAuth(); // Correctly use the hook
+  const { currentProject } = useProject(); // Correctly use the hook
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  // Use signOut from useAuth context
+  const handleLogout = async () => {
+    await signOut(); 
+    // Navigation might be handled within signOut or you might need to add it here if not
+  };
+
 
   return (
     <header className={styles.header}>
       <div className={styles.leftSection}>
-        <Link href={currentProject ? "/" : "/"} passHref> {/* Adjust link as needed */}
+        <Link href={currentProject ? "/marketing-plan" : "/"} passHref> {/* Link to marketing plan if project exists, else home */}
           <a className={styles.logo}>
             {/* Replace with your actual logo/name */}
             {/* <Image src="/logo.png" alt="Mark1 Logo" width={30} height={30} /> */}
@@ -30,22 +41,28 @@ const Header = ({ isMenuOpen, toggleMenu }) => {
           <BellIcon className={styles.icon} />
           {/* Add notification count logic here if needed */}
         </div>
-        <div className={`${styles.iconWrapper} ${styles.userProfile}`} onClick={() => setShowUserDropdown(!showUserDropdown)}>
-          <UserCircleIcon className={styles.icon} />
+        <div className={`${styles.iconWrapper} ${styles.userProfile}`} >
+          {/* Wrap UserCircleIcon in a button for accessibility if it triggers dropdown */} 
+          <button onClick={() => setShowUserDropdown(!showUserDropdown)} className={styles.iconButton}>
+             <UserCircleIcon className={styles.icon} />
+          </button>
           {showUserDropdown && (
-            <div className={styles.userDropdown}>
+            <div className={styles.userDropdown} onMouseLeave={() => setShowUserDropdown(false)}> {/* Close dropdown on mouse leave */}
               {/* Add Account Settings link later */}
               {/* <Link href="/account-settings"><a>Account Settings</a></Link> */}
-              <button onClick={logout}>Logout</button>
+              <button onClick={handleLogout}>Logout</button> {/* Use handleLogout */} 
             </div>
           )}
         </div>
-        <div className={styles.iconWrapper} onClick={toggleMenu}>
-          {isMenuOpen ? (
-            <XIcon className={styles.icon} />
-          ) : (
-            <MenuIcon className={styles.icon} />
-          )}
+        <div className={styles.iconWrapper} >
+            {/* Wrap icons in buttons for accessibility */} 
+           <button onClick={toggleMenu} className={styles.iconButton}>
+            {isMenuOpen ? (
+                <XIcon className={styles.icon} />
+            ) : (
+                <MenuIcon className={styles.icon} />
+            )}
+           </button>
         </div>
       </div>
     </header>

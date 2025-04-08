@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
 import Link from 'next/link';
-import { ProjectContext } from '../contexts/ProjectContext';
+// import { ProjectContext } from '../contexts/ProjectContext'; // Remove direct context import
+import { useProject } from '../contexts/ProjectContext'; // Import custom hook
 import styles from '../styles/HamburgerMenu.module.css'; // Create this next
 
 const HamburgerMenu = ({ isOpen, closeMenu }) => {
-  const { currentProject, projects } = useContext(ProjectContext); // Assuming projects list is available here
+  // const { currentProject, projects } = useContext(ProjectContext); // Use custom hook instead
+  const { currentProject } = useProject(); // Correctly use the hook
 
   if (!isOpen) return null;
 
@@ -18,14 +20,16 @@ const HamburgerMenu = ({ isOpen, closeMenu }) => {
         <button className={styles.closeButton} onClick={closeMenu}>X</button> {/* Simple close button */}
         <ul>
           <li>
-            <Link href="/" passHref> {/* Link to project selection/dashboard */}
+             {/* Link to project selection/dashboard - Assume "/" handles this routing */}
+            <Link href="/" passHref> 
               <a onClick={closeMenu}>My Projects</a>
             </Link>
           </li>
           {isProjectFullySetUp && (
             <li>
               {/* Update href to the actual content management dashboard path */}
-              <Link href={`/content-dashboard?projectId=${currentProject.id}`} passHref>
+              {/* Assuming a route like /projects/[projectId]/dashboard */}
+              <Link href={`/projects/${currentProject.id}/dashboard`} passHref> 
                  <a onClick={closeMenu}>Content Management Dashboard</a>
               </Link>
             </li>
