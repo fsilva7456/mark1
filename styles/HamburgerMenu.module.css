@@ -1,0 +1,76 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+  z-index: 99; /* Below the menu itself, above other content */
+  display: flex; /* Use flex to position the menu */
+  justify-content: flex-start; /* Align menu to the left */
+}
+
+.menu {
+  background-color: #ffffff;
+  width: 280px; /* Adjust width as needed */
+  height: 100%;
+  padding: 1.5rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  position: relative; /* For absolute positioning of close button */
+  z-index: 100; /* Above the overlay */
+  overflow-y: auto; /* In case of many menu items */
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280; /* gray-500 */
+}
+
+.closeButton:hover {
+  color: #1f2937; /* gray-800 */
+}
+
+.menu ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 3rem; /* Space below close button */
+}
+
+.menu li {
+  margin-bottom: 1rem;
+}
+
+.menu a {
+  text-decoration: none;
+  color: #374151; /* gray-700 */
+  font-size: 1.1rem;
+  display: block;
+  padding: 0.5rem 0;
+  transition: color 0.2s ease;
+}
+
+.menu a:hover {
+  color: #3454D1; /* Your primary color */
+}
+
+/* Style for disabled/inactive links if needed */
+.menu li.disabled a {
+  color: #9ca3af; /* gray-400 */
+  cursor: not-allowed;
+} 

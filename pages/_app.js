@@ -2,13 +2,19 @@ import '../styles/globals.css'
 import { AuthProvider } from '../contexts/AuthContext'
 import { ProjectProvider } from '../contexts/ProjectContext'
 import { MarketingPlanProvider } from '../contexts/MarketingPlanContext'
-import { useState } from 'react'
-import React from 'react'
+import React, { useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import ProjectSelectorModal from '../components/ProjectSelectorModal'
+import Header from '../components/Header'
+import HamburgerMenu from '../components/HamburgerMenu'
+import Head from 'next/head'
 
 function MyApp({ Component, pageProps }) {
   const [error, setError] = useState(null)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+  const closeMenu = () => setIsMenuOpen(false)
 
   if (error) {
     return (
@@ -37,9 +43,18 @@ function MyApp({ Component, pageProps }) {
       <AuthProvider>
         <ProjectProvider>
           <MarketingPlanProvider>
-            <Component {...pageProps} />
-            <ProjectSelectorModal />
-            <Toaster position="top-right" />
+            <>
+              <Head>
+                <title>Mark1 App</title>
+              </Head>
+              <Header isMenuOpen={isMenuOpen} toggleMenu={toggleMenu} />
+              <HamburgerMenu isOpen={isMenuOpen} closeMenu={closeMenu} />
+              <main style={{ paddingTop: '65px' }}>
+                <Component {...pageProps} />
+              </main>
+              <ProjectSelectorModal />
+              <Toaster position="top-right" />
+            </>
           </MarketingPlanProvider>
         </ProjectProvider>
       </AuthProvider>
