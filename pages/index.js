@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const router = useRouter();
