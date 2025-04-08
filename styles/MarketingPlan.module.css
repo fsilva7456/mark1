@@ -1163,4 +1163,54 @@
   font-size: 0.8rem !important;
   opacity: 0.9 !important;
   z-index: 999 !important;
-} 
+}
+
+/* Welcome Banner */
+.welcomeBanner {
+  background-color: var(--background-color-info); /* Use an info color */
+  color: var(--text-color-on-info);
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  margin: 0 auto 1.5rem auto; /* Center below header/progress */
+  max-width: 800px; /* Match progress bar width */
+  width: 90%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.welcomeBanner span {
+  flex-grow: 1;
+  margin-right: 1rem;
+}
+
+.closeBannerButton {
+  background: none;
+  border: none;
+  color: var(--text-color-on-info);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.closeBannerButton:hover {
+  opacity: 1;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  /* ... other mobile adjustments ... */
+
+  .welcomeBanner {
+    width: 95%;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Tooltip Styling */
+/* ... existing tooltip styles ... */ 

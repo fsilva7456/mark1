@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link';
 import styles from '../../styles/Strategy.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,6 +44,7 @@ export default function NewStrategy() {
   
   // Add state for storing the strategy ID
   const [strategyId, setStrategyId] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   const { user } = useAuth();
   const { currentProject, projects, setShowProjectSelector } = useProject();
@@ -648,12 +650,11 @@ Please share:
     setIsProcessing(true);
     
     try {
-      // Format data for Supabase
       const strategyData = {
         user_id: user.id,
         project_id: currentProject.id,
         name: userData.name || 'Untitled Strategy',
-        business_description: userData.answers[0] || '',
+        business_description: userData.answers[2] || '',
         target_audience: matrix.targetAudience,
         objectives: matrix.objectives,
         key_messages: matrix.keyMessages,
@@ -661,27 +662,20 @@ Please share:
         updated_at: new Date()
       };
       
-      // Save to Supabase
       const { data, error } = await supabase
         .from('strategies')
         .insert([strategyData])
-        .select();
+        .select('id');
       
       if (error) throw error;
       
-      // Success!
-      toast.success('Strategy saved successfully!');
+      console.log('Strategy saved, ID:', data[0]?.id);
+      setStrategyId(data[0]?.id);
+      setShowSuccessModal(true);
       
-      // Store the strategy ID
-      if (data && data.length > 0) {
-        setStrategyId(data[0].id);
-        
-        // Redirect to the content generation page
-        router.push(`/content/new?strategy=${data[0].id}`);
-      }
     } catch (error) {
       console.error('Error saving strategy:', error);
-      toast.error('Failed to save strategy');
+      toast.error(`Failed to save strategy: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -1182,7 +1176,7 @@ Please share:
   };
 
   // Enhance Matrix UI display to show the full 3x3x3 structure
-  const MatrixDisplay = ({ matrix }) => {
+  const MatrixDisplay = ({ matrix, onSave, onEdit }) => {
     // Check if we have the enhanced matrix structure
     const hasEnhancedData = matrix.enhancedStrategy && matrix.enhancedStrategy.audiences;
     
@@ -1196,7 +1190,7 @@ Please share:
               {matrix.targetAudience.map((item, index) => (
                 <li 
                   key={index} 
-                  onClick={() => handleCellClick('targetAudience', index, item)}
+                  onClick={() => onEdit('targetAudience', index, item)}
                   className={styles.interactiveCell}
                 >
                   {item}
@@ -1210,7 +1204,7 @@ Please share:
               {matrix.objectives.map((item, index) => (
                 <li 
                   key={index} 
-                  onClick={() => handleCellClick('objectives', index, item)}
+                  onClick={() => onEdit('objectives', index, item)}
                   className={styles.interactiveCell}
                 >
                   {item}
@@ -1224,7 +1218,7 @@ Please share:
               {matrix.keyMessages.map((item, index) => (
                 <li 
                   key={index} 
-                  onClick={() => handleCellClick('keyMessages', index, item)}
+                  onClick={() => onEdit('keyMessages', index, item)}
                   className={styles.interactiveCell}
                 >
                   {item}
@@ -1551,21 +1545,34 @@ Please share:
     );
   };
 
+  // --- NEW: Handler for Modal Continue Button ---
+  const handleModalContinue = () => {
+    setShowSuccessModal(false);
+    router.push('/marketing-plan'); // Redirect back to the dashboard
+  };
+
   return (
-    <div className={styles.container}>
+    <div className={styles.pageContainer}>
       <Head>
-        <title>Create Marketing Strategy | Mark1</title>
+        <title>Create New Strategy | Mark1</title>
         <meta name="description" content="Create a new marketing strategy" />
       </Head>
       
-      <main className={styles.main}>
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1>Create a New Marketing Strategy</h1>
-            <p>Our AI assistant will help you build a customized marketing strategy for your fitness business.</p>
-          </div>
+      {/* --- NEW: Header Bar --- */}
+      <header className={styles.strategyHeader}>
+        <Link href="/marketing-plan" className={styles.backButton}>
+          &larr; Back to Dashboard
+        </Link>
+        <div className={styles.headerTitles}>
+          <h1 className={styles.pageTitle}>Mark1 - Strategy Creation</h1>
+          {currentProject && (
+            <span className={styles.projectName}>Project: {currentProject.name}</span>
+          )}
         </div>
+        <div className={styles.headerActions}> {/* Placeholder for potential future actions */} </div>
+      </header>
 
+      <main className={styles.mainContent}>
         <div className={styles.content}>
           {!showMatrix ? (
             // Chat UI - Only show when matrix is not visible
@@ -1689,55 +1696,33 @@ Please share:
                     </button>
                   </div>
                 ) : (
-                  <MatrixDisplay matrix={matrix} />
+                  <MatrixDisplay matrix={matrix} onSave={handleSaveStrategy} onEdit={handleCellClick} />
                 )}
-                <div className={styles.matrixActions}>
-                  <button
-                    onClick={handleSaveStrategy}
-                    className={styles.saveButton}
-                    disabled={isProcessing}
-                    style={{
-                      backgroundColor: '#3454D1',
-                      color: 'white',
-                      borderRadius: '20px',
-                      padding: '8px 16px',
-                      border: 'none',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {isProcessing ? 'Saving...' : 'Save Strategy'}
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      // Show the aesthetic modal instead of directly navigating
-                      setAestheticModal({
-                        visible: true,
-                        value: ''
-                      });
-                    }}
-                    className={styles.outlineButton}
-                    disabled={isProcessing}
-                    style={{
-                      backgroundColor: '#3454D1',
-                      color: 'white',
-                      borderRadius: '20px',
-                      padding: '8px 16px',
-                      border: 'none',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    Generate Content Outline
-                  </button>
-                </div>
               </div>
             </div>
           )}
         </div>
       </main>
       
+      {/* --- NEW: Success Modal --- */}
+      {showSuccessModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContainer}>
+            <h2 className={styles.modalTitle}>Strategy Created!</h2>
+            <p className={styles.modalMessage}>
+              Strategy created successfully! Next, create your Content Outline.
+            </p>
+            <button
+              onClick={handleModalContinue}
+              className={styles.modalButton}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Processing...' : 'Continue'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Feedback Popup */}
       {feedbackPopup.visible && (
         <div className={styles.modalOverlay}>

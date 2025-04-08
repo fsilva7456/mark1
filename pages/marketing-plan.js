@@ -41,6 +41,7 @@ export default function CreationDashboard() {
     calendarId: null,
   });
   const [currentStep, setCurrentStep] = useState(0); // 0: Loading, 1: Strategy, 2: Outline, 3: Calendar, 4: Complete
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true); // State for welcome banner
 
   // Fetch data on user, project change, or mount
   useEffect(() => {
@@ -269,6 +270,20 @@ export default function CreationDashboard() {
       <Tooltip id="inactive-tooltip" />
 
       <main className={styles.main}>
+        {/* Welcome Banner (conditional) */}
+        {showWelcomeBanner && currentStep === 1 && !isLoadingData && !error && (
+          <div className={styles.welcomeBanner}>
+            <span>👋 Start by creating your Strategy!</span>
+            <button
+              onClick={() => setShowWelcomeBanner(false)}
+              className={styles.closeBannerButton}
+              aria-label="Dismiss welcome banner"
+            >
+              &times;
+            </button>
+          </div>
+        )}
+
         {/* Header Bar */}
         <div className={styles.headerBar}>
           <span className={styles.headerTitle}>Mark1 - Creation Dashboard</span>
