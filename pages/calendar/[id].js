@@ -4,7 +4,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Navbar from '../../components/Navbar';
 import BreadcrumbNavigation from '../../components/BreadcrumbNavigation';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -505,8 +504,6 @@ export default function CalendarManagement() {
         <title>{calendar?.name || 'Content Calendar'} | Mark1</title>
         <meta name="description" content="Manage your content calendar and scheduled posts" />
       </Head>
-      
-      <Navbar />
       
       <main className={styles.main}>
         <BreadcrumbNavigation 

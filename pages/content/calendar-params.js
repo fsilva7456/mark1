@@ -4,8 +4,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { createClient } from '@supabase/supabase-js';
-import Navbar from '../../components/Navbar';
-import styles from '../../styles/Calendar.module.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProject } from '../../contexts/ProjectContext';
 import { 
@@ -16,6 +14,7 @@ import {
   Youtube, 
   TikTok
 } from '../../components/icons/SocialIcons';
+import styles from '../../styles/Calendar.module.css';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -348,9 +347,8 @@ export default function CalendarParams() {
     return (
       <div className={styles.container}>
         <Head>
-          <title>Calendar Parameters | Mark1</title>
+          <title>Loading Calendar Parameters | Mark1</title>
         </Head>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
@@ -365,9 +363,8 @@ export default function CalendarParams() {
     return (
       <div className={styles.container}>
         <Head>
-          <title>Error | Mark1</title>
+          <title>Error Loading Calendar | Mark1</title>
         </Head>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.errorContainer}>
             <div className={styles.errorIcon}>⚠️</div>
@@ -398,10 +395,10 @@ export default function CalendarParams() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Calendar Parameters | Mark1</title>
+        <title>Configure Content Calendar | Mark1</title>
+        <meta name="description" content="Set parameters for your content calendar" />
       </Head>
-      
-      <Navbar />
+
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerContent}>

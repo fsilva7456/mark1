@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Navbar from '../../components/Navbar';
 import styles from '../../styles/Content.module.css';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -982,12 +981,10 @@ export default function NewContent() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Content Outline | Mark1</title>
-        <meta name="description" content="Create a content outline for your fitness business" />
+        <title>Create Content | Mark1</title>
+        <meta name="description" content="Generate content outlines and calendars" />
       </Head>
-
-      <Navbar />
-
+      
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerContent}>

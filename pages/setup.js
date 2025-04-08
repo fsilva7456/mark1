@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Navbar from '../components/Navbar';
 import styles from '../styles/Setup.module.css';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -118,12 +117,10 @@ export default function Setup() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>User Setup | Mark1</title>
-        <meta name="description" content="Set up your website information" />
+        <title>Account Setup | Mark1</title>
+        <meta name="description" content="Set up your Mark1 account" />
       </Head>
-
-      <Navbar />
-
+      
       <main className={styles.main}>
         <div className={styles.header}>
           <div className={styles.headerContent}>

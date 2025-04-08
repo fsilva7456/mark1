@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import Navbar from '../../components/Navbar';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from '../../styles/Calendar.module.css';
@@ -249,11 +248,9 @@ export default function CalendarView() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Calendar View | Mark1</title>
-        <meta name="description" content="View your content calendar" />
+        <title>View Calendar | Mark1</title>
+        <meta name="description" content="View and manage your content calendar" />
       </Head>
-
-      <Navbar />
 
       <main className={styles.main}>
         <div className={styles.header}>

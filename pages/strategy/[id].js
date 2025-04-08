@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import Navbar from '../../components/Navbar';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import styles from '../../styles/Strategy.module.css';
@@ -199,11 +198,9 @@ export default function ViewStrategy() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>View Strategy | Mark1</title>
+        <title>{strategy ? strategy.name : 'Strategy'} | Mark1</title>
         <meta name="description" content="View your marketing strategy" />
       </Head>
-
-      <Navbar />
       
       <main className={styles.main}>
         <div className={styles.header}>
