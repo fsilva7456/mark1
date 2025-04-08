@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
 import { useAuth } from '../contexts/AuthContext';
-import styles from '../styles/AuthForms.module.css';
+import styles from '../styles/Login.module.css';
 
 export default function Signup() {
   const router = useRouter();
