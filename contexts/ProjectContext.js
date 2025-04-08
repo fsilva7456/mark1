@@ -72,12 +72,13 @@ export const ProjectProvider = ({ children }) => {
         const defaultProject = data.find(p => p.is_default);
         const projectToSet = defaultProject || data[0]; // Use default or most recent
         
+        // Set the current project state, but don't automatically hide the selector
         console.log("Setting initial currentProject:", projectToSet);
         setCurrentProject(projectToSet);
-        // Don't automatically show selector here if a project is set
-        // Only show if we intended to (e.g., explicitly requested)
-        // setShowProjectSelector(true); <-- Removed this auto-show
-        setShowProjectSelector(false); // Explicitly hide if we load a project
+        
+        // Show the selector to allow user confirmation/choice on initial load
+        console.log("Projects found, showing selector for confirmation/choice.");
+        setShowProjectSelector(true); 
         
       } else if (data && data.length === 0) {
         // No projects exist, show selector to prompt creation
