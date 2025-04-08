@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import Navbar from '../components/Navbar';
 import StatusDashboard from '../components/StatusDashboard';
 import WorkflowDiagram from '../components/WorkflowDiagram';
 import ContextualActionButtons from '../components/ContextualActionButtons';
@@ -29,7 +28,6 @@ export default function MarketingPlanDashboard() {
           <title>Marketing Plan Dashboard | Mark1</title>
           <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
         </Head>
-        <Navbar />
         <main className={styles.main}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
@@ -230,8 +228,6 @@ export default function MarketingPlanDashboard() {
           <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
         </Head>
         
-        <Navbar />
-        
         <main className={styles.main}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
@@ -249,8 +245,6 @@ export default function MarketingPlanDashboard() {
         <Head>
           <title>Error | Mark1</title>
         </Head>
-        
-        <Navbar />
         
         <main className={styles.main}>
           <div className={styles.errorContainer}>
@@ -304,8 +298,6 @@ export default function MarketingPlanDashboard() {
         <title>Marketing Plan Dashboard | Mark1</title>
         <meta name="description" content="Unified dashboard for managing your marketing plan workflow" />
       </Head>
-      
-      <Navbar />
       
       <main className={styles.main}>
         <BreadcrumbNavigation 
