@@ -60,22 +60,153 @@
 
 .matrixContainer {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px; /* Adjust max-width as needed */
   background-color: white;
   border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-  padding: 2.5rem;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+  padding: 2rem 2.5rem;
+  margin: 2rem auto; /* Center the matrix container */
 }
 
 .matrixContainer h2 {
   font-size: 1.75rem;
   color: #1A2B3C;
-  margin: 0 0 2rem 0;
+  margin: 0 0 1rem 0;
   text-align: center;
   font-weight: 700;
-  letter-spacing: -0.02em;
 }
 
+.matrixIntro {
+  text-align: center;
+  color: var(--text-color-secondary);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+.matrixGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  border: 1px solid var(--border-color-light);
+  border-radius: 8px;
+  overflow: hidden; /* Ensure child borders don't overlap */
+}
+
+.matrixCell {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color-light);
+  border-right: 1px solid var(--border-color-light);
+}
+
+/* Remove right border for last column cells */
+.matrixCell:nth-child(3n) {
+  border-right: none;
+}
+
+/* Remove bottom border for last row cells */
+.matrixGrid > .matrixCell:nth-last-child(-n+3) {
+   border-bottom: none;
+}
+
+.headerCell {
+  background-color: var(--background-color-medium);
+  font-weight: 600;
+  color: var(--text-color-primary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  text-align: center;
+  position: sticky;
+  top: 0; /* Stick to top if scrolling within grid */
+}
+
+.audienceCell,
+.objectivesCell,
+.messagesCell {
+  background-color: var(--background-color-light);
+}
+
+.objectivesCell ul,
+.messagesCell ul {
+  list-style-type: disc;
+  margin: 0;
+  padding-left: 1.2rem; /* Indent list items */
+}
+
+.objectivesCell li,
+.messagesCell li {
+  margin-bottom: 0.5rem;
+  color: var(--text-color-primary);
+  font-size: 0.95rem;
+}
+
+.objectivesCell li:last-child,
+.messagesCell li:last-child {
+  margin-bottom: 0;
+}
+
+.interactiveCell {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative; /* For hover effect */
+  display: inline; /* Apply hover to text only if needed */
+}
+
+.matrixCell > span.interactiveCell:hover {
+   background-color: #e0eaff; /* Light blue hover for audience */
+   border-radius: 4px;
+   padding: 2px 4px;
+}
+
+.objectivesCell li.interactiveCell:hover,
+.messagesCell li.interactiveCell:hover {
+  background-color: #e0eaff; /* Light blue hover */
+  border-radius: 4px;
+  /* padding: 0 3px; */ /* Adjust padding as needed */
+}
+
+/* Error State Styles */
+.matrixContainer.errorState {
+  background-color: #fff5f5; /* Light red */
+  border: 1px solid #fc8181; /* Red border */
+}
+
+.errorMessage {
+  background-color: #fed7d7; /* Lighter red */
+  border: 1px solid #fc8181;
+  padding: 1rem;
+  border-radius: 4px;
+  color: #c53030; /* Dark red text */
+  white-space: pre-wrap; /* Preserve line breaks */
+  font-family: monospace;
+  font-size: 0.85rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Save Button (ensure it's styled correctly, maybe slightly adjust margin) */
+.saveButton {
+  display: block; /* Ensure it takes full width for centering */
+  margin: 2.5rem auto 0 auto; /* Add more top margin */
+  padding: 0.8rem 2rem;
+  background-color: var(--primary-color-success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.saveButton:hover {
+  background-color: #25a35a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+/* --- Comment out or remove old conflicting styles --- */
+
+/*
 .matrix {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -88,70 +219,95 @@
 }
 
 .matrixColumn h3 {
-  font-size: 1.1rem;
-  color: #3454D1;
-  margin: 0 0 1.25rem 0;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid #E2E8F0;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  font-size: 0.9rem;
+  ...
 }
 
 .matrixColumn ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
-  gap: 1rem;
+  ...
 }
 
 .matrixColumn li {
-  padding: 1.25rem;
-  background-color: #F8FAFC;
-  border-radius: 12px;
-  color: #4A5568;
-  font-size: 1rem;
-  line-height: 1.6;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  margin: 0;
-  box-sizing: border-box;
-  border: 1px solid transparent;
-  transition: all 0.25s ease;
+  ...
 }
 
-.interactiveCell {
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
+.enhancedMatrix {
+  ...
 }
 
-.interactiveCell:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(52, 84, 209, 0.15);
-  border-color: rgba(52, 84, 209, 0.2);
+.audienceSection {
+  ...
 }
 
-.interactiveCell:after {
-  content: '✏️';
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.25s;
+.audienceTitleRow {
+  ...
 }
 
-.interactiveCell:hover:after {
-  opacity: 1;
+.audienceContent {
+  ...
+}
+
+.objectivesColumn, .messagesColumn {
+  ...
+}
+*/
+
+/* Responsive adjustments for grid */
+@media (max-width: 900px) {
+  .matrixGrid {
+    grid-template-columns: 1fr; /* Stack columns on smaller screens */
+    gap: 0; /* Remove gap if stacking */
+    border: none;
+    border-radius: 0;
+  }
+
+  .matrixCell {
+    border-right: none !important; /* Remove all right borders */
+    border-bottom: 1px solid var(--border-color-light); /* Keep bottom border */
+    border-radius: 0; /* Remove radius */
+  }
+
+  .matrixGrid > .matrixCell:nth-last-child(1) {
+     border-bottom: none; /* Remove bottom border only for the very last cell */
+  }
+
+  .headerCell {
+    position: static; /* Unstick header cells */
+    border-top: 1px solid var(--border-color-light); /* Add top border when stacked */
+  }
+  .matrixGrid > .matrixCell:first-child {
+    border-top: none; /* Remove top border for the first header */
+  }
+
+  .matrixContainer {
+    padding: 1.5rem;
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Inherits stacking from max-width: 900px */
+  /* Further mobile adjustments if needed */
+  .matrixContainer h2 {
+    font-size: 1.5rem;
+  }
+  .matrixIntro {
+    font-size: 0.9rem;
+  }
+  .matrixCell {
+    padding: 0.8rem 1rem;
+  }
+  .objectivesCell ul,
+  .messagesCell ul {
+    padding-left: 1rem;
+  }
+  .objectivesCell li,
+  .messagesCell li {
+    font-size: 0.9rem;
+  }
+  .saveButton {
+    font-size: 1rem;
+    padding: 0.7rem 1.5rem;
+  }
 }
 
 .matrixActions {
@@ -159,32 +315,6 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-}
-
-.saveButton, .outlineButton {
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  min-width: 160px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.saveButton {
-  background-color: #3454D1;
-  color: white;
-  border: none;
-}
-
-.saveButton:hover {
-  background-color: #2a43a7;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
 }
 
 .outlineButton {
@@ -378,18 +508,6 @@
   }
 }
 
-/* Mobile responsiveness for modal */
-@media (max-width: 768px) {
-  .modalBody {
-    padding: 1rem;
-  }
-  
-  .feedbackModal {
-    width: 95%;
-    max-height: 90vh;
-  }
-}
-
 /* Suggested Answers */
 .suggestedAnswers {
   display: flex;
@@ -432,22 +550,6 @@
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .matrix {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  
-  .matrixActions {
-    flex-direction: column;
-  }
-  
-  .saveButton, .cancelButton {
-    width: 100%;
-  }
 }
 
 /* Chat UI Styles */

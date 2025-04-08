@@ -1553,28 +1553,8 @@ Please share:
               </div>
             </div>
           ) : (
-            // Matrix UI - Only show when matrix is visible
-            <div className={styles.matrixLayout}>
-              <div className={styles.matrixContainer}>
-                <h2>Your Marketing Strategy</h2>
-                {matrix.error ? (
-                  <div className={styles.matrixError}>
-                    <h3>Strategy Generation Error</h3>
-                    <div className={styles.errorDetails}>
-                      <pre>{matrix.errorMessage}</pre>
-                    </div>
-                    <button
-                      onClick={() => setShowMatrix(false)}
-                      className={styles.tryAgainButton}
-                    >
-                      Go Back and Try Again
-                    </button>
-                  </div>
-                ) : (
-                  <MatrixDisplay matrix={matrix} onSave={handleSaveStrategy} onEdit={handleCellClick} />
-                )}
-              </div>
-            </div>
+            // Matrix UI - Render MatrixDisplay directly
+            <MatrixDisplay matrix={matrix} onSave={handleSaveStrategy} onEdit={handleCellClick} />
           )}
         </div>
       </main>
