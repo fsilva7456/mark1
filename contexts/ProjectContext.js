@@ -25,31 +25,22 @@ export const ProjectProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
   
-  // Ref to track previous path
-  const prevPath = useRef(router.pathname);
+  // Ref to track previous path (can likely be removed now)
+  // const prevPath = useRef(router.pathname);
 
   // Fetch projects when user changes
   useEffect(() => {
     if (user) {
+      console.log("User changed or logged in, fetching projects...");
       fetchProjects();
     } else {
+      console.log("User logged out, resetting project state.");
       setProjects([]);
       setCurrentProject(null);
       setIsLoading(false);
+      setShowProjectSelector(false); // Ensure modal is hidden on logout
     }
   }, [user]);
-
-  // Check for path changes to marketing plan page
-  useEffect(() => {
-    // Only show when user is logged in and we're navigating TO the marketing plan page
-    if (user && router.pathname === '/marketing-plan' && prevPath.current !== '/marketing-plan') {
-      console.log('Path changed to marketing-plan, showing project selector');
-      setShowProjectSelector(true);
-    }
-    
-    // Update the previous path
-    prevPath.current = router.pathname;
-  }, [router.pathname, user]);
 
   // Fetch projects from the database
   const fetchProjects = async () => {
@@ -57,6 +48,14 @@ export const ProjectProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
       
+      // Ensure user is available before fetching
+      if (!user) {
+          console.log("fetchProjects called without user, aborting.");
+          setIsLoading(false);
+          return;
+      }
+
+      console.log("Fetching projects for user:", user.id);
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -64,31 +63,38 @@ export const ProjectProvider = ({ children }) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
+      console.log("Projects fetched:", data);
       
       setProjects(data || []);
       
-      // If there are projects but no current project set
+      // Logic to determine if selector should show AFTER fetching
       if (data && data.length > 0) {
-        // Check for default project first
         const defaultProject = data.find(p => p.is_default);
+        const projectToSet = defaultProject || data[0]; // Use default or most recent
         
-        // If default exists, set it
-        if (defaultProject) {
-          setCurrentProject(defaultProject);
-        } else {
-          // Otherwise set the most recent project
-          setCurrentProject(data[0]);
-        }
+        console.log("Setting initial currentProject:", projectToSet);
+        setCurrentProject(projectToSet);
+        // Don't automatically show selector here if a project is set
+        // Only show if we intended to (e.g., explicitly requested)
+        // setShowProjectSelector(true); <-- Removed this auto-show
+        setShowProjectSelector(false); // Explicitly hide if we load a project
         
-        // Always show project selector when projects exist
-        setShowProjectSelector(true);
       } else if (data && data.length === 0) {
-        // Auto-open project selector if no projects exist
+        // No projects exist, show selector to prompt creation
+        console.log("No projects found, showing selector.");
+        setCurrentProject(null); // Ensure no project is set
         setShowProjectSelector(true);
+      } else {
+          // Handle case where data is null unexpectedly
+          console.log("No projects data received, showing selector.")
+          setCurrentProject(null);
+          setShowProjectSelector(true);
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
       setError('Failed to load projects');
+      // Optionally show selector on error?
+      // setShowProjectSelector(true);
     } finally {
       setIsLoading(false);
     }
