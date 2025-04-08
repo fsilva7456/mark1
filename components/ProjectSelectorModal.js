@@ -9,7 +9,8 @@ const ProjectSelectorModal = () => {
     setShowProjectSelector, 
     createProject, 
     switchProject,
-    isLoading
+    isLoading,
+    currentProject
   } = useProject();
   
   const [activeTab, setActiveTab] = useState(projects.length > 0 ? 'select' : 'create');
@@ -17,30 +18,27 @@ const ProjectSelectorModal = () => {
   const [projectDescription, setProjectDescription] = useState('');
   const [formError, setFormError] = useState('');
   
-  // Debug the modal state on mount and when relevant states change
+  // Debug log (can be kept or removed)
   useEffect(() => {
     console.log('ProjectSelectorModal state:', { 
       showProjectSelector, 
-      projectsCount: projects.length 
+      projectsCount: projects.length,
+      currentProjectId: currentProject?.id 
     });
-    
-    // Only force show on initial mount, not when showProjectSelector changes
-    // This prevents reopening the modal after it's been explicitly closed
-  }, [projects.length, showProjectSelector]);
+  }, [projects.length, showProjectSelector, currentProject]);
 
-  // Add a separate effect that only runs once on mount to initialize the modal
+  // Update activeTab logic slightly to handle dynamic project loading
   useEffect(() => {
-    // Force show on initial component mount
-    if (projects.length > 0) {
-      setShowProjectSelector(true);
+    if (showProjectSelector) { // Only adjust tab when modal becomes visible
+        setActiveTab(projects.length > 0 ? 'select' : 'create');
     }
-  }, []);
-  
-  // Close the modal (only if we have at least one project)
+  }, [showProjectSelector, projects.length]);
+
+  // Close the modal 
   const handleClose = () => {
-    if (projects.length > 0) {
-      setShowProjectSelector(false);
-    }
+    // We should always be able to close, even if no projects exist yet,
+    // assuming the context allows setting showProjectSelector to false.
+    setShowProjectSelector(false);
   };
   
   // Handle form submission for new project
