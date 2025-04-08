@@ -6,7 +6,8 @@ import Image from 'next/image'; // Assuming you might use an Image component for
 import { useAuth } from '../contexts/AuthContext'; // Import custom hook
 import { useProject } from '../contexts/ProjectContext'; // Import custom hook
 import styles from '../styles/Header.module.css';
-import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/outline';
+// import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/outline'; // V1 import path
+import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/24/outline'; // Correct V2 import path
 
 const Header = ({ isMenuOpen, toggleMenu }) => {
   // const { user, logout } = useContext(AuthContext); // Use custom hook instead
@@ -38,8 +39,10 @@ const Header = ({ isMenuOpen, toggleMenu }) => {
       </div>
       <div className={styles.rightSection}>
         <div className={styles.iconWrapper}>
-          <BellIcon className={styles.icon} />
-          {/* Add notification count logic here if needed */}
+          <button className={styles.iconButton}>
+             <BellIcon className={styles.icon} />
+             {/* Add notification count logic here if needed */}
+          </button>
         </div>
         <div className={`${styles.iconWrapper} ${styles.userProfile}`} >
           {/* Wrap UserCircleIcon in a button for accessibility if it triggers dropdown */} 
