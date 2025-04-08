@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext'; // Import custom hook
 import { useProject } from '../contexts/ProjectContext'; // Import custom hook
 import styles from '../styles/Header.module.css';
 // import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/outline'; // V1 import path
-import { MenuIcon, UserCircleIcon, BellIcon, XIcon } from '@heroicons/react/24/outline'; // Correct V2 import path
+import { Bars3Icon, UserCircleIcon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'; // Correct V2 names
 
 const Header = ({ isMenuOpen, toggleMenu }) => {
   // const { user, logout } = useContext(AuthContext); // Use custom hook instead
@@ -61,9 +61,9 @@ const Header = ({ isMenuOpen, toggleMenu }) => {
             {/* Wrap icons in buttons for accessibility */} 
            <button onClick={toggleMenu} className={styles.iconButton}>
             {isMenuOpen ? (
-                <XIcon className={styles.icon} />
+                <XMarkIcon className={styles.icon} />
             ) : (
-                <MenuIcon className={styles.icon} />
+                <Bars3Icon className={styles.icon} />
             )}
            </button>
         </div>
