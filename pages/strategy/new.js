@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProject } from '../../contexts/ProjectContext';
 import { toast } from 'react-hot-toast';
+import React from 'react';
 
 export default function NewStrategy() {
   const router = useRouter();
@@ -1175,232 +1176,106 @@ Please share:
     }
   };
 
-  // Enhance Matrix UI display to show the full 3x3x3 structure
+  // --- Corrected MatrixDisplay Component Definition ---
   const MatrixDisplay = ({ matrix, onSave, onEdit }) => {
-    // Check if we have the enhanced matrix structure
-    const hasEnhancedData = matrix.enhancedStrategy && matrix.enhancedStrategy.audiences;
-    
-    if (!hasEnhancedData) {
-      // Fallback to original display if no enhanced data
+    // Check for error state first
+    if (matrix.error) {
       return (
-        <div className={styles.matrix}>
-          <div className={styles.matrixColumn}>
-            <h3>Target Audience</h3>
-            <ul>
-              {matrix.targetAudience.map((item, index) => (
-                <li 
-                  key={index} 
-                  onClick={() => onEdit('targetAudience', index, item)}
-                  className={styles.interactiveCell}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className={styles.matrixColumn}>
-            <h3>Objectives</h3>
-            <ul>
-              {matrix.objectives.map((item, index) => (
-                <li 
-                  key={index} 
-                  onClick={() => onEdit('objectives', index, item)}
-                  className={styles.interactiveCell}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className={styles.matrixColumn}>
-            <h3>Key Messages</h3>
-            <ul>
-              {matrix.keyMessages.map((item, index) => (
-                <li 
-                  key={index} 
-                  onClick={() => onEdit('keyMessages', index, item)}
-                  className={styles.interactiveCell}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className={`${styles.matrixContainer} ${styles.errorState}`}>
+          <h2>Strategy Generation Failed</h2>
+          <p>We encountered an error while generating the strategy:</p>
+          <pre className={styles.errorMessage}>{matrix.errorMessage}</pre>
+          <p>Please try adjusting your inputs or contact support if the issue persists.</p>
+          {/* Optionally add a button to go back or retry */}
         </div>
       );
     }
-    
-    // Enhanced display with full 3x3x3 structure
+
+    // Check if we have the enhanced matrix structure (or basic)
+    const hasEnhancedData = matrix.enhancedStrategy && matrix.enhancedStrategy.audiences;
+    const targetAudience = hasEnhancedData ? matrix.enhancedStrategy.audiences.map(a => a.segment) : matrix.targetAudience;
+    const objectives = hasEnhancedData ? matrix.enhancedStrategy.audiences.map(a => a.objectives.map(o => o.objective)) : [matrix.objectives]; // Wrap basic objectives
+    const keyMessages = hasEnhancedData ? matrix.enhancedStrategy.audiences.map(a => a.keyMessages) : [matrix.keyMessages]; // Wrap basic messages
+
+    // Ensure we always have arrays even if data is missing/malformed
+    const audiences = Array.isArray(targetAudience) ? targetAudience : [];
+    const objectivesList = Array.isArray(objectives) ? objectives : [];
+    const messagesList = Array.isArray(keyMessages) ? keyMessages : [];
+
     return (
-      <div className={styles.enhancedMatrix}>
-        {matrix.enhancedStrategy.audiences.map((audience, audienceIndex) => (
-          <div key={audienceIndex} className={styles.audienceSection}>
-            <div className={styles.audienceTitleRow}>
-              <h3 className={styles.audienceTitle}>
-                {audience.segment}
-              </h3>
-              
-              <div className={styles.audienceActions}>
-                <button 
-                  className={`${styles.saveButton} ${regeneratingAudience === audienceIndex ? styles.loading : ''}`}
-                  onClick={() => handleOpenFeedbackModal(audienceIndex)}
-                  disabled={regeneratingAudience !== null}
-                  title="Add feedback and regenerate this audience"
-                  style={{
-                    backgroundColor: '#4f46e5',
-                    color: 'white',
-                    borderRadius: '6px',
-                    padding: '10px 16px',
-                    margin: '5px 0',
-                    border: 'none',
-                    boxShadow: 'none',
-                    fontWeight: '500',
-                    transition: 'background-color 0.2s'
-                  }}
+      <div className={styles.matrixContainer}>
+        <h2>Marketing Strategy Matrix</h2>
+        <p className={styles.matrixIntro}>
+          Here is the generated strategy based on your input. Review the details below. You can click on items to refine them if needed (audience regeneration available, others are direct edits for now).
+        </p>
+
+        <div className={styles.matrixGrid}>
+          {/* Column Headers */}
+          <div className={`${styles.matrixCell} ${styles.headerCell}`}>Target Audience</div>
+          <div className={`${styles.matrixCell} ${styles.headerCell}`}>Objectives</div>
+          <div className={`${styles.matrixCell} ${styles.headerCell}`}>Key Messages</div>
+
+          {/* Render rows based on audience segments */}
+          {audiences.map((audience, audienceIndex) => (
+            <React.Fragment key={`audience-${audienceIndex}`}>
+              {/* Audience Cell */}
+              <div className={`${styles.matrixCell} ${styles.audienceCell}`}>
+                <span
+                  onClick={() => hasEnhancedData ? onEdit('audience', audienceIndex, audience) : null}
+                  className={hasEnhancedData ? styles.interactiveCell : ''}
                 >
-                  {regeneratingAudience === audienceIndex ? 'Regenerating...' : 'Add Feedback and Regenerate'}
-                </button>
+                  {audience || 'N/A'}
+                </span>
               </div>
-            </div>
-            
-            <div className={styles.audienceContent}>
-              <div className={styles.objectivesColumn}>
-                <h4>Objectives</h4>
+
+              {/* Objectives Cell (List) */}
+              <div className={`${styles.matrixCell} ${styles.objectivesCell}`}>
                 <ul>
-                  {audience.objectives.map((obj, objIndex) => (
-                    <li 
-                      key={objIndex} 
-                      className={styles.objectiveItem}
-                      onClick={() => handleOpenObjectiveModal(audienceIndex, objIndex)}
-                      style={{ listStyleType: 'none' }}
+                  {(objectivesList[audienceIndex] || []).map((obj, objectiveIndex) => (
+                    <li
+                      key={`obj-${audienceIndex}-${objectiveIndex}`}
+                      onClick={() => hasEnhancedData ? onEdit('objective', audienceIndex, objectiveIndex, obj) : null}
+                       className={hasEnhancedData ? styles.interactiveCell : ''}
                     >
-                      <div className={styles.objectiveHeader}>
-                        {obj.objective}
-                      </div>
-                      <div className={styles.objectiveMeta}>
-                        <span className={styles.metaLabel}>Success Metrics:</span> {obj.successMetrics}
-                      </div>
-                      <div className={styles.objectiveMeta}>
-                        <span className={styles.metaLabel}>Content Types:</span> {obj.contentTypes.join(', ')}
-                      </div>
+                      {typeof obj === 'string' ? obj : obj.objective || 'N/A'}
                     </li>
                   ))}
+                  {(!objectivesList[audienceIndex] || objectivesList[audienceIndex].length === 0) && <li>N/A</li>}
                 </ul>
               </div>
-              
-              <div className={styles.messagesColumn}>
-                <h4>Key Messages</h4>
+
+              {/* Key Messages Cell (List) */}
+              <div className={`${styles.matrixCell} ${styles.messagesCell}`}>
                 <ul>
-                  {audience.keyMessages.map((message, msgIndex) => (
-                    <li 
-                      key={msgIndex} 
-                      className={styles.messageItem}
-                      onClick={() => handleOpenMessageModal(audienceIndex, msgIndex)}
-                      style={{ listStyleType: 'none' }}
+                  {(messagesList[audienceIndex] || []).map((msg, messageIndex) => (
+                    <li
+                      key={`msg-${audienceIndex}-${messageIndex}`}
+                      onClick={() => hasEnhancedData ? onEdit('keyMessage', audienceIndex, messageIndex, msg) : null}
+                       className={hasEnhancedData ? styles.interactiveCell : ''}
                     >
-                      {message}
+                      {msg || 'N/A'}
                     </li>
                   ))}
-                </ul>
-                
-                <div className={styles.channelsInfo}>
-                  <h4>Primary Channels</h4>
-                  <div className={styles.channelsList}>
-                    {audience.channels.map((channel, chIndex) => (
-                      <span key={chIndex} className={styles.channelTag}>{channel}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        <div className={styles.strategySection}>
-          <div className={styles.timelineSection}>
-            <h3>90-Day Implementation Plan</h3>
-            <div className={styles.timelinePhases}>
-              <div className={styles.timelinePhase}>
-                <h4>Days 1-30</h4>
-                <ul>
-                  {matrix.enhancedStrategy.implementationTimeline.phase1_days1_30.map((task, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
-                  ))}
+                  {(!messagesList[audienceIndex] || messagesList[audienceIndex].length === 0) && <li>N/A</li>}
                 </ul>
               </div>
-              <div className={styles.timelinePhase}>
-                <h4>Days 31-60</h4>
-                <ul>
-                  {matrix.enhancedStrategy.implementationTimeline.phase2_days31_60.map((task, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className={styles.timelinePhase}>
-                <h4>Days 61-90</h4>
-                <ul>
-                  {matrix.enhancedStrategy.implementationTimeline.phase3_days61_90.map((task, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{task}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          
-          <div className={styles.competitiveSection}>
-            <h3>Competitive Gap Analysis</h3>
-            <div className={styles.gapsGrid}>
-              <div className={styles.gapsColumn}>
-                <h4>Identified Gaps</h4>
-                <ul>
-                  {matrix.enhancedStrategy.competitiveGaps.identifiedGaps.map((gap, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{gap}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className={styles.gapsColumn}>
-                <h4>Exploitation Strategies</h4>
-                <ul>
-                  {matrix.enhancedStrategy.competitiveGaps.exploitationStrategies.map((strategy, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{strategy}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-          
-          <div className={styles.contentStrategySection}>
-            <h3>Content Strategy Guidelines</h3>
-            <div className={styles.contentStrategyInfo}>
-              <div className={styles.strategyInfoRow}>
-                <span className={styles.strategyLabel}>Tone & Style:</span>
-                <span className={styles.strategyValue}>{matrix.enhancedStrategy.contentStrategy.tone}</span>
-              </div>
-              <div className={styles.strategyInfoRow}>
-                <span className={styles.strategyLabel}>Posting Frequency:</span>
-                <span className={styles.strategyValue}>{matrix.enhancedStrategy.contentStrategy.frequencyRecommendation}</span>
-              </div>
-              
-              <div className={styles.ctaLibrary}>
-                <h4>Call-to-Action Library</h4>
-                <div className={styles.ctaList}>
-                  {matrix.enhancedStrategy.contentStrategy.callToActionLibrary.map((cta, index) => (
-                    <div key={index} className={styles.ctaItem}>{cta}</div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className={styles.abTests}>
-                <h4>Recommended A/B Tests</h4>
-                <ul>
-                  {matrix.enhancedStrategy.contentStrategy.abTestRecommendations.map((test, index) => (
-                    <li key={index} style={{ listStyleType: 'none' }}>{test}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
+            </React.Fragment>
+          ))}
+
+          {/* Fallback if no audiences */} 
+          {audiences.length === 0 && (
+            <>
+              <div className={styles.matrixCell}>No Audience Data</div>
+              <div className={styles.matrixCell}>No Objectives Data</div>
+              <div className={styles.matrixCell}>No Key Messages Data</div>
+            </>
+          )}
         </div>
+
+        {/* Save Button - Placed correctly inside the component */}
+        <button onClick={onSave} className={styles.saveButton}>
+          Save & Finish Strategy
+        </button>
       </div>
     );
   };
