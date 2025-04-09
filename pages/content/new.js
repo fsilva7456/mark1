@@ -678,13 +678,11 @@ export default function NewContent() {
     setIsSaving(true);
     toast.loading("Saving Outline and Posts...");
 
-    let outlineId = savedOutlineId; // Use existing ID if already saved
-
     try {
-        // Step 1: Check if outline exists and update or insert accordingly
+        let outlineId = savedOutlineId; // Use existing ID if already saved
+
+        // Check if outline exists for this strategy 
         if (!outlineId) {
-            // Check if an outline exists for this strategy
-            console.log("Checking for existing outline for strategy:", selectedStrategy.id);
             const { data: existingOutline, error: checkError } = await supabase
                 .from('content_outlines')
                 .select('id')
@@ -759,9 +757,6 @@ export default function NewContent() {
                 
                 outlineId = insertData.id;
             }
-            
-            console.log("Content outline operation successful, ID:", outlineId);
-            setSavedOutlineId(outlineId); // Store the ID for future use
         } else {
             // If already saved, update the existing outline
             console.log("Updating previously saved outline ID:", outlineId);
@@ -792,8 +787,23 @@ export default function NewContent() {
             if (updateError) throw updateError;
         }
 
-        // Step 2: Prepare and Insert Content Posts (Delete old ones first)
+        // Prepare and Insert Content Posts (Delete old ones first)
         console.log("Preparing posts for insertion, Outline ID:", outlineId);
+        
+        // Delete existing posts first to avoid duplicates
+        console.log(`Deleting existing posts for outline ID: ${outlineId}`);
+        const { error: deleteError } = await supabase
+            .from('content_posts')
+            .delete()
+            .eq('content_outline_id', outlineId);
+            
+        if (deleteError) {
+            console.error("Error deleting old posts:", deleteError);
+        } else {
+            console.log("Successfully deleted old posts.");
+        }
+        
+        // Insert new posts
         const postsToInsert = [];
         contentOutline.forEach(week => {
             (week.posts || []).forEach(post => {
@@ -801,8 +811,8 @@ export default function NewContent() {
                     content_outline_id: outlineId,
                     project_id: currentProject.id,
                     user_id: user.id,
-                    title: post.topic, // Using topic as title
-                    description: null, // Or use caption? Or leave empty?
+                    title: post.topic,
+                    description: null,
                     post_type: post.type,
                     target_audience: post.audience,
                     call_to_action: post.cta,
@@ -810,27 +820,12 @@ export default function NewContent() {
                     principle_explanation: post.principleExplanation,
                     visual_concept: post.visual,
                     proposed_caption: post.proposedCaption,
-                    status: 'draft' // Default status
-                    // due_date, posted_on, metrics, tasks can be set later
+                    status: 'draft'
                 });
             });
         });
 
         if (postsToInsert.length > 0) {
-             // Optional: Delete existing posts first to avoid duplicates if re-saving
-             console.log(`Deleting existing posts for outline ID: ${outlineId}`);
-             const { error: deleteError } = await supabase
-                .from('content_posts')
-                .delete()
-                .eq('content_outline_id', outlineId);
-            if (deleteError) {
-                console.error("Error deleting old posts:", deleteError);
-                // Decide whether to proceed or throw error - proceeding might create duplicates
-                // throw new Error(`Failed to clear old posts: ${deleteError.message}`);
-            } else {
-                console.log("Successfully deleted old posts.");
-            }
-
             console.log(`Inserting ${postsToInsert.length} posts...`);
             const { error: insertError } = await supabase
                 .from('content_posts')
@@ -838,13 +833,12 @@ export default function NewContent() {
 
             if (insertError) throw insertError;
             console.log("Successfully inserted posts.");
-        } else {
-            console.log("No posts found in the outline to insert.");
         }
 
         toast.dismiss();
         toast.success("Outline and Posts Saved Successfully!");
-        setIsOutlineSaved(true); // Mark as saved
+        setIsOutlineSaved(true);
+        setSavedOutlineId(outlineId); // Store ID for future use
 
         // Navigate to calendar params page after successful save
         router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${outlineId}`);
