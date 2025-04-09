@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { RefreshIcon } from '@heroicons/react/24/outline';
 import { BsCalendarEvent } from 'react-icons/bs';
+import { MdSave } from 'react-icons/md';
 import { useProject } from '../../contexts/ProjectContext';
 
 const mockContent = [
@@ -162,6 +163,10 @@ export default function NewContent() {
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedbackWeek, setFeedbackWeek] = useState(null);
   const [feedbackText, setFeedbackText] = useState('');
+  
+  const [isSaving, setIsSaving] = useState(false); // State for save operation
+  const [isOutlineSaved, setIsOutlineSaved] = useState(false); // State to track if outline has been saved
+  const [savedOutlineId, setSavedOutlineId] = useState(null); // Store the ID after save
   
   // When component mounts, check URL params and localStorage for strategy ID
   useEffect(() => {
@@ -543,6 +548,34 @@ export default function NewContent() {
     }
   };
   
+  // --- NEW: Check if outline exists and set saved state --- 
+  useEffect(() => {
+    const checkExistingOutline = async () => {
+        if (!selectedStrategy?.id) return;
+        
+        const { data, error } = await supabase
+            .from('content_outlines')
+            .select('id')
+            .eq('strategy_id', selectedStrategy.id)
+            .maybeSingle();
+
+        if (data && !error) {
+            console.log("Previously saved outline found, ID:", data.id);
+            setIsOutlineSaved(true);
+            setSavedOutlineId(data.id);
+        } else {
+            setIsOutlineSaved(false);
+            setSavedOutlineId(null);
+        }
+    };
+    
+    // Only run this check if content isn't currently loading
+    if (!isLoading && contentOutline.length > 0 && !contentOutline.some(w => w.loading)) {
+        checkExistingOutline();
+    }
+// Depend on contentOutline length and loading states to re-check after generation/retry
+}, [isLoading, contentOutline, selectedStrategy]); 
+
   const handleSaveCalendar = async () => {
     try {
       // Create a new calendar in Supabase
@@ -631,60 +664,137 @@ export default function NewContent() {
     }
   };
 
-  const handleSaveContent = async () => {
+  // --- NEW SAVE FUNCTION for Outline and Posts ---
+  const handleSaveOutlineAndPosts = async () => {
+    if (!selectedStrategy?.id || !currentProject?.id || !user?.id) {
+        toast.error("Missing required data (Strategy, Project, or User).");
+        return;
+    }
+    if (!contentOutline || contentOutline.length === 0 || contentOutline.some(w => w.loading || w.error)) {
+        toast.error("Content outline is not ready or contains errors.");
+        return;
+    }
+
+    setIsSaving(true);
+    toast.loading("Saving Outline and Posts...");
+
+    let outlineId = savedOutlineId; // Use existing ID if already saved
+
     try {
-      toast.loading("Saving content plan...");
-      
-      if (!selectedStrategy || !selectedStrategy.id) {
-        toast.error("No strategy selected");
-        return;
-      }
-      
-      if (!currentProject) {
-        toast.error("No project selected");
-        return;
-      }
-      
-      // Create a new content plan in the database
-      const { data: contentPlanData, error: contentPlanError } = await supabase
-        .from('content_outlines')
-        .insert([
-          {
-            user_id: user.id,
-            project_id: currentProject.id,
-            strategy_id: selectedStrategy.id,
-            outline: contentOutline.map(week => ({
-              week: week.week,
-              theme: week.theme,
-              posts: week.posts.map(post => ({
-                type: post.type,
-                topic: post.topic,
-                audience: post.audience,
-                cta: post.cta,
-                principle: post.principle,
-                principle_explanation: post.principleExplanation,
-                visual: post.visual,
-                proposed_caption: post.proposedCaption
-              })),
-              objective: week.objective
-            })),
-          }
-        ])
-        .select();
-      
-      if (contentPlanError) {
-        throw contentPlanError;
-      }
-      
-      toast.dismiss();
-      toast.success("Content outline saved successfully!");
-      
-      // Navigate to the content calendar creation page
-      router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&contentOutline=${encodeURIComponent(JSON.stringify(contentPlanData[0].outline))}`);
+        // Step 1: Upsert Content Outline
+        if (!outlineId) { // Only upsert if we don't have an ID from a previous save
+            console.log("Upserting content outline for strategy:", selectedStrategy.id);
+            const { data: upsertData, error: upsertError } = await supabase
+                .from('content_outlines')
+                .upsert({
+                    strategy_id: selectedStrategy.id, // Conflict target
+                    user_id: user.id,
+                    project_id: currentProject.id,
+                    outline: contentOutline.map(week => ({
+                        week: week.week,
+                        theme: week.theme,
+                        posts: week.posts.map(post => ({ // Map to match DB column names if needed
+                            type: post.type,
+                            topic: post.topic,
+                            audience: post.audience,
+                            cta: post.cta,
+                            principle: post.principle,
+                            principleExplanation: post.principleExplanation, // Ensure casing matches if needed
+                            visual: post.visual,
+                            proposedCaption: post.proposedCaption
+                        })),
+                        objective: week.objective,
+                        targetSegment: week.targetSegment,
+                        phase: week.phase
+                    })),
+                    status: 'draft', // Default status
+                    updated_at: new Date()
+                }, {
+                    onConflict: 'strategy_id' // Specify column for upsert conflict
+                })
+                .select('id') // Select the ID of the upserted row
+                .single(); // Expect exactly one row back
+
+            if (upsertError) throw upsertError;
+            if (!upsertData?.id) throw new Error("Failed to get ID after outline upsert.");
+            
+            outlineId = upsertData.id;
+            console.log("Content outline upsert successful, ID:", outlineId);
+            setSavedOutlineId(outlineId); // Store the ID for future use
+        } else {
+            // If already saved, maybe just update the updated_at timestamp?
+            // Or potentially update the outline JSONB if changes were made (requires more complex state tracking)
+            console.log("Outline already saved (ID:", outlineId, "), skipping upsert. Consider adding update logic if needed.");
+            // Optionally update timestamp:
+            // await supabase.from('content_outlines').update({ updated_at: new Date() }).eq('id', outlineId);
+        }
+
+        // Step 2: Prepare and Insert Content Posts (Delete old ones first? Or handle conflicts?)
+        // Simple approach: Insert new posts. Assumes posts aren't edited here.
+        // More robust: Delete existing posts for this outlineId, then insert.
+        
+        console.log("Preparing posts for insertion, Outline ID:", outlineId);
+        const postsToInsert = [];
+        contentOutline.forEach(week => {
+            (week.posts || []).forEach(post => {
+                postsToInsert.push({
+                    content_outline_id: outlineId,
+                    project_id: currentProject.id,
+                    user_id: user.id,
+                    title: post.topic, // Using topic as title
+                    description: null, // Or use caption? Or leave empty?
+                    post_type: post.type,
+                    target_audience: post.audience,
+                    call_to_action: post.cta,
+                    persuasion_principle: post.principle,
+                    principle_explanation: post.principleExplanation,
+                    visual_concept: post.visual,
+                    proposed_caption: post.proposedCaption,
+                    status: 'draft' // Default status
+                    // due_date, posted_on, metrics, tasks can be set later
+                });
+            });
+        });
+
+        if (postsToInsert.length > 0) {
+             // Optional: Delete existing posts first to avoid duplicates if re-saving
+             console.log(`Deleting existing posts for outline ID: ${outlineId}`);
+             const { error: deleteError } = await supabase
+                .from('content_posts')
+                .delete()
+                .eq('content_outline_id', outlineId);
+            if (deleteError) {
+                console.error("Error deleting old posts:", deleteError);
+                // Decide whether to proceed or throw error - proceeding might create duplicates
+                // throw new Error(`Failed to clear old posts: ${deleteError.message}`);
+            } else {
+                console.log("Successfully deleted old posts.");
+            }
+
+            console.log(`Inserting ${postsToInsert.length} posts...`);
+            const { error: insertError } = await supabase
+                .from('content_posts')
+                .insert(postsToInsert);
+
+            if (insertError) throw insertError;
+            console.log("Successfully inserted posts.");
+        } else {
+            console.log("No posts found in the outline to insert.");
+        }
+
+        toast.dismiss();
+        toast.success("Outline and Posts Saved Successfully!");
+        setIsOutlineSaved(true); // Mark as saved
+
+        // Navigate to calendar params page after successful save
+        router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${outlineId}`);
+
     } catch (error) {
-      toast.dismiss();
-      console.error("Error saving content outline:", error);
-      toast.error("Failed to save content outline");
+        toast.dismiss();
+        console.error("Error saving outline and posts:", error);
+        toast.error(`Save failed: ${error.message}`);
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -965,31 +1075,31 @@ export default function NewContent() {
             <div className={styles.outlineContainer}>
               {/* Always show the calendar button when a strategy is loaded, regardless of content status */}
               {selectedStrategy && (
-                <div className={styles.calendarButtonContainer}>
+                <div className={styles.actionButtonsContainer}>
+                  {/* Save Outline Button */}
                   <button 
-                    onClick={() => router.push({
-                      pathname: '/content/calendar-params',
-                      query: { 
-                        contentOutline: JSON.stringify(contentOutline.length > 0 ? contentOutline : []),
-                        strategyId: selectedStrategy.id
-                      }
-                    })}
-                    className={styles.calendarCallToAction}
-                    disabled={contentOutline.length === 0 || contentOutline.some(week => week.loading) || !contentOutline.some(week => week.posts && week.posts.length > 0)}
+                    onClick={handleSaveOutlineAndPosts}
+                    className={`${styles.actionButton} ${styles.saveButton}`}
+                    disabled={isSaving || isLoading || !contentOutline.length || contentOutline.some(w => w.loading || w.error)}
                   >
-                    <BsCalendarEvent className={styles.calendarIcon} />
+                    <MdSave className={styles.buttonIcon} />
+                    {isOutlineSaved ? "Update Outline & Posts" : "Save Outline & Posts"}
+                  </button>
+
+                  {/* Generate Calendar Button - Enabled only after save */}
+                  <button 
+                    onClick={() => router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${savedOutlineId}`)}
+                    className={`${styles.actionButton} ${styles.calendarButton}`}
+                    // Disable if not saved, or if saving/loading, or if outline is empty/has errors
+                    disabled={!isOutlineSaved || !savedOutlineId || isSaving || isLoading || !contentOutline.length || contentOutline.some(w => w.loading || w.error)}
+                  >
+                    <BsCalendarEvent className={styles.buttonIcon} />
                     Generate Content Calendar
                   </button>
-                  <p className={styles.calendarDescription}>
-                    {contentOutline.some(week => week.loading) ? (
-                      "Please wait while we prepare your content..."
-                    ) : contentOutline.length === 0 ? (
-                      "Your content is being prepared. This button will activate once content is ready."
-                    ) : !contentOutline.some(week => week.posts && week.posts.length > 0) ? (
-                      "Content is still generating. The button will activate once at least one week of content is ready."
-                    ) : (
-                      "Create a structured calendar of posts across your social platforms with optimized scheduling."
-                    )}
+                  <p className={styles.buttonDescription}>
+                    {isSaving ? "Saving..." 
+                     : !isOutlineSaved ? "Save the outline and posts first to enable calendar generation."
+                     : "Create a structured calendar for your saved posts."} 
                   </p>
                 </div>
               )}
@@ -1141,17 +1251,6 @@ export default function NewContent() {
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              {!isLoading && contentOutline.some(week => week.posts && week.posts.length > 0) && (
-                <div className={styles.actions}>
-                  <button 
-                    onClick={() => router.push('/marketing-plan')} 
-                    className={styles.cancelButton}
-                  >
-                    Cancel
-                  </button>
                 </div>
               )}
             </div>

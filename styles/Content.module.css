@@ -1488,4 +1488,100 @@ button.channelDisabled:not([disabled]).channelSelected {
   color: #287d47;
   text-align: center;
   font-weight: 500;
+}
+
+/* Action Buttons Container */
+.actionButtonsContainer {
+  background-color: var(--background-card);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2.5rem;
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 1.5rem; /* Space between buttons */
+  align-items: center; /* Align items vertically */
+  justify-content: center; /* Center buttons */
+}
+
+/* Base Action Button Style */
+.actionButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem; /* Space between icon and text */
+}
+
+/* Save Button Specific Styles */
+.saveButton {
+  background-color: var(--primary-color); /* Use primary color */
+  color: white;
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 84, 209, 0.2);
+}
+
+/* Calendar Button Specific Styles (adjust if needed) */
+.calendarButton {
+  background-color: var(--success-color); /* Green */
+  color: white;
+}
+
+.calendarButton:hover:not(:disabled) {
+  background-color: #2F7A54; /* Darker green */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(56, 161, 105, 0.2);
+}
+
+/* Disabled State for Buttons */
+.actionButton:disabled {
+  background-color: var(--secondary-color);
+  color: var(--text-light);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.buttonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.buttonDescription {
+  flex-basis: 100%; /* Make description take full width */
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem; /* Space above description */
+}
+
+/* Remove or repurpose old calendar button styles */
+/*
+.calendarButtonContainer { ... }
+.calendarCallToAction { ... }
+.calendarIcon { ... }
+.calendarDescription { ... }
+*/
+
+/* Responsive */
+@media (max-width: 600px) {
+  .actionButtonsContainer {
+    flex-direction: column;
+    align-items: stretch; /* Make buttons full width */
+    gap: 1rem;
+  }
+  .actionButton {
+    justify-content: center; /* Center icon/text */
+  }
+  .buttonDescription {
+    margin-top: 0.25rem;
+  }
 } 
