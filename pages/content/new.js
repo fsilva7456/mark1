@@ -173,35 +173,41 @@ export default function NewContent() {
     const initializePage = async () => {
       try {
         setIsLoading(true);
+        let strategyIdSource = 'None'; // To track where ID came from
         
         // First try to get strategy ID from URL
         let strategyId = router.query.strategy;
+        if (strategyId) {
+            strategyIdSource = 'URL Query';
+        }
+        
         let savedContentOutline = null;
         
         // If no strategy ID in URL, check localStorage
         if (!strategyId) {
           strategyId = localStorage.getItem('lastStrategyId');
-          
-          // If we found a strategy ID in localStorage, also check for saved content outline
           if (strategyId) {
-            try {
-              const savedOutline = localStorage.getItem('lastContentOutline');
-              if (savedOutline) {
-                savedContentOutline = JSON.parse(savedOutline);
+              strategyIdSource = 'localStorage';
+              // If we found a strategy ID in localStorage, also check for saved content outline
+              try {
+                const savedOutline = localStorage.getItem('lastContentOutline');
+                if (savedOutline) {
+                  savedContentOutline = JSON.parse(savedOutline);
+                }
+              } catch (e) {
+                console.error('Failed to parse saved content outline:', e);
               }
-            } catch (e) {
-              console.error('Failed to parse saved content outline:', e);
-            }
           }
         }
+        
+        // --- Log Strategy ID Source --- 
+        console.log(`Strategy ID obtained from: ${strategyIdSource}, Value: ${strategyId}`);
         
         if (!strategyId) {
           setError('No strategy ID provided. Please select a strategy first.');
           setIsLoading(false);
           return;
         }
-        
-        console.log("Strategy ID obtained:", strategyId);
         
         // Fetch strategy data
         const { data: strategyData, error: strategyError } = await supabase
@@ -218,9 +224,9 @@ export default function NewContent() {
           return;
         }
         
-        console.log("Strategy data loaded successfully:", strategyData.id);
+        // --- Log Fetched Strategy --- 
+        console.log(`Fetched Strategy Data - ID: ${strategyData.id}, Name: ${strategyData.name}`);
         
-        // Set strategy and update UI - Ensure this completes before proceeding
         setSelectedStrategy(strategyData);
         
         // If we have a saved content outline from localStorage, use it
@@ -231,8 +237,8 @@ export default function NewContent() {
           return;
         }
         
-        // Wait a moment to ensure the strategy state is updated before proceeding
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Wait a moment (keep this? maybe reduce delay)
+        await new Promise(resolve => setTimeout(resolve, 200)); // Reduced delay
         
         // Otherwise, check if we need to load existing content outline
         const { data: existingContent, error: contentError } = await supabase
@@ -245,10 +251,11 @@ export default function NewContent() {
         if (contentError) throw contentError;
         
         if (existingContent && existingContent.length > 0) {
-          // Use existing content outline
+          console.log("Found existing content outline in DB for strategy:", strategyId);
           setContentOutline(existingContent[0].outline || []);
         } else {
-          // Generate new content outline - directly use strategyData instead of relying on state
+          // --- Log Before Calling Generate --- 
+          console.log(`No existing outline. Calling generateContent with Strategy - ID: ${strategyData.id}, Name: ${strategyData.name}`);
           await generateContent(strategyData);
         }
         
@@ -261,7 +268,18 @@ export default function NewContent() {
     };
     
     initializePage();
-  }, [router.isReady, router.query, user, loading]);
+  }, [router.isReady, router.query.strategy, user, loading]); // Added router.query.strategy dependency
+  
+  // --- NEW useEffect to log contentOutline changes --- 
+  useEffect(() => {
+      console.log("contentOutline state updated:", JSON.stringify(contentOutline, null, 2));
+      // Optional: Log just the themes/topics to easily compare with mock data
+      if(contentOutline && contentOutline.length > 0) {
+          console.log("Current Outline Themes:", contentOutline.map(w => w.theme));
+          console.log("Current Outline Week 1 Topics:", contentOutline[0]?.posts?.map(p => p.topic));
+      }
+  }, [contentOutline]);
+  // --- END NEW useEffect --- 
   
   // Add the missing generateWeeklyThemes function
   const generateWeeklyThemes = async () => {
