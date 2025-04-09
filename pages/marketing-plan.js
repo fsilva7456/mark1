@@ -75,7 +75,12 @@ export default function CreationDashboard() {
           .eq('project_id', currentProject.id)
           .maybeSingle(); // Expect 0 or 1
 
-        if (strategyError) throw new Error(`Failed to fetch strategy: ${strategyError.message}`);
+        if (strategyError) {
+          // --- Enhanced Error Logging --- 
+          console.error("Supabase strategy fetch error object:", JSON.stringify(strategyError, null, 2));
+          throw new Error(`Failed to fetch strategy: ${strategyError.message}`);
+          // --- End Enhanced Logging ---
+        }
         const hasStrategy = !!strategyData;
         const strategyId = strategyData?.id || null;
 
