@@ -676,90 +676,36 @@ export default function NewContent() {
     }
 
     setIsSaving(true);
-    toast.loading("Saving Outline and Posts...");
+    const toastId = toast.loading("Saving Outline and Posts...");
 
     try {
         let outlineId = savedOutlineId; // Use existing ID if already saved
-
-        // Check if outline exists for this strategy 
+        
+        // Check if outline exists for this strategy if we don't have an ID yet
         if (!outlineId) {
+            console.log("Checking for existing outline with strategy_id:", selectedStrategy.id);
             const { data: existingOutline, error: checkError } = await supabase
                 .from('content_outlines')
                 .select('id')
                 .eq('strategy_id', selectedStrategy.id)
                 .maybeSingle();
                 
-            if (checkError) throw checkError;
-            
-            if (existingOutline?.id) {
-                // Update existing outline
-                console.log("Updating existing outline ID:", existingOutline.id);
-                outlineId = existingOutline.id;
-                const { error: updateError } = await supabase
-                    .from('content_outlines')
-                    .update({
-                        outline: contentOutline.map(week => ({
-                            week: week.week,
-                            theme: week.theme,
-                            posts: week.posts.map(post => ({
-                                type: post.type,
-                                topic: post.topic,
-                                audience: post.audience,
-                                cta: post.cta,
-                                principle: post.principle,
-                                principleExplanation: post.principleExplanation,
-                                visual: post.visual,
-                                proposedCaption: post.proposedCaption
-                            })),
-                            objective: week.objective,
-                            targetSegment: week.targetSegment,
-                            phase: week.phase
-                        })),
-                        updated_at: new Date()
-                    })
-                    .eq('id', outlineId);
-                    
-                if (updateError) throw updateError;
-            } else {
-                // Insert new outline
-                console.log("Inserting new outline for strategy:", selectedStrategy.id);
-                const { data: insertData, error: insertError } = await supabase
-                    .from('content_outlines')
-                    .insert({
-                        strategy_id: selectedStrategy.id,
-                        user_id: user.id,
-                        project_id: currentProject.id,
-                        outline: contentOutline.map(week => ({
-                            week: week.week,
-                            theme: week.theme,
-                            posts: week.posts.map(post => ({
-                                type: post.type,
-                                topic: post.topic,
-                                audience: post.audience,
-                                cta: post.cta,
-                                principle: post.principle,
-                                principleExplanation: post.principleExplanation,
-                                visual: post.visual,
-                                proposedCaption: post.proposedCaption
-                            })),
-                            objective: week.objective,
-                            targetSegment: week.targetSegment,
-                            phase: week.phase
-                        })),
-                        status: 'draft',
-                        updated_at: new Date()
-                    })
-                    .select('id')
-                    .single();
-                    
-                if (insertError) throw insertError;
-                if (!insertData?.id) throw new Error("Failed to get ID after outline insert.");
-                
-                outlineId = insertData.id;
+            if (checkError) {
+                console.error("Error checking for existing outline:", checkError);
+                throw checkError;
             }
-        } else {
-            // If already saved, update the existing outline
-            console.log("Updating previously saved outline ID:", outlineId);
+            
+            // If we found an existing outline, use its ID
+            if (existingOutline?.id) {
+                console.log("Found existing outline ID:", existingOutline.id);
+                outlineId = existingOutline.id;
+            }
+        }
+        
+        // Now we either update an existing outline or insert a new one
+        if (outlineId) {
+            // Update existing outline
+            console.log("Updating existing outline ID:", outlineId);
             const { error: updateError } = await supabase
                 .from('content_outlines')
                 .update({
@@ -784,67 +730,115 @@ export default function NewContent() {
                 })
                 .eq('id', outlineId);
                 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error("Error updating outline:", updateError);
+                throw updateError;
+            }
+            console.log("Successfully updated outline");
+        } else {
+            // Insert new outline
+            console.log("Inserting new outline for strategy:", selectedStrategy.id);
+            const { data: insertData, error: insertError } = await supabase
+                .from('content_outlines')
+                .insert({
+                    strategy_id: selectedStrategy.id,
+                    user_id: user.id,
+                    project_id: currentProject.id,
+                    outline: contentOutline.map(week => ({
+                        week: week.week,
+                        theme: week.theme,
+                        posts: week.posts.map(post => ({
+                            type: post.type,
+                            topic: post.topic,
+                            audience: post.audience,
+                            cta: post.cta,
+                            principle: post.principle,
+                            principleExplanation: post.principleExplanation,
+                            visual: post.visual,
+                            proposedCaption: post.proposedCaption
+                        })),
+                        objective: week.objective,
+                        targetSegment: week.targetSegment,
+                        phase: week.phase
+                    })),
+                    status: 'draft',
+                    updated_at: new Date()
+                })
+                .select('id')
+                .single();
+                
+            if (insertError) {
+                console.error("Error inserting outline:", insertError);
+                throw insertError;
+            }
+            
+            if (!insertData?.id) {
+                throw new Error("Failed to get ID after outline insert.");
+            }
+            
+            outlineId = insertData.id;
+            console.log("Successfully inserted new outline with ID:", outlineId);
         }
 
-        // Prepare and Insert Content Posts (Delete old ones first)
-        console.log("Preparing posts for insertion, Outline ID:", outlineId);
-        
-        // Delete existing posts first to avoid duplicates
-        console.log(`Deleting existing posts for outline ID: ${outlineId}`);
-        const { error: deleteError } = await supabase
-            .from('content_posts')
-            .delete()
-            .eq('content_outline_id', outlineId);
+        // Now handle content posts - delete old ones first
+        if (outlineId) {
+            console.log(`Deleting existing posts for outline ID: ${outlineId}`);
+            const { error: deleteError } = await supabase
+                .from('content_posts')
+                .delete()
+                .eq('content_outline_id', outlineId);
+                
+            if (deleteError) {
+                console.error("Error deleting old posts:", deleteError);
+                throw deleteError;
+            }
+            console.log("Successfully deleted old posts");
             
-        if (deleteError) {
-            console.error("Error deleting old posts:", deleteError);
-        } else {
-            console.log("Successfully deleted old posts.");
-        }
-        
-        // Insert new posts
-        const postsToInsert = [];
-        contentOutline.forEach(week => {
-            (week.posts || []).forEach(post => {
-                postsToInsert.push({
-                    content_outline_id: outlineId,
-                    project_id: currentProject.id,
-                    user_id: user.id,
-                    title: post.topic,
-                    description: null,
-                    post_type: post.type,
-                    target_audience: post.audience,
-                    call_to_action: post.cta,
-                    persuasion_principle: post.principle,
-                    principle_explanation: post.principleExplanation,
-                    visual_concept: post.visual,
-                    proposed_caption: post.proposedCaption,
-                    status: 'draft'
+            // Insert new posts
+            const postsToInsert = [];
+            contentOutline.forEach(week => {
+                (week.posts || []).forEach(post => {
+                    postsToInsert.push({
+                        content_outline_id: outlineId,
+                        project_id: currentProject.id,
+                        user_id: user.id,
+                        title: post.topic,
+                        description: null,
+                        post_type: post.type,
+                        target_audience: post.audience,
+                        call_to_action: post.cta,
+                        persuasion_principle: post.principle,
+                        principle_explanation: post.principleExplanation,
+                        visual_concept: post.visual,
+                        proposed_caption: post.proposedCaption,
+                        status: 'draft'
+                    });
                 });
             });
-        });
 
-        if (postsToInsert.length > 0) {
-            console.log(`Inserting ${postsToInsert.length} posts...`);
-            const { error: insertError } = await supabase
-                .from('content_posts')
-                .insert(postsToInsert);
+            if (postsToInsert.length > 0) {
+                console.log(`Inserting ${postsToInsert.length} posts...`);
+                const { error: insertError } = await supabase
+                    .from('content_posts')
+                    .insert(postsToInsert);
 
-            if (insertError) throw insertError;
-            console.log("Successfully inserted posts.");
+                if (insertError) {
+                    console.error("Error inserting posts:", insertError);
+                    throw insertError;
+                }
+                console.log("Successfully inserted posts");
+            }
+
+            toast.dismiss(toastId);
+            toast.success("Outline and Posts Saved Successfully!");
+            setIsOutlineSaved(true);
+            setSavedOutlineId(outlineId); // Store ID for future use
+
+            // Navigate to calendar params page after successful save
+            router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${outlineId}`);
         }
-
-        toast.dismiss();
-        toast.success("Outline and Posts Saved Successfully!");
-        setIsOutlineSaved(true);
-        setSavedOutlineId(outlineId); // Store ID for future use
-
-        // Navigate to calendar params page after successful save
-        router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${outlineId}`);
-
     } catch (error) {
-        toast.dismiss();
+        toast.dismiss(toastId);
         console.error("Error saving outline and posts:", error);
         toast.error(`Save failed: ${error.message}`);
     } finally {
