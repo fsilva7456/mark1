@@ -681,25 +681,103 @@ export default function NewContent() {
     let outlineId = savedOutlineId; // Use existing ID if already saved
 
     try {
-        // Step 1: Upsert Content Outline
-        if (!outlineId) { // Only upsert if we don't have an ID from a previous save
-            console.log("Upserting content outline for strategy:", selectedStrategy.id);
-            const { data: upsertData, error: upsertError } = await supabase
+        // Step 1: Check if outline exists and update or insert accordingly
+        if (!outlineId) {
+            // Check if an outline exists for this strategy
+            console.log("Checking for existing outline for strategy:", selectedStrategy.id);
+            const { data: existingOutline, error: checkError } = await supabase
                 .from('content_outlines')
-                .upsert({
-                    strategy_id: selectedStrategy.id, // Conflict target
-                    user_id: user.id,
-                    project_id: currentProject.id,
+                .select('id')
+                .eq('strategy_id', selectedStrategy.id)
+                .maybeSingle();
+                
+            if (checkError) throw checkError;
+            
+            if (existingOutline?.id) {
+                // Update existing outline
+                console.log("Updating existing outline ID:", existingOutline.id);
+                outlineId = existingOutline.id;
+                const { error: updateError } = await supabase
+                    .from('content_outlines')
+                    .update({
+                        outline: contentOutline.map(week => ({
+                            week: week.week,
+                            theme: week.theme,
+                            posts: week.posts.map(post => ({
+                                type: post.type,
+                                topic: post.topic,
+                                audience: post.audience,
+                                cta: post.cta,
+                                principle: post.principle,
+                                principleExplanation: post.principleExplanation,
+                                visual: post.visual,
+                                proposedCaption: post.proposedCaption
+                            })),
+                            objective: week.objective,
+                            targetSegment: week.targetSegment,
+                            phase: week.phase
+                        })),
+                        updated_at: new Date()
+                    })
+                    .eq('id', outlineId);
+                    
+                if (updateError) throw updateError;
+            } else {
+                // Insert new outline
+                console.log("Inserting new outline for strategy:", selectedStrategy.id);
+                const { data: insertData, error: insertError } = await supabase
+                    .from('content_outlines')
+                    .insert({
+                        strategy_id: selectedStrategy.id,
+                        user_id: user.id,
+                        project_id: currentProject.id,
+                        outline: contentOutline.map(week => ({
+                            week: week.week,
+                            theme: week.theme,
+                            posts: week.posts.map(post => ({
+                                type: post.type,
+                                topic: post.topic,
+                                audience: post.audience,
+                                cta: post.cta,
+                                principle: post.principle,
+                                principleExplanation: post.principleExplanation,
+                                visual: post.visual,
+                                proposedCaption: post.proposedCaption
+                            })),
+                            objective: week.objective,
+                            targetSegment: week.targetSegment,
+                            phase: week.phase
+                        })),
+                        status: 'draft',
+                        updated_at: new Date()
+                    })
+                    .select('id')
+                    .single();
+                    
+                if (insertError) throw insertError;
+                if (!insertData?.id) throw new Error("Failed to get ID after outline insert.");
+                
+                outlineId = insertData.id;
+            }
+            
+            console.log("Content outline operation successful, ID:", outlineId);
+            setSavedOutlineId(outlineId); // Store the ID for future use
+        } else {
+            // If already saved, update the existing outline
+            console.log("Updating previously saved outline ID:", outlineId);
+            const { error: updateError } = await supabase
+                .from('content_outlines')
+                .update({
                     outline: contentOutline.map(week => ({
                         week: week.week,
                         theme: week.theme,
-                        posts: week.posts.map(post => ({ // Map to match DB column names if needed
+                        posts: week.posts.map(post => ({
                             type: post.type,
                             topic: post.topic,
                             audience: post.audience,
                             cta: post.cta,
                             principle: post.principle,
-                            principleExplanation: post.principleExplanation, // Ensure casing matches if needed
+                            principleExplanation: post.principleExplanation,
                             visual: post.visual,
                             proposedCaption: post.proposedCaption
                         })),
@@ -707,32 +785,14 @@ export default function NewContent() {
                         targetSegment: week.targetSegment,
                         phase: week.phase
                     })),
-                    status: 'draft', // Default status
                     updated_at: new Date()
-                }, {
-                    onConflict: 'strategy_id' // Specify column for upsert conflict
                 })
-                .select('id') // Select the ID of the upserted row
-                .single(); // Expect exactly one row back
-
-            if (upsertError) throw upsertError;
-            if (!upsertData?.id) throw new Error("Failed to get ID after outline upsert.");
-            
-            outlineId = upsertData.id;
-            console.log("Content outline upsert successful, ID:", outlineId);
-            setSavedOutlineId(outlineId); // Store the ID for future use
-        } else {
-            // If already saved, maybe just update the updated_at timestamp?
-            // Or potentially update the outline JSONB if changes were made (requires more complex state tracking)
-            console.log("Outline already saved (ID:", outlineId, "), skipping upsert. Consider adding update logic if needed.");
-            // Optionally update timestamp:
-            // await supabase.from('content_outlines').update({ updated_at: new Date() }).eq('id', outlineId);
+                .eq('id', outlineId);
+                
+            if (updateError) throw updateError;
         }
 
-        // Step 2: Prepare and Insert Content Posts (Delete old ones first? Or handle conflicts?)
-        // Simple approach: Insert new posts. Assumes posts aren't edited here.
-        // More robust: Delete existing posts for this outlineId, then insert.
-        
+        // Step 2: Prepare and Insert Content Posts (Delete old ones first)
         console.log("Preparing posts for insertion, Outline ID:", outlineId);
         const postsToInsert = [];
         contentOutline.forEach(week => {
