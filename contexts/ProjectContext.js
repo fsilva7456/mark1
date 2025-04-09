@@ -72,13 +72,26 @@ export const ProjectProvider = ({ children }) => {
         const defaultProject = data.find(p => p.is_default);
         const projectToSet = defaultProject || data[0]; // Use default or most recent
         
-        // Set the current project state, but don't automatically hide the selector
-        console.log("Setting initial currentProject:", projectToSet);
-        setCurrentProject(projectToSet);
-        
-        // Show the selector to allow user confirmation/choice on initial load
-        console.log("Projects found, showing selector for confirmation/choice.");
-        setShowProjectSelector(true); 
+        // --- MODIFICATION: Only show selector if currentProject isn't already set --- 
+        if (!currentProject) {
+            // No project currently selected (likely initial load), set it and show selector for confirmation
+            console.log("Setting initial currentProject:", projectToSet);
+            setCurrentProject(projectToSet);
+            console.log("Projects found, showing selector for confirmation/choice.");
+            setShowProjectSelector(true); 
+        } else {
+            // currentProject is already set (likely navigation back), ensure selector stays hidden
+            console.log("Projects found, but currentProject already set. Keeping selector hidden.");
+            // Optionally re-verify currentProject is still in the fetched list
+            if (!data.some(p => p.id === currentProject.id)) {
+                console.warn("Current project not found in latest fetch, switching to default/first.");
+                setCurrentProject(projectToSet); // Switch to a valid one
+                setShowProjectSelector(true); // Show selector as project changed unexpectedly
+            } else {
+                 setShowProjectSelector(false); // Ensure it remains false
+            }
+        }
+        // --- END MODIFICATION ---
         
       } else if (data && data.length === 0) {
         // No projects exist, show selector to prompt creation

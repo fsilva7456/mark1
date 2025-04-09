@@ -136,7 +136,7 @@ export default function NewContent() {
   console.log("NewContent component rendered. router.query:", JSON.stringify(router.query));
   // --- End Log ---
 
-  const { strategy } = router.query;
+  const { strategyId } = router.query;
   const { user, loading } = useAuth();
   const { currentProject } = useProject();
   const [contentOutline, setContentOutline] = useState([]);
@@ -165,7 +165,7 @@ export default function NewContent() {
   
   // When component mounts, check URL params and localStorage for strategy ID
   useEffect(() => {
-    console.log("Running effect. router.isReady:", router.isReady, "router.query.strategy:", router.query.strategy);
+    console.log("Running effect. router.isReady:", router.isReady, "router.query.strategyId:", router.query.strategyId);
     if (!router.isReady) {
         console.log("Router not ready, skipping effect run.");
         return; 
@@ -185,27 +185,16 @@ export default function NewContent() {
         setIsLoading(true);
         let strategyIdSource = 'None';
         
-        // --- MODIFICATION: Rely ONLY on URL query --- 
-        let strategyId = router.query.strategy;
-        if (strategyId) {
+        let currentStrategyId = router.query.strategyId;
+        if (currentStrategyId) {
             strategyIdSource = 'URL Query';
         }
-        // --- Remove localStorage fallback --- 
-        // let savedContentOutline = null;
-        // if (!strategyId) {
-        //   strategyId = localStorage.getItem('lastStrategyId');
-        //   if (strategyId) {
-        //       strategyIdSource = 'localStorage';
-        //       // ... check saved outline ...
-        //   }
-        // }
-        // --- END MODIFICATION ---
         
-        console.log(`Strategy ID obtained from: ${strategyIdSource}, Value: ${strategyId}`);
+        console.log(`Strategy ID obtained from: ${strategyIdSource}, Value: ${currentStrategyId}`);
         
-        if (!strategyId) {
+        if (!currentStrategyId) {
           // If no ID in URL after router is ready, it's an error
-          console.error("No strategy ID found in URL query parameter.")
+          console.error("No strategyId found in URL query parameter.")
           setError('No strategy ID provided in URL. Please navigate from the dashboard.');
           setIsLoading(false);
           return;
@@ -218,11 +207,11 @@ export default function NewContent() {
         // --- END CLEAR --- 
         
         // Fetch strategy data
-        console.log(`Fetching strategy data for ID: ${strategyId}`); // Log ID being fetched
+        console.log(`Fetching strategy data for ID: ${currentStrategyId}`); // Log ID being fetched
         const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
           .select('*')
-          .eq('id', strategyId)
+          .eq('id', currentStrategyId)
           .single();
         
         if (strategyError) throw strategyError;
@@ -239,18 +228,18 @@ export default function NewContent() {
         await new Promise(resolve => setTimeout(resolve, 50)); // Shorter delay
         
         // Check if outline exists in DB
-        console.log(`Checking DB for existing outline for strategy: ${strategyId}`);
+        console.log(`Checking DB for existing outline for strategy: ${currentStrategyId}`);
         const { data: existingContent, error: contentError } = await supabase
           .from('content_outlines')
           .select('*')
-          .eq('strategy_id', strategyId)
+          .eq('strategy_id', currentStrategyId)
           .order('created_at', { ascending: false })
           .limit(1);
           
         if (contentError) throw contentError;
         
         if (existingContent && existingContent.length > 0) {
-          console.log("Found existing content outline in DB for strategy:", strategyId);
+          console.log("Found existing content outline in DB for strategy:", currentStrategyId);
           setContentOutline(existingContent[0].outline || []);
         } else {
           console.log(`No existing DB outline. Calling generateContent with Strategy - ID: ${strategyData.id}, Name: ${strategyData.name}`);
@@ -266,7 +255,7 @@ export default function NewContent() {
     };
     
     initializePage();
-  }, [router.isReady, router.query.strategy, user, loading]);
+  }, [router.isReady, router.query.strategyId, user, loading]);
   
   // --- NEW useEffect to log contentOutline changes --- 
   useEffect(() => {
