@@ -200,8 +200,8 @@ export default function CreationDashboard() {
         router.push(`/content/new?strategyId=${strategyId}`);
     } else if (outlineStatus === 'completed' && strategyId) {
       log.info('Navigating to view/edit content outline', { strategyId });
-      // Navigate to view/edit outline - adjust route as needed
-      router.push(`/content/view?strategyId=${strategyId}`); // Example route
+      // Navigate to edit the content outline in the same page used for creation
+      router.push(`/content/new?strategyId=${strategyId}`);
     }
   };
 

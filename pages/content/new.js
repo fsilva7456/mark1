@@ -246,6 +246,9 @@ export default function NewContent() {
         if (existingContent && existingContent.length > 0) {
           console.log("Found existing content outline in DB for strategy:", currentStrategyId);
           setContentOutline(existingContent[0].outline || []);
+          // Set saved state for existing outline
+          setSavedOutlineId(existingContent[0].id);
+          setIsOutlineSaved(true);
         } else {
           console.log(`No existing DB outline. Calling generateContent with Strategy - ID: ${strategyData.id}, Name: ${strategyData.name}`);
           await generateContent(strategyData);
@@ -827,8 +830,8 @@ export default function NewContent() {
             setIsOutlineSaved(true);
             setSavedOutlineId(outlineId); // Store ID for future use
 
-            // Navigate to calendar params page after successful save
-            router.push(`/content/calendar-params?strategyId=${selectedStrategy.id}&outlineId=${outlineId}`);
+            // Navigate to marketing-plan page after successful save
+            router.push('/marketing-plan');
         }
     } catch (error) {
         toast.dismiss(toastId);
