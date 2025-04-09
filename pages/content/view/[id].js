@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Layout from '../../../components/Layout';
-import supabase from '../../../utils/supabaseClient';
+import { supabase } from '../../../lib/supabase';
 import Link from 'next/link';
 import styles from '../../../styles/Content.module.css';
 import StatusBadge from '../../../components/StatusBadge';
