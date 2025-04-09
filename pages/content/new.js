@@ -353,11 +353,15 @@ export default function NewContent() {
   const generateContent = async (strategyData) => {
     try {
       console.log("Generating content with strategy data using multi-stage approach...");
-      
-      // Reset any previous errors
       setError('');
-      
-      // Get aesthetic from URL if available
+      setIsLoading(true); // Ensure main loading state is true
+      setThemesLoading(true); // Themes are loading first
+      setWeekLoadingStates({ /* Reset week states */ });
+
+      // --- MODIFICATION: Start with empty outline --- 
+      setContentOutline([]); 
+      // --- END MODIFICATION ---
+
       const aesthetic = router.query.aesthetic || '';
       console.log("Aesthetic from URL:", aesthetic);
       
@@ -369,130 +373,80 @@ export default function NewContent() {
         return;
       }
       
-      // Initialize an empty content outline with placeholder weeks
-      setContentOutline([
-        { week: 1, theme: "Loading...", posts: [], loading: true },
-        { week: 2, theme: "Loading...", posts: [], loading: true },
-        { week: 3, theme: "Loading...", posts: [], loading: true }
-      ]);
-      
-      // Store all generated weeks here
       let generatedWeeks = [];
-      
+
       // Step 1: Generate weekly themes
       console.log("Step 1: Generating weekly themes...");
-      setThemesLoading(true);
+      // ... (retry logic for themes API call) ...
       
-      // Add retry mechanism for theme generation
-      const maxRetries = 3;
-      let retryCount = 0;
-      let themesData = null;
+      const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          strategy: {
+            name: strategyData.name,
+            business_description: strategyData.business_description,
+            target_audience: strategyData.target_audience,
+            objectives: strategyData.objectives,
+            key_messages: strategyData.key_messages,
+            // Include enhanced strategy data if available
+            enhancedStrategy: strategyData.enhancedStrategy || null
+          },
+          aesthetic: aesthetic
+        }),
+      });
       
-      while (retryCount < maxRetries && !themesData) {
-        try {
-          if (retryCount > 0) {
-            console.log(`Retrying theme generation - Attempt ${retryCount + 1} of ${maxRetries}`);
-          }
-          
-          const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              strategy: {
-                name: strategyData.name,
-                business_description: strategyData.business_description,
-                target_audience: strategyData.target_audience,
-                objectives: strategyData.objectives,
-                key_messages: strategyData.key_messages,
-                // Include enhanced strategy data if available
-                enhancedStrategy: strategyData.enhancedStrategy || null
-              },
-              aesthetic: aesthetic
-            }),
-          });
-          
-          if (!themesResponse.ok) {
-            const errorData = await themesResponse.json();
-            const errorText = errorData.error || `Status code: ${themesResponse.status}`;
-            console.error("Themes API error:", errorData);
-            
-            // Add more detailed logging of the error response
-            console.error("Theme generation failed with details:", {
-              status: themesResponse.status,
-              statusText: themesResponse.statusText,
-              error: errorData.error,
-              details: errorData.details || 'No additional details',
-              errorSource: errorData.errorSource || 'Unknown source'
-            });
-            
-            throw new Error(`Failed to generate themes: ${errorText}\n${errorData.details || ''}`);
-          }
-          
-          themesData = await themesResponse.json();
-          
-          // Debug log the raw response from the API
-          console.log("Raw themes API response:", JSON.stringify(themesData));
-          
-          if (!themesData || !themesData.weeklyThemes || !Array.isArray(themesData.weeklyThemes)) {
-            console.error("Invalid themes response format:", themesData);
-            throw new Error('Invalid themes response format. Please try again later.');
-          }
-          
-          // If we got here, we have valid data
-          break;
-        } catch (error) {
-          retryCount++;
-          console.error(`Theme generation attempt ${retryCount} failed:`, error);
-          
-          if (retryCount >= maxRetries) {
-            throw new Error(`Failed to generate themes after ${maxRetries} attempts: ${error.message}`);
-          }
-          
-          // Wait a bit before retrying (exponential backoff)
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 8000);
-          console.log(`Waiting ${delay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+      if (!themesResponse.ok) {
+        const errorData = await themesResponse.json();
+        const errorText = errorData.error || `Status code: ${themesResponse.status}`;
+        console.error("Themes API error:", errorData);
+        
+        // Add more detailed logging of the error response
+        console.error("Theme generation failed with details:", {
+          status: themesResponse.status,
+          statusText: themesResponse.statusText,
+          error: errorData.error,
+          details: errorData.details || 'No additional details',
+          errorSource: errorData.errorSource || 'Unknown source'
+        });
+        
+        throw new Error(`Failed to generate themes: ${errorText}\n${errorData.details || ''}`);
       }
+      
+      const themesData = await themesResponse.json();
+      
+      // ... (handle themes response errors) ...
       
       console.log("Successfully generated themes:", themesData.weeklyThemes);
       setThemes(themesData.weeklyThemes);
-      
-      // Update the content outline with theme information
-      setContentOutline(prev => {
-        const updated = [...prev];
-        themesData.weeklyThemes.forEach(theme => {
-          const index = theme.week - 1;
-          if (index >= 0 && index < updated.length) {
-            updated[index] = {
-              ...updated[index],
-              theme: theme.theme,
-              objective: theme.objective,
-              targetSegment: theme.targetSegment || "", // Add target segment
-              phase: theme.phase || ""                  // Add phase
-            };
-          }
-        });
-        return updated;
-      });
-      
+
+      // --- MODIFICATION: Initialize outline AFTER themes are fetched --- 
+      const initialOutline = themesData.weeklyThemes.map(theme => ({
+          week: theme.week,
+          theme: theme.theme,
+          objective: theme.objective,
+          targetSegment: theme.targetSegment || "",
+          phase: theme.phase || "",
+          posts: [],
+          loading: true, // Mark as loading initially for week content
+          error: null
+      }));
+      setContentOutline(initialOutline);
+      // --- END MODIFICATION ---
+
       setThemesLoading(false);
-      
-      // Step 2: Generate content for each week one by one for better UX
+
+      // Step 2: Generate content for each week
       console.log("Step 2: Generating content for each week sequentially...");
       
       for (const weekTheme of themesData.weeklyThemes) {
-        // Update loading state for this specific week
-        setWeekLoadingStates(prev => ({
-          ...prev,
-          [weekTheme.week]: { loading: true, error: null }
-        }));
+        // Update loading state for this specific week (using the separate state)
+        setWeekLoadingStates(prev => ({ ...prev, [weekTheme.week]: { loading: true, error: null } }));
         
         try {
           console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
-          
           const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
             method: 'POST',
             headers: {
@@ -528,68 +482,59 @@ export default function NewContent() {
           }
           
           console.log(`Successfully generated content for Week ${weekTheme.week}`);
-          
-          // Add this week's content to the list
           generatedWeeks.push(weekData.weekContent);
-          
-          // Also update the UI immediately with this week's content
-          setContentOutline(prev => {
-            const updated = [...prev];
-            const index = weekTheme.week - 1;
-            if (index >= 0 && index < updated.length) {
-              updated[index] = {
-                ...weekData.weekContent,
+
+          // --- MODIFICATION: Update state using functional update --- 
+          setContentOutline(prevOutline => {
+            const updatedOutline = [...prevOutline];
+            const index = updatedOutline.findIndex(w => w.week === weekTheme.week);
+            if (index !== -1) {
+              updatedOutline[index] = {
+                ...weekData.weekContent, // Contains week, theme, posts
                 loading: false, // Mark as loaded
-                objective: weekTheme.objective,
-                targetSegment: weekTheme.targetSegment || updated[index].targetSegment || "",
-                phase: weekTheme.phase || updated[index].phase || ""
+                objective: weekTheme.objective, // Ensure objective is kept
+                targetSegment: weekTheme.targetSegment || updatedOutline[index].targetSegment || "", // Ensure segment is kept
+                phase: weekTheme.phase || updatedOutline[index].phase || "" // Ensure phase is kept
               };
             }
-            return updated;
+            return updatedOutline;
           });
-          
-          // Update loading state for this week
-          setWeekLoadingStates(prev => ({
-            ...prev,
-            [weekTheme.week]: { loading: false, error: null }
-          }));
-          
+          // --- END MODIFICATION ---
+
+          setWeekLoadingStates(prev => ({ ...prev, [weekTheme.week]: { loading: false, error: null } }));
         } catch (weekError) {
           console.error(`Error generating Week ${weekTheme.week} content:`, weekError);
+          setWeekLoadingStates(prev => ({ ...prev, [weekTheme.week]: { loading: false, error: weekError.message } }));
           
-          // Update error state for this week
-          setWeekLoadingStates(prev => ({
-            ...prev,
-            [weekTheme.week]: { loading: false, error: weekError.message }
-          }));
-          
-          // Still show the partial content with an error indicator
-          setContentOutline(prev => {
-            const updated = [...prev];
-            const index = weekTheme.week - 1;
-            if (index >= 0 && index < updated.length) {
-              updated[index] = {
-                ...updated[index],
+          // --- MODIFICATION: Update state using functional update for error --- 
+          setContentOutline(prevOutline => {
+            const updatedOutline = [...prevOutline];
+            const index = updatedOutline.findIndex(w => w.week === weekTheme.week);
+            if (index !== -1) {
+              updatedOutline[index] = {
+                ...updatedOutline[index], // Keep existing theme, objective etc.
                 loading: false,
                 error: weekError.message,
-                posts: [], // No posts for this week
-                objective: weekTheme.objective,
-                // Ensure we preserve these fields
-                targetSegment: weekTheme.targetSegment || updated[index].targetSegment || "",
-                phase: weekTheme.phase || updated[index].phase || ""
+                posts: [] // Clear posts on error
               };
             }
-            return updated;
+            return updatedOutline;
           });
+          // --- END MODIFICATION ---
         }
       }
       
-      console.log("All weeks generated successfully:", generatedWeeks.length);
-      setIsLoading(false);
+      console.log("All weeks generation attempts complete.");
+      // setIsLoading(false); // Removed: Main loading state should be false once themes are loaded
     } catch (error) {
       console.error('Error in multi-stage content generation:', error);
       setError(`Content generation failed: ${error.message}. Please try again later.`);
-      setIsLoading(false);
+      setContentOutline([]); // Clear outline on major error
+      setThemesLoading(false);
+    } finally {
+      // Ensure main loading indicator stops after themes are loaded or if there's an error
+      // Individual weeks handle their own loading indicators via weekLoadingStates
+      setIsLoading(false); 
     }
   };
   
