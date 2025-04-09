@@ -173,43 +173,42 @@ export default function NewContent() {
     const initializePage = async () => {
       try {
         setIsLoading(true);
-        let strategyIdSource = 'None'; // To track where ID came from
+        let strategyIdSource = 'None';
         
-        // First try to get strategy ID from URL
+        // --- MODIFICATION: Rely ONLY on URL query --- 
         let strategyId = router.query.strategy;
         if (strategyId) {
             strategyIdSource = 'URL Query';
         }
+        // --- Remove localStorage fallback --- 
+        // let savedContentOutline = null;
+        // if (!strategyId) {
+        //   strategyId = localStorage.getItem('lastStrategyId');
+        //   if (strategyId) {
+        //       strategyIdSource = 'localStorage';
+        //       // ... check saved outline ...
+        //   }
+        // }
+        // --- END MODIFICATION ---
         
-        let savedContentOutline = null;
-        
-        // If no strategy ID in URL, check localStorage
-        if (!strategyId) {
-          strategyId = localStorage.getItem('lastStrategyId');
-          if (strategyId) {
-              strategyIdSource = 'localStorage';
-              // If we found a strategy ID in localStorage, also check for saved content outline
-              try {
-                const savedOutline = localStorage.getItem('lastContentOutline');
-                if (savedOutline) {
-                  savedContentOutline = JSON.parse(savedOutline);
-                }
-              } catch (e) {
-                console.error('Failed to parse saved content outline:', e);
-              }
-          }
-        }
-        
-        // --- Log Strategy ID Source --- 
         console.log(`Strategy ID obtained from: ${strategyIdSource}, Value: ${strategyId}`);
         
         if (!strategyId) {
-          setError('No strategy ID provided. Please select a strategy first.');
+          // If no ID in URL after router is ready, it's an error
+          console.error("No strategy ID found in URL query parameter.")
+          setError('No strategy ID provided in URL. Please navigate from the dashboard.');
           setIsLoading(false);
           return;
         }
         
+        // --- Clear potentially stale localStorage items --- 
+        localStorage.removeItem('lastStrategyId');
+        localStorage.removeItem('lastContentOutline');
+        console.log("Cleared stale localStorage items.");
+        // --- END CLEAR --- 
+        
         // Fetch strategy data
+        console.log(`Fetching strategy data for ID: ${strategyId}`); // Log ID being fetched
         const { data: strategyData, error: strategyError } = await supabase
           .from('strategies')
           .select('*')
@@ -224,23 +223,13 @@ export default function NewContent() {
           return;
         }
         
-        // --- Log Fetched Strategy --- 
         console.log(`Fetched Strategy Data - ID: ${strategyData.id}, Name: ${strategyData.name}`);
-        
         setSelectedStrategy(strategyData);
         
-        // If we have a saved content outline from localStorage, use it
-        if (savedContentOutline && savedContentOutline.length > 0) {
-          console.log('Using content outline from localStorage');
-          setContentOutline(savedContentOutline);
-          setIsLoading(false);
-          return;
-        }
+        await new Promise(resolve => setTimeout(resolve, 50)); // Shorter delay
         
-        // Wait a moment (keep this? maybe reduce delay)
-        await new Promise(resolve => setTimeout(resolve, 200)); // Reduced delay
-        
-        // Otherwise, check if we need to load existing content outline
+        // Check if outline exists in DB
+        console.log(`Checking DB for existing outline for strategy: ${strategyId}`);
         const { data: existingContent, error: contentError } = await supabase
           .from('content_outlines')
           .select('*')
@@ -254,8 +243,7 @@ export default function NewContent() {
           console.log("Found existing content outline in DB for strategy:", strategyId);
           setContentOutline(existingContent[0].outline || []);
         } else {
-          // --- Log Before Calling Generate --- 
-          console.log(`No existing outline. Calling generateContent with Strategy - ID: ${strategyData.id}, Name: ${strategyData.name}`);
+          console.log(`No existing DB outline. Calling generateContent with Strategy - ID: ${strategyData.id}, Name: ${strategyData.name}`);
           await generateContent(strategyData);
         }
         
@@ -268,7 +256,7 @@ export default function NewContent() {
     };
     
     initializePage();
-  }, [router.isReady, router.query.strategy, user, loading]); // Added router.query.strategy dependency
+  }, [router.isReady, router.query.strategy, user, loading]);
   
   // --- NEW useEffect to log contentOutline changes --- 
   useEffect(() => {
