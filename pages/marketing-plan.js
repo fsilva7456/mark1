@@ -90,19 +90,25 @@ export default function CreationDashboard() {
 
         if (hasStrategy && strategyId) {
           // 2. Check for Content Outline (assuming linked to strategy)
-          // Adjust table/column names as needed (e.g., 'content_outlines', 'strategy_id')
           const { data: outlineData, error: outlineError } = await supabase
-            .from('content_outlines') // Replace with your actual outline table name
-            .select('id') // Assuming outlines have their own ID
-            .eq('strategy_id', strategyId) // Assuming outlines link to strategies
-            .limit(1); // Check if at least one exists
+            .from('content_outlines')
+            .select('id')
+            .eq('strategy_id', strategyId)
+            .limit(1);
 
           if (outlineError) throw new Error(`Failed to fetch content outline: ${outlineError.message}`);
+          
+          // More detailed logging for debugging
+          console.log("Outline query results:", JSON.stringify(outlineData));
+          
           hasOutline = outlineData && outlineData.length > 0;
           
-          // Save the outline ID if it exists, using null as fallback
-          const outlineId = (hasOutline && outlineData.length > 0) ? outlineData[0].id : null;
-          console.log("Fetched outline ID:", outlineId); // Debugging log
+          // Fix: Make sure we correctly extract the ID from the first result
+          let outlineId = null;
+          if (hasOutline && outlineData && outlineData.length > 0) {
+            outlineId = outlineData[0].id;
+            console.log("Using outline ID:", outlineId);
+          }
 
           if (hasOutline) {
             // 3. Check for Content Calendar (assuming linked to strategy)
@@ -213,9 +219,39 @@ export default function CreationDashboard() {
     if (calendarStatus === 'active' && strategyId) {
       log.info('Navigating to create content calendar', { strategyId, outlineId: projectData.outlineId });
       
+      // Debug info to help track down the issue
+      console.log("ProjectData:", JSON.stringify(projectData));
+      
       // Check if we have a valid outlineId
       if (!projectData.outlineId) {
-        toast.error("Content outline ID not found. Try refreshing the page or return to the content outline page.");
+        // Try to fetch the outline ID directly before giving up
+        console.log("OutlineId not in projectData, attempting to fetch directly");
+        
+        const fetchOutlineId = async () => {
+          try {
+            const { data: outlineData, error } = await supabase
+              .from('content_outlines')
+              .select('id')
+              .eq('strategy_id', strategyId)
+              .limit(1);
+            
+            if (error) throw error;
+            
+            if (outlineData && outlineData.length > 0) {
+              const outlineId = outlineData[0].id;
+              console.log("Successfully fetched outline ID:", outlineId);
+              // Navigate with the directly fetched ID
+              router.push(`/content/calendar-params?strategyId=${strategyId}&outlineId=${outlineId}`);
+            } else {
+              toast.error("Content outline not found. Please create a content outline first.");
+            }
+          } catch (err) {
+            console.error("Error fetching outline ID:", err);
+            toast.error("Failed to fetch content outline. Please try again or return to the content outline page.");
+          }
+        };
+        
+        fetchOutlineId();
         return;
       }
       
