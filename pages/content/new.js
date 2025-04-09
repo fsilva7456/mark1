@@ -132,6 +132,10 @@ const WeekLoadingPlaceholder = ({ weekNumber, theme }) => (
 
 export default function NewContent() {
   const router = useRouter();
+  // --- Log router query on initial render --- 
+  console.log("NewContent component rendered. router.query:", JSON.stringify(router.query));
+  // --- End Log ---
+
   const { strategy } = router.query;
   const { user, loading } = useAuth();
   const { currentProject } = useProject();
@@ -161,6 +165,12 @@ export default function NewContent() {
   
   // When component mounts, check URL params and localStorage for strategy ID
   useEffect(() => {
+    console.log("Running effect. router.isReady:", router.isReady, "router.query.strategy:", router.query.strategy);
+    if (!router.isReady) {
+        console.log("Router not ready, skipping effect run.");
+        return; 
+    }
+    
     // Check for user authentication
     if (!loading && !user) {
       toast.error('Please login to continue');
