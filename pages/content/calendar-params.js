@@ -51,8 +51,22 @@ export default function CalendarParams() {
         // Get parameters from URL
         const { strategyId, outlineId } = router.query;
         
-        if (!strategyId || !outlineId) {
-          setError('Missing required parameters. Please go back to the content outline page.');
+        // Validate parameters
+        if (!strategyId) {
+          setError('Missing strategy ID. Please go back to the content outline page.');
+          setLoading(false);
+          return;
+        }
+        
+        if (!outlineId) {
+          setError('Missing outline ID. Please go back to the content outline page.');
+          setLoading(false);
+          return;
+        }
+        
+        // Check for "null" string value which can happen with query parameters
+        if (outlineId === "null") {
+          setError('Invalid outline ID. Please go back to the marketing plan and try again.');
           setLoading(false);
           return;
         }

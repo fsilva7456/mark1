@@ -99,8 +99,10 @@ export default function CreationDashboard() {
 
           if (outlineError) throw new Error(`Failed to fetch content outline: ${outlineError.message}`);
           hasOutline = outlineData && outlineData.length > 0;
-          // Save the outline ID if it exists
-          const outlineId = hasOutline && outlineData.length > 0 ? outlineData[0].id : null;
+          
+          // Save the outline ID if it exists, using null as fallback
+          const outlineId = (hasOutline && outlineData.length > 0) ? outlineData[0].id : null;
+          console.log("Fetched outline ID:", outlineId); // Debugging log
 
           if (hasOutline) {
             // 3. Check for Content Calendar (assuming linked to strategy)
@@ -210,6 +212,13 @@ export default function CreationDashboard() {
   const handleCreateCalendar = () => {
     if (calendarStatus === 'active' && strategyId) {
       log.info('Navigating to create content calendar', { strategyId, outlineId: projectData.outlineId });
+      
+      // Check if we have a valid outlineId
+      if (!projectData.outlineId) {
+        toast.error("Content outline ID not found. Try refreshing the page or return to the content outline page.");
+        return;
+      }
+      
       // Pass both strategyId and outlineId to the calendar params page
       router.push(`/content/calendar-params?strategyId=${strategyId}&outlineId=${projectData.outlineId}`);
     } else if (calendarStatus === 'completed' && calendarId) {
