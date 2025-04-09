@@ -48,79 +48,53 @@ export default function CalendarParams() {
       try {
         setLoading(true);
         
-        // Parse content outline from query params
-        const { contentOutline: contentOutlineParam, strategyId } = router.query;
+        // Get parameters from URL
+        const { strategyId, outlineId } = router.query;
         
-        // First try using URL parameters
-        if (contentOutlineParam && strategyId) {
-          try {
-            // Parse the content outline from JSON
-            const parsedContentOutline = JSON.parse(contentOutlineParam);
-            setContentOutline(parsedContentOutline);
-            
-            // Fetch strategy details
-            const { data: strategyData, error: strategyError } = await supabase
-              .from('strategies')
-              .select('*')
-              .eq('id', strategyId)
-              .single();
-            
-            if (strategyError) throw strategyError;
-            
-            if (!strategyData) {
-              setError('Strategy not found.');
-              setLoading(false);
-              return;
-            }
-            
-            setSelectedStrategy(strategyData);
-            setLoading(false);
-            return;
-          } catch (parseError) {
-            console.error('Error parsing content outline:', parseError);
-            // Continue to fallback if parsing fails
-          }
+        if (!strategyId || !outlineId) {
+          setError('Missing required parameters. Please go back to the content outline page.');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch strategy details
+        const { data: strategyData, error: strategyError } = await supabase
+          .from('strategies')
+          .select('*')
+          .eq('id', strategyId)
+          .single();
+        
+        if (strategyError) throw strategyError;
+        
+        if (!strategyData) {
+          setError('Strategy not found.');
+          setLoading(false);
+          return;
         }
         
-        // Try to load from localStorage as fallback
-        const savedStrategyId = localStorage.getItem('lastStrategyId');
-        const savedContentOutline = localStorage.getItem('lastContentOutline');
+        setSelectedStrategy(strategyData);
         
-        if (savedStrategyId && savedContentOutline) {
-          try {
-            // Parse the saved content outline
-            const parsedContentOutline = JSON.parse(savedContentOutline);
-            setContentOutline(parsedContentOutline);
-            
-            // Fetch strategy details
-            const { data: strategyData, error: strategyError } = await supabase
-              .from('strategies')
-              .select('*')
-              .eq('id', savedStrategyId)
-              .single();
-            
-            if (strategyError) throw strategyError;
-            
-            if (!strategyData) {
-              setError('Strategy not found.');
-              setLoading(false);
-              return;
-            }
-            
-            setSelectedStrategy(strategyData);
-            setLoading(false);
-            return;
-          } catch (fallbackError) {
-            console.error('Error loading from localStorage:', fallbackError);
-          }
+        // Fetch content outline data using outlineId
+        const { data: outlineData, error: outlineError } = await supabase
+          .from('content_outlines')
+          .select('*')
+          .eq('id', outlineId)
+          .single();
+          
+        if (outlineError) throw outlineError;
+        
+        if (!outlineData) {
+          setError('Content outline not found.');
+          setLoading(false);
+          return;
         }
         
-        // If we get here, both methods failed
-        setError('Missing required parameters. Please go back to the content outline page.');
+        // Set the content outline from the database
+        setContentOutline(outlineData.outline || []);
+        setLoading(false);
       } catch (err) {
         console.error('Error initializing page:', err);
         setError('Failed to initialize: ' + err.message);
-      } finally {
         setLoading(false);
       }
     };

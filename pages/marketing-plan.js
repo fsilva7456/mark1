@@ -99,6 +99,8 @@ export default function CreationDashboard() {
 
           if (outlineError) throw new Error(`Failed to fetch content outline: ${outlineError.message}`);
           hasOutline = outlineData && outlineData.length > 0;
+          // Save the outline ID if it exists
+          const outlineId = hasOutline && outlineData.length > 0 ? outlineData[0].id : null;
 
           if (hasOutline) {
             // 3. Check for Content Calendar (assuming linked to strategy)
@@ -115,8 +117,8 @@ export default function CreationDashboard() {
           }
         }
 
-        log.debug('Fetched project data:', { hasStrategy, hasOutline, hasCalendar, strategyId, calendarId });
-        setProjectData({ hasStrategy, hasOutline, hasCalendar, strategyId, calendarId });
+        log.debug('Fetched project data:', { hasStrategy, hasOutline, hasCalendar, strategyId, outlineId, calendarId });
+        setProjectData({ hasStrategy, hasOutline, hasCalendar, strategyId, outlineId, calendarId });
 
         // Determine current step based on fetched data
         if (hasCalendar) setCurrentStep(4); // All complete
@@ -139,7 +141,7 @@ export default function CreationDashboard() {
 
 
   // Determine button states and step text
-  const { hasStrategy, hasOutline, hasCalendar, strategyId, calendarId } = projectData;
+  const { hasStrategy, hasOutline, hasCalendar, strategyId, outlineId, calendarId } = projectData;
 
   let stepText = 'Loading...';
   let progressPercent = 0;
@@ -207,9 +209,9 @@ export default function CreationDashboard() {
 
   const handleCreateCalendar = () => {
     if (calendarStatus === 'active' && strategyId) {
-      log.info('Navigating to create content calendar', { strategyId });
-      // Assuming calendar creation is tied to a strategy ID
-      router.push(`/content/calendar-params?strategyId=${strategyId}`);
+      log.info('Navigating to create content calendar', { strategyId, outlineId: projectData.outlineId });
+      // Pass both strategyId and outlineId to the calendar params page
+      router.push(`/content/calendar-params?strategyId=${strategyId}&outlineId=${projectData.outlineId}`);
     } else if (calendarStatus === 'completed' && calendarId) {
         log.info('Navigating to view/edit content calendar', { calendarId });
         router.push(`/calendar/${calendarId}`); // Navigate to the specific calendar
