@@ -679,28 +679,21 @@ export default function NewContent() {
     const toastId = toast.loading("Saving Outline and Posts...");
 
     try {
-        let outlineId = savedOutlineId; // Use existing ID if already saved
-        
-        // Check if outline exists for this strategy if we don't have an ID yet
-        if (!outlineId) {
-            console.log("Checking for existing outline with strategy_id:", selectedStrategy.id);
-            const { data: existingOutline, error: checkError } = await supabase
-                .from('content_outlines')
-                .select('id')
-                .eq('strategy_id', selectedStrategy.id)
-                .maybeSingle();
-                
-            if (checkError) {
-                console.error("Error checking for existing outline:", checkError);
-                throw checkError;
-            }
+        // Always check for existing outline first to get the ID
+        console.log("Checking for existing outline with strategy_id:", selectedStrategy.id);
+        const { data: existingOutline, error: checkError } = await supabase
+            .from('content_outlines')
+            .select('id')
+            .eq('strategy_id', selectedStrategy.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
             
-            // If we found an existing outline, use its ID
-            if (existingOutline?.id) {
-                console.log("Found existing outline ID:", existingOutline.id);
-                outlineId = existingOutline.id;
-            }
+        if (checkError) {
+            console.error("Error checking for existing outline:", checkError);
+            throw checkError;
         }
+        
+        let outlineId = existingOutline?.id || savedOutlineId;
         
         // Now we either update an existing outline or insert a new one
         if (outlineId) {
