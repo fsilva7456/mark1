@@ -53,8 +53,7 @@ export default function ContentDashboard() {
     engagement: {
       likes: 0,
       comments: 0,
-      shares: 0,
-      clickThrough: 0
+      shares: 0
     },
     performanceScore: 0
   });
@@ -144,14 +143,12 @@ export default function ContentDashboard() {
     let totalLikes = 0;
     let totalComments = 0;
     let totalShares = 0;
-    let totalClicks = 0;
     
     postsData.forEach(post => {
       if (post.engagement) {
         totalLikes += post.engagement.likes || 0;
         totalComments += post.engagement.comments || 0;
         totalShares += post.engagement.shares || 0;
-        totalClicks += post.engagement.clicks || 0;
       }
     });
     
@@ -172,8 +169,7 @@ export default function ContentDashboard() {
       engagement: {
         likes: totalLikes,
         comments: totalComments,
-        shares: totalShares,
-        clickThrough: totalClicks
+        shares: totalShares
       },
       performanceScore
     });
@@ -653,11 +649,6 @@ export default function ContentDashboard() {
                     <div className={styles.engagementMetric}>
                       <div className={styles.engagementValue}>{metrics.engagement.shares}</div>
                       <div className={styles.engagementLabel}>Shares</div>
-                    </div>
-                    
-                    <div className={styles.engagementMetric}>
-                      <div className={styles.engagementValue}>{metrics.engagement.clickThrough}</div>
-                      <div className={styles.engagementLabel}>Clicks</div>
                     </div>
                   </div>
                   
