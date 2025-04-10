@@ -267,18 +267,21 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 100;
+  align-items: center;
+  z-index: 1000;
 }
 
-.modal {
-  background-color: white;
-  border-radius: 8px;
+.aestheticModal {
+  background: white;
+  border-radius: 10px;
   width: 90%;
-  max-width: 500px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
 }
 
 .modalHeader {
@@ -286,19 +289,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid #eee;
 }
 
-.modalBody {
-  padding: 20px;
-}
-
-.modalFooter {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 15px 20px;
-  border-top: 1px solid #eaeaea;
+.modalHeader h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
 }
 
 .closeButton {
@@ -306,264 +303,38 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
+  padding: 0;
   color: #666;
 }
 
-.contentSection {
-  margin-top: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  width: 100%;
-}
-
-.contentSection h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.5rem;
-}
-
-/* Enhanced Post Management - Drag and Drop */
-.postCard {
-  cursor: move;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.postCard:hover, .postCard.dragging {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.postCard.dragging {
-  opacity: 0.7;
-  cursor: grabbing;
-}
-
-/* Color coding for posts by status */
-.postCard.draft {
-  border-left: 4px solid #b0bec5; /* Blue-grey */
-}
-
-.postCard.scheduled {
-  border-left: 4px solid #4caf50; /* Green */
-}
-
-.postCard.published {
-  border-left: 4px solid #9c27b0; /* Purple */
-}
-
-/* Post preview functionality */
-.previewButton {
-  background: none;
-  border: none;
-  color: #2196f3;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.previewButton:hover {
-  text-decoration: underline;
-}
-
-.previewModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.previewContent {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 2rem;
-  position: relative;
-}
-
-.previewClose {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-}
-
-.previewHeader {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.previewPlatform {
-  display: inline-block;
-  background: #f5f5f5;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.previewTitle {
-  font-size: 1.5rem;
-  margin: 0.5rem 0;
-}
-
-.previewBody {
-  line-height: 1.6;
-  white-space: pre-wrap;
-}
-
-/* Bulk editing capabilities */
-.bulkActions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
-.bulkActionsTitle {
-  font-weight: 600;
-  margin-right: auto;
-}
-
-.bulkActionsButton {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  background: #2196f3;
-  color: white;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.bulkActionsButton:hover {
-  background: #1976d2;
-}
-
-.bulkActionsButton.destructive {
-  background: #f44336;
-}
-
-.bulkActionsButton.destructive:hover {
-  background: #d32f2f;
-}
-
-/* Custom checkboxes */
-.checkboxContainer {
-  position: relative;
-  padding-left: 30px;
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-}
-
-.checkboxContainer input {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.checkmark {
-  position: absolute;
-  left: 0;
-  height: 20px;
-  width: 20px;
-  background-color: #fff;
-  border: 2px solid #ccc;
-  border-radius: 4px;
-}
-
-.checkboxContainer:hover input ~ .checkmark {
-  border-color: #2196f3;
-}
-
-.checkboxContainer input:checked ~ .checkmark {
-  background-color: #2196f3;
-  border-color: #2196f3;
-}
-
-.checkmark:after {
-  content: "";
-  position: absolute;
-  display: none;
-}
-
-.checkboxContainer input:checked ~ .checkmark:after {
-  display: block;
-}
-
-.checkboxContainer .checkmark:after {
-  left: 6px;
-  top: 2px;
-  width: 5px;
-  height: 10px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-/* Aesthetic Modal Styles */
-.aestheticModal {
-  background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  width: 80%;
-  max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
-  z-index: 1001;
+.modalBody {
+  padding: 20px;
 }
 
 .modalDescription {
-  margin-bottom: 20px;
   color: #666;
+  margin-bottom: 20px;
   text-align: center;
 }
 
 .aestheticGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  gap: 15px;
   margin-bottom: 20px;
 }
 
 .aestheticCard {
-  border: 2px solid #eaeaea;
+  border: 2px solid #eee;
   border-radius: 8px;
-  padding: 16px;
+  padding: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .aestheticCard:hover {
-  border-color: #3454D1;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .selectedAesthetic {
@@ -572,20 +343,22 @@
 }
 
 .aestheticInfo h4 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
+  margin: 0 0 5px 0;
+  color: #333;
 }
 
 .aestheticInfo p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #666;
 }
 
 .customAestheticInput {
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eaeaea;
+  padding: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
 .customAestheticInput label {
@@ -598,25 +371,43 @@
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 6px;
-  margin-bottom: 16px;
-  font-size: 0.95rem;
-}
-
-.customInput:focus {
-  outline: none;
-  border-color: #3454D1;
-  box-shadow: 0 0 0 2px rgba(52, 84, 209, 0.2);
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
+  margin-top: 20px;
   gap: 10px;
-  margin-top: 16px;
 }
 
-/* Responsive adjustments */
+.cancelButton, .continueButton {
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.continueButton {
+  background-color: #3454D1;
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.continueButton:disabled {
+  background-color: #b3b3b3;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .aestheticGrid {
     grid-template-columns: 1fr;
@@ -627,176 +418,6 @@
     max-height: 80vh;
   }
 }
-
-/* Commented out for troubleshooting - Guided Workflow
-.guidedWorkflow {
-  background: linear-gradient(to right, #f9fbff, #f1f5ff);
-  border-radius: 12px;
-  padding: 32px 24px;
-  margin-bottom: 30px;
-  border: 1px solid #e0e7ff;
-  box-shadow: 0 4px 12px rgba(52, 84, 209, 0.08);
-}
-
-.workflowSteps {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 30px;
-  position: relative;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.workflowSteps::before {
-  content: '';
-  position: absolute;
-  top: 25px;
-  left: 60px;
-  right: 60px;
-  height: 3px;
-  background-color: #e0e7ff;
-  z-index: 1;
-}
-
-.workflowStep {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 2;
-  flex: 1;
-}
-
-.stepNumber {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 16px;
-  color: #8c96a8;
-  margin-bottom: 12px;
-  border: 2px solid #e0e7ff;
-  box-shadow: 0 2px 6px rgba(52, 84, 209, 0.1);
-  position: relative;
-  z-index: 2;
-  transition: all 0.3s ease;
-}
-
-.stepLabel {
-  font-size: 14px;
-  color: #6c757d;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  text-align: center;
-  max-width: 90px;
-  white-space: normal;
-}
-
-.workflowStep.completed .stepNumber {
-  background-color: #3454D1;
-  color: white;
-  border-color: #3454D1;
-  box-shadow: 0 3px 8px rgba(52, 84, 209, 0.2);
-}
-
-.workflowStep.completed .stepLabel {
-  color: #3454D1;
-  font-weight: 600;
-}
-
-.workflowStep.completed::after {
-  content: '';
-  position: absolute;
-  top: 25px;
-  right: -50%;
-  width: 100%;
-  height: 3px;
-  background-color: #3454D1;
-  z-index: 1;
-}
-
-.workflowStep.active .stepNumber {
-  background-color: #ffffff;
-  color: #3454D1;
-  border-color: #3454D1;
-  border-width: 2px;
-  transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(52, 84, 209, 0.15);
-}
-
-.workflowStep.active .stepLabel {
-  color: #3454D1;
-  font-weight: 700;
-}
-
-.workflowStep:last-child::after {
-  display: none;
-}
-
-.workflowStep.active.completed .stepNumber {
-  background-color: #ffffff;
-  color: #3454D1;
-}
-
-.workflowMessage {
-  text-align: center;
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.workflowMessage p {
-  margin-bottom: 1rem;
-  max-width: 500px;
-  font-size: 1rem;
-  color: #575F73;
-  line-height: 1.5;
-}
-
-@media (max-width: 768px) {
-  .workflowSteps {
-    flex-direction: column;
-    gap: 40px;
-  }
-  
-  .workflowSteps::before {
-    top: 0;
-    bottom: 0;
-    left: 25px;
-    right: auto;
-    width: 3px;
-    height: auto;
-  }
-  
-  .workflowStep {
-    flex-direction: row;
-    width: 100%;
-    gap: 20px;
-    justify-content: flex-start;
-  }
-  
-  .workflowStep.completed::after {
-    top: -50%;
-    right: auto;
-    left: 25px;
-    width: 3px;
-    height: 100%;
-  }
-  
-  .stepLabel {
-    max-width: none;
-    text-align: left;
-  }
-}
-*/ 
 
 .outlineButton:disabled,
 .calendarButton:disabled,
