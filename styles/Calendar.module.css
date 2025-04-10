@@ -391,28 +391,49 @@
 }
 
 .engagementMetrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 1rem;
-}
-
-.metric {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  background-color: #F8FAFC;
-  padding: 0.75rem;
-  border-radius: 8px;
 }
 
-.metric span:first-child {
-  font-size: 0.8rem;
-  color: #718096;
-}
-
-.metric span:last-child {
-  font-size: 1.25rem;
+.engagementTitle {
+  font-size: 1rem;
   font-weight: 600;
-  color: #3454D1;
+  margin: 0 0 1rem;
+  color: #333;
+  width: 100%;
+  display: block;
+}
+
+.engagementGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
+}
+
+.engagementMetric {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.engagementValue {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.engagementLabel {
+  font-size: 0.8rem;
+  color: #666;
 }
 
 /* Forms */
@@ -1401,49 +1422,6 @@
   margin-top: 0.5rem;
 }
 
-/* Engagement Metrics */
-.engagementMetrics {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.25rem;
-}
-
-.engagementTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 1rem;
-  color: #333;
-}
-
-.engagementGrid {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 1.25rem;
-  width: 100%;
-}
-
-.engagementMetric {
-  flex: 1;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.5rem;
-}
-
-.engagementValue {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #333;
-  line-height: 1.2;
-  margin-bottom: 0.25rem;
-}
-
-.engagementLabel {
-  font-size: 0.8rem;
-  color: #666;
-}
-
 /* Performance Score */
 .performanceScore {
   margin-top: 1rem;
@@ -1809,12 +1787,7 @@
   }
   
   .engagementGrid {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-  
-  .engagementMetric {
-    padding: 0.25rem;
+    gap: 0.5rem;
   }
 } 
