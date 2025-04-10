@@ -73,61 +73,87 @@ export default function ContentDashboard() {
     
     // Fetch calendar details when ID is available
     if (id && user) {
-      fetchCalendarDetails(id);
+      fetchCalendarDetails();
     }
   }, [id, user, loading, router]);
   
-  const fetchCalendarDetails = async (calendarId) => {
+  const fetchCalendarDetails = async () => {
     try {
       setIsLoading(true);
-      console.log('Fetching calendar details for ID:', calendarId);
+      setError('');
       
-      // Fetch calendar data
+      if (!id || !user) {
+        console.error('Missing required parameters: calendar ID or user');
+        toast.error('Missing required information');
+        return;
+      }
+      
+      console.log(`Fetching calendar details for ID: ${id}`);
+      
+      // Fetch calendar details with expanded strategy data
       const { data: calendarData, error: calendarError } = await supabase
         .from('calendars')
-        .select('*')
-        .eq('id', calendarId)
+        .select(`
+          *,
+          strategy:strategy_id (
+            id,
+            name,
+            target_audience
+          )
+        `)
+        .eq('id', id)
         .single();
-      
+        
       if (calendarError) {
         console.error('Error fetching calendar:', calendarError);
-        setError('Failed to load calendar data. Please try again.');
+        toast.error('Failed to load calendar details');
+        setError('Failed to load calendar details');
         setIsLoading(false);
         return;
       }
       
-      console.log('Calendar data retrieved:', calendarData);
+      if (!calendarData) {
+        console.error('Calendar not found');
+        toast.error('Calendar not found');
+        router.push('/calendar/view');
+        return;
+      }
+      
+      console.log('Calendar data loaded:', calendarData);
+      setCalendar(calendarData);
       
       // Fetch posts for this calendar
       const { data: postsData, error: postsError } = await supabase
         .from('calendar_posts')
         .select('*')
-        .eq('calendar_id', calendarId)
+        .eq('calendar_id', id)
         .order('scheduled_date', { ascending: true });
-      
+        
       if (postsError) {
-        console.error('Error fetching calendar posts:', postsError);
-        setError('Failed to load calendar posts. Please try again.');
+        console.error('Error fetching posts:', postsError);
+        toast.error('Failed to load calendar posts');
+        setError('Failed to load calendar posts');
         setIsLoading(false);
         return;
       }
       
-      console.log('Posts data retrieved:', postsData ? postsData.length : 0, 'posts');
+      console.log(`Loaded ${postsData?.length || 0} posts for calendar`);
       
-      // Process posts and set state
-      if (postsData && postsData.length > 0) {
-        setPosts(postsData);
-        calculateMetrics(postsData);
-        generateSuggestions(postsData, calendarData);
+      // Create default posts if none exist
+      if (!postsData || postsData.length === 0) {
+        console.log('No posts found, creating defaults');
+        await createDefaultPosts(id, calendarData);
       } else {
-        // Handle case with no posts
-        await createDefaultPosts(calendarId, calendarData);
+        setPosts(postsData);
+        // Calculate metrics based on the posts
+        calculateMetrics(postsData);
+        // Generate content suggestions
+        generateSuggestions(postsData, calendarData);
       }
-      
-      setCalendar(calendarData);
-    } catch (err) {
-      console.error('Error fetching calendar:', err);
-      setError('Failed to load calendar details. Please try again.');
+    } catch (error) {
+      console.error('Error in fetchCalendarDetails:', error);
+      toast.error('Failed to load calendar data');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -318,111 +344,185 @@ export default function ContentDashboard() {
   // New function to create default posts when no content plan exists
   const createDefaultPosts = async (calendarId, calendarData) => {
     try {
-      console.log('Creating default posts for calendar');
+      console.log('Creating default posts for calendar:', calendarId);
       
-      const postTypes = ['Image Post', 'Carousel', 'Video', 'Story', 'Reel'];
-      const channels = ['Instagram', 'Facebook', 'Twitter', 'LinkedIn'];
-      const startDate = new Date();
-      const newPosts = [];
+      if (!calendarId || !calendarData) {
+        console.error('Missing required data for creating default posts');
+        return null;
+      }
       
-      // Create 8 default posts over 4 weeks
+      const startDate = new Date(calendarData.start_date);
+      const defaultPosts = [];
+      
+      // Create 8 default posts (2 per week for 4 weeks)
       for (let week = 0; week < 4; week++) {
-        for (let postIndex = 0; postIndex < 2; postIndex++) {
-          const postDate = new Date(startDate);
-          postDate.setDate(postDate.getDate() + (week * 7) + (postIndex * 3)); // Posts every 3 days
-          
-          const postType = postTypes[Math.floor(Math.random() * postTypes.length)];
-          const channel = channels[Math.floor(Math.random() * channels.length)];
-          
-          newPosts.push({
-            calendar_id: calendarId,
-            title: `Week ${week + 1} ${postType} for ${channel}`,
-            content: `Default content for ${calendarData.name || 'your calendar'} - Week ${week + 1}`,
-            post_type: postType,
-            target_audience: 'General audience',
-            scheduled_date: postDate.toISOString(),
-            channel: channel,
-            status: 'scheduled',
-            user_id: user.id,
-            engagement: {
-              likes: 0,
-              comments: 0,
-              shares: 0,
-              saves: 0,
-              clicks: 0
-            }
-          });
-        }
+        // Monday post
+        const mondayDate = new Date(startDate);
+        mondayDate.setDate(startDate.getDate() + (week * 7));
+        
+        // Thursday post
+        const thursdayDate = new Date(startDate);
+        thursdayDate.setDate(startDate.getDate() + (week * 7) + 3);
+        
+        // Create the posts
+        defaultPosts.push({
+          calendar_id: calendarId,
+          title: `Week ${week + 1} Primary Post`,
+          content: '',
+          channel: week % 2 === 0 ? 'linkedin' : 'instagram',
+          post_type: 'post',
+          status: 'draft',
+          scheduled_date: mondayDate.toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
+          engagement: 0
+        });
+        
+        defaultPosts.push({
+          calendar_id: calendarId,
+          title: `Week ${week + 1} Secondary Post`,
+          content: '',
+          channel: week % 2 === 0 ? 'twitter' : 'facebook',
+          post_type: week % 2 === 0 ? 'image' : 'video',
+          status: 'draft',
+          scheduled_date: thursdayDate.toISOString().split('T')[0],
+          created_at: new Date().toISOString(),
+          engagement: 0
+        });
       }
       
-      console.log('Created', newPosts.length, 'default posts');
+      console.log(`Inserting ${defaultPosts.length} default posts`);
       
-      // Add posts to the database
-      const { data: insertedPosts, error: insertError } = await supabase
+      // Insert all posts in a single batch operation
+      const { data: insertedPosts, error } = await supabase
         .from('calendar_posts')
-        .insert(newPosts)
+        .insert(defaultPosts)
         .select();
-      
-      if (insertError) {
-        console.error('Error inserting default posts:', insertError);
-        throw insertError;
+        
+      if (error) {
+        console.error('Error creating default posts:', error);
+        toast.error('Failed to create default posts');
+        return null;
       }
       
-      console.log('Successfully inserted', insertedPosts.length, 'default posts');
-      setPosts(insertedPosts);
+      console.log(`Successfully created ${insertedPosts.length} default posts`);
       
       // Update calendar progress
-      await updateCalendarProgress(calendarId, insertedPosts);
+      await updateCalendarProgress(calendarId, 0);
+      
+      // Set the posts in state
+      setPosts(insertedPosts);
+      
+      // Calculate metrics with the new posts
+      calculateMetrics(insertedPosts);
+      
+      // Generate suggestions
+      generateSuggestions(insertedPosts, calendarData);
+      
+      return insertedPosts;
     } catch (error) {
-      console.error('Error creating default posts:', error);
-      setPosts([]); // Set empty posts array on error
+      console.error('Error in createDefaultPosts:', error);
+      toast.error('Failed to create default posts');
+      return null;
     }
   };
   
   const updatePostStatus = async (postId, newStatus) => {
     try {
+      setIsLoading(true);
+      
+      if (!postId) {
+        toast.error('Post ID is required to update status');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log(`Updating post ${postId} status to ${newStatus}`);
+      
+      // Update the post status in the database
       const { data, error } = await supabase
         .from('calendar_posts')
-        .update({ status: newStatus })
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', postId)
         .select();
+        
+      if (error) {
+        console.error('Error updating post status:', error);
+        toast.error('Failed to update post status');
+        setIsLoading(false);
+        return;
+      }
       
-      if (error) throw error;
+      console.log('Successfully updated post status');
       
-      // Update local state
-      setPosts(posts.map(post => 
-        post.id === postId ? {...post, status: newStatus} : post
-      ));
+      // Update the post in the state
+      const updatedPosts = posts.map(post => 
+        post.id === postId ? { ...post, status: newStatus } : post
+      );
       
-      toast.success(`Post marked as ${newStatus}`);
+      setPosts(updatedPosts);
       
-      // Update calendar progress
-      updateCalendarProgress(calendar.id, posts);
+      // Update the calendar progress
+      await updateCalendarProgress(id);
+      
+      // Recalculate metrics with the updated posts
+      calculateMetrics(updatedPosts);
+      
+      toast.success(`Post status updated to ${newStatus}`);
     } catch (error) {
-      console.error('Error updating post status:', error);
+      console.error('Error in updatePostStatus:', error);
       toast.error('Failed to update post status');
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  const updatePostEngagement = async (postId, engagement) => {
+  const updatePostEngagement = async (postId, engagementData) => {
     try {
+      setIsLoading(true);
+      
+      if (!postId) {
+        toast.error('Post ID is required to update engagement');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log(`Updating engagement for post ${postId}`, engagementData);
+      
+      // Update the post engagement metrics in the database
       const { data, error } = await supabase
         .from('calendar_posts')
-        .update({ engagement })
+        .update({
+          ...engagementData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', postId)
         .select();
+        
+      if (error) {
+        console.error('Error updating post engagement:', error);
+        toast.error('Failed to update engagement metrics');
+        setIsLoading(false);
+        return;
+      }
       
-      if (error) throw error;
+      console.log('Successfully updated post engagement');
       
-      // Update local state
-      setPosts(posts.map(post => 
-        post.id === postId ? {...post, engagement} : post
-      ));
+      // Update the post in the state
+      const updatedPosts = posts.map(post => 
+        post.id === postId ? { ...post, ...engagementData } : post
+      );
+      
+      setPosts(updatedPosts);
+      
+      // Recalculate metrics with the updated posts
+      calculateMetrics(updatedPosts);
       
       toast.success('Engagement metrics updated');
     } catch (error) {
-      console.error('Error updating engagement metrics:', error);
+      console.error('Error in updatePostEngagement:', error);
       toast.error('Failed to update engagement metrics');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -455,35 +555,58 @@ export default function ContentDashboard() {
     }
   };
   
-  const addNewPost = async (newPost) => {
+  const addNewPost = async (newPostData) => {
     try {
+      setIsLoading(true);
+      
+      // Ensure all required fields are present
+      const postToInsert = {
+        calendar_id: id,
+        user_id: user.id,
+        strategy_id: calendar?.strategy_id,
+        project_id: calendar?.project_id,
+        platform: newPostData.platform || 'Instagram',
+        content_type: newPostData.content_type || 'Post',
+        title: newPostData.title || `New post - ${new Date().toLocaleDateString()}`,
+        content: newPostData.content || '',
+        status: newPostData.status || 'draft',
+        scheduled_date: newPostData.scheduled_date || new Date().toISOString(),
+        target_audience: newPostData.target_audience || calendar?.strategy?.target_audience || 'General audience',
+        engagement: { likes: 0, comments: 0, shares: 0 },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('Adding new post:', postToInsert);
+      
       const { data, error } = await supabase
         .from('calendar_posts')
-        .insert([{
-          calendar_id: id,
-          ...newPost,
-          status: 'scheduled',
-          engagement: {
-            likes: 0,
-            comments: 0,
-            shares: 0,
-            saves: 0,
-            clicks: 0
-          }
-        }])
+        .insert([postToInsert])
         .select();
+        
+      if (error) {
+        console.error('Error adding new post:', error);
+        toast.error('Failed to add new post');
+        throw error;
+      }
       
-      if (error) throw error;
+      console.log('New post added:', data);
       
-      // Update local state
-      setPosts([...posts, data[0]]);
-      toast.success('New post added to calendar');
+      // Add the new post to the state
+      const newPost = data[0];
+      setPosts(prevPosts => [...prevPosts, newPost]);
       
       // Update calendar progress
-      updateCalendarProgress(id, posts);
+      await updateCalendarProgress(id, posts);
+      
+      toast.success('New post added successfully');
+      return newPost;
     } catch (error) {
-      console.error('Error adding new post:', error);
+      console.error('Error in addNewPost:', error);
       toast.error('Failed to add new post');
+      return null;
+    } finally {
+      setIsLoading(false);
     }
   };
   
