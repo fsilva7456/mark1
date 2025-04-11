@@ -90,17 +90,10 @@ export default function ContentDashboard() {
       
       console.log(`Fetching calendar details for ID: ${id}`);
       
-      // Fetch calendar details with expanded strategy data
+      // Step 1: Fetch calendar details without trying to join strategy
       const { data: calendarData, error: calendarError } = await supabase
         .from('calendars')
-        .select(`
-          *,
-          strategy:strategy_id (
-            id,
-            name,
-            target_audience
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
         
@@ -120,9 +113,32 @@ export default function ContentDashboard() {
       }
       
       console.log('Calendar data loaded:', calendarData);
-      setCalendar(calendarData);
       
-      // Fetch posts for this calendar
+      // Step 2: If calendar has a strategy_id, fetch the strategy separately
+      let strategyData = null;
+      if (calendarData.strategy_id) {
+        const { data: strategy, error: strategyError } = await supabase
+          .from('strategies')
+          .select('id, name, target_audience, description')
+          .eq('id', calendarData.strategy_id)
+          .single();
+          
+        if (strategyError) {
+          console.error('Error fetching strategy:', strategyError);
+        } else {
+          strategyData = strategy;
+        }
+      }
+      
+      // Combine calendar with strategy data
+      const calendarWithStrategy = {
+        ...calendarData,
+        strategy: strategyData
+      };
+      
+      setCalendar(calendarWithStrategy);
+      
+      // Step 3: Fetch posts for this calendar
       const { data: postsData, error: postsError } = await supabase
         .from('calendar_posts')
         .select('*')
@@ -142,13 +158,13 @@ export default function ContentDashboard() {
       // Create default posts if none exist
       if (!postsData || postsData.length === 0) {
         console.log('No posts found, creating defaults');
-        await createDefaultPosts(id, calendarData);
+        await createDefaultPosts(id, calendarWithStrategy);
       } else {
         setPosts(postsData);
         // Calculate metrics based on the posts
         calculateMetrics(postsData);
         // Generate content suggestions
-        generateSuggestions(postsData, calendarData);
+        generateSuggestions(postsData, calendarWithStrategy);
       }
     } catch (error) {
       console.error('Error in fetchCalendarDetails:', error);
@@ -351,8 +367,12 @@ export default function ContentDashboard() {
         return null;
       }
       
-      const startDate = new Date(calendarData.start_date);
+      // Use calendar start date or default to current date
+      const startDate = calendarData.start_date ? new Date(calendarData.start_date) : new Date();
       const defaultPosts = [];
+      
+      // Get target audience from strategy or default
+      const targetAudience = calendarData.strategy?.target_audience || 'General audience';
       
       // Create 8 default posts (2 per week for 4 weeks)
       for (let week = 0; week < 4; week++) {
@@ -373,8 +393,11 @@ export default function ContentDashboard() {
           post_type: 'post',
           status: 'draft',
           scheduled_date: mondayDate.toISOString().split('T')[0],
+          target_audience: targetAudience,
+          strategy_id: calendarData.strategy_id || null,
+          user_id: user.id,
           created_at: new Date().toISOString(),
-          engagement: 0
+          engagement: { likes: 0, comments: 0, shares: 0 }
         });
         
         defaultPosts.push({
@@ -385,8 +408,11 @@ export default function ContentDashboard() {
           post_type: week % 2 === 0 ? 'image' : 'video',
           status: 'draft',
           scheduled_date: thursdayDate.toISOString().split('T')[0],
+          target_audience: targetAudience,
+          strategy_id: calendarData.strategy_id || null,
+          user_id: user.id,
           created_at: new Date().toISOString(),
-          engagement: 0
+          engagement: { likes: 0, comments: 0, shares: 0 }
         });
       }
       
