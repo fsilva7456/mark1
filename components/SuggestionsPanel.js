@@ -1,43 +1,79 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SparklesIcon } from '@heroicons/react/24/outline';
 import SuggestionCard from './SuggestionCard';
 import styles from '../styles/Calendar.module.css';
+import { generateSuggestions } from '../utils/generateSuggestions';
 
-const SuggestionsPanel = ({ suggestions, onSuggestionAction }) => {
-  // Default suggestions if none provided
-  const defaultSuggestions = [
-    {
-      id: 1,
-      title: 'Boost engagement with video',
-      description: 'Our analysis shows videos get 2x more engagement. Try adding a Reel next week.',
-      actionLabel: 'Add Video Post',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      title: 'Content gap detected',
-      description: 'You have no content scheduled for next Tuesday. Consider adding a post.',
-      actionLabel: 'Schedule Post',
-      priority: 'medium',
-    },
-    {
-      id: 3,
-      title: 'Trending hashtag opportunity',
-      description: '#SummerVibes is trending in your industry. Consider incorporating it.',
-      actionLabel: 'View Details',
-      priority: 'low',
-    },
-  ];
+const SuggestionsPanel = ({ calendarId }) => {
+  const [suggestions, setSuggestions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const displaySuggestions = suggestions || defaultSuggestions;
+  useEffect(() => {
+    if (calendarId) {
+      fetchSuggestions();
+    }
+  }, [calendarId]);
 
-  const handleAction = (suggestion) => {
-    if (onSuggestionAction) {
-      onSuggestionAction(suggestion);
-    } else {
-      console.log('Action clicked for suggestion:', suggestion);
+  const fetchSuggestions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const suggestionsData = await generateSuggestions(calendarId);
+      setSuggestions(suggestionsData);
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+      setError('Failed to generate suggestions. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleRefresh = () => {
+    fetchSuggestions();
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className={styles.suggestionsPanel}>
+        <div className={styles.suggestionsPanelHeader}>
+          <h3 className={styles.suggestionsPanelTitle}>
+            <SparklesIcon className={styles.suggestionsPanelIcon} />
+            AI Content Suggestions
+          </h3>
+        </div>
+        <div className={`${styles.suggestionsPanelContent} ${styles.suggestionLoading}`}>
+          <div className={styles.spinner}></div>
+          <p>Generating smart suggestions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className={styles.suggestionsPanel}>
+        <div className={styles.suggestionsPanelHeader}>
+          <h3 className={styles.suggestionsPanelTitle}>
+            <SparklesIcon className={styles.suggestionsPanelIcon} />
+            AI Content Suggestions
+          </h3>
+        </div>
+        <div className={`${styles.suggestionsPanelContent} ${styles.suggestionError}`}>
+          <p>{error}</p>
+          <button 
+            onClick={handleRefresh}
+            className={styles.suggestionRefreshButton}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.suggestionsPanel}>
@@ -45,21 +81,27 @@ const SuggestionsPanel = ({ suggestions, onSuggestionAction }) => {
         <h3 className={styles.suggestionsPanelTitle}>
           <SparklesIcon className={styles.suggestionsPanelIcon} />
           AI Content Suggestions
+          <button 
+            onClick={handleRefresh} 
+            className={styles.suggestionRefreshIcon}
+            aria-label="Refresh suggestions"
+          >
+            ↻
+          </button>
         </h3>
       </div>
 
       <div className={styles.suggestionsPanelContent}>
-        {displaySuggestions.length > 0 ? (
-          displaySuggestions.map((suggestion) => (
+        {suggestions.length > 0 ? (
+          suggestions.map((suggestion) => (
             <SuggestionCard 
               key={suggestion.id} 
-              suggestion={suggestion} 
-              onAction={handleAction}
+              suggestion={suggestion}
             />
           ))
         ) : (
           <div className={styles.noSuggestions}>
-            <p>No suggestions available at this time.</p>
+            <p>No new suggestions right now. Try updating your metrics or strategy.</p>
           </div>
         )}
       </div>

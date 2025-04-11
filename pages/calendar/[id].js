@@ -638,13 +638,10 @@ export default function ContentDashboard() {
               {/* Right column: Metrics and Suggestions */}
               <section className={styles.metricsAndSuggestionsSection}>
                 {/* Engagement Summary */}
-                <MetricsSummary metrics={metrics.engagement} calendarId={id} />
+                <MetricsSummary calendarId={id} />
                 
                 {/* AI Suggestions Panel */}
-                <SuggestionsPanel 
-                  suggestions={suggestions} 
-                  onSuggestionAction={handleSuggestionAction}
-                />
+                <SuggestionsPanel calendarId={id} />
               </section>
             </div>
           </>

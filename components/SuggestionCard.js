@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import styles from '../styles/Calendar.module.css';
 
@@ -9,6 +10,30 @@ const SuggestionCard = ({ suggestion, onAction }) => {
       return <LightBulbIcon className={styles.suggestionIcon} />;
     }
     return suggestion.icon;
+  };
+
+  // Render action button/link based on the suggestion
+  const renderAction = () => {
+    if (!suggestion.actionLabel) return null;
+    
+    // If there's an actionRoute, use Next.js Link
+    if (suggestion.actionRoute) {
+      return (
+        <Link href={suggestion.actionRoute} className={styles.suggestionCardAction}>
+          {suggestion.actionLabel}
+        </Link>
+      );
+    }
+    
+    // Otherwise use a regular button with the callback
+    return (
+      <button 
+        className={styles.suggestionCardAction}
+        onClick={() => onAction && onAction(suggestion)}
+      >
+        {suggestion.actionLabel}
+      </button>
+    );
   };
 
   return (
@@ -23,14 +48,7 @@ const SuggestionCard = ({ suggestion, onAction }) => {
         <p className={styles.suggestionCardDescription}>
           {suggestion.description || 'No description provided'}
         </p>
-        {suggestion.actionLabel && (
-          <button 
-            className={styles.suggestionCardAction}
-            onClick={() => onAction && onAction(suggestion)}
-          >
-            {suggestion.actionLabel}
-          </button>
-        )}
+        {renderAction()}
       </div>
     </div>
   );
