@@ -17,8 +17,12 @@ import {
   LightBulbIcon,
   ArrowPathIcon,
   DocumentPlusIcon,
-  ChartPieIcon 
+  ChartPieIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
+import ContentCard from '../../components/ContentCard';
+import MetricsSummary from '../../components/MetricsSummary';
+import SuggestionsPanel from '../../components/SuggestionsPanel';
 
 // Add these static generation methods to improve build-time handling
 export async function getStaticPaths() {
@@ -42,7 +46,12 @@ export default function ContentDashboard() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeWeek, setActiveWeek] = useState(0); // Track the active week tab (0, 1, 2)
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [showRefreshBanner, setShowRefreshBanner] = useState(true);
+  
+  // Mock last updated date for strategy refresh banner
+  const lastUpdatedWeeks = 10; // More than 9 weeks to show banner
   
   // States for metrics
   const [metrics, setMetrics] = useState({
@@ -309,401 +318,176 @@ export default function ContentDashboard() {
     setSuggestions(suggestions);
   };
 
-  // Handle suggestion actions
-  const handleSuggestionAction = (action) => {
-    switch (action) {
-      case 'Create content':
-        // Navigate to content creation for posts that need content
-        const firstEmptyPost = posts.find(post => 
-          post.status === 'scheduled' && 
-          new Date(post.scheduled_date) > new Date() &&
-          (!post.content || post.content.trim() === '')
-        );
-        if (firstEmptyPost) {
-          router.push(`/calendar/${id}/post/${firstEmptyPost.id}`);
+  // Organize posts by week
+  const getPostsByWeek = () => {
+    if (!posts.length) return [[], [], []];
+    
+    // Sort posts by scheduled date
+    const sortedPosts = [...posts].sort((a, b) => 
+      new Date(a.scheduled_date) - new Date(b.scheduled_date)
+    );
+    
+    // Get the start of the current week (Monday)
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust when day is Sunday
+    const startOfWeek = new Date(now.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // Create dates for 3 weeks
+    const week1Start = startOfWeek;
+    const week1End = new Date(week1Start);
+    week1End.setDate(week1Start.getDate() + 6);
+    
+    const week2Start = new Date(week1End);
+    week2Start.setDate(week2Start.getDate() + 1);
+    const week2End = new Date(week2Start);
+    week2End.setDate(week2Start.getDate() + 6);
+    
+    const week3Start = new Date(week2End);
+    week3Start.setDate(week3Start.getDate() + 1);
+    const week3End = new Date(week3Start);
+    week3End.setDate(week3Start.getDate() + 6);
+    
+    // Filter posts by week
+    const week1Posts = sortedPosts.filter(post => {
+      const postDate = new Date(post.scheduled_date);
+      return postDate >= week1Start && postDate <= week1End;
+    });
+    
+    const week2Posts = sortedPosts.filter(post => {
+      const postDate = new Date(post.scheduled_date);
+      return postDate >= week2Start && postDate <= week2End;
+    });
+    
+    const week3Posts = sortedPosts.filter(post => {
+      const postDate = new Date(post.scheduled_date);
+      return postDate >= week3Start && postDate <= week3End;
+    });
+    
+    return [week1Posts, week2Posts, week3Posts];
+  };
+
+  // Generate a new week of content
+  const handleGenerateNewWeek = async () => {
+    setGenerateLoading(true);
+    
+    // Mock API call - would be replaced with actual generation logic
+    setTimeout(() => {
+      // Create some mock posts for the new week
+      const now = new Date();
+      const startOfNextWeek = new Date(now);
+      startOfNextWeek.setDate(now.getDate() + 7 + (1 - now.getDay())); // Next Monday
+      
+      const newPosts = [
+        {
+          id: `generated-${Date.now()}-1`,
+          title: 'Generated Post 1',
+          content: 'AI generated content for your social media.',
+          channel: 'Instagram',
+          post_type: 'Image',
+          scheduled_date: new Date(startOfNextWeek).toISOString(),
+          status: 'draft',
+          calendar_id: id,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
+        },
+        {
+          id: `generated-${Date.now()}-2`,
+          title: 'Generated Post 2',
+          content: 'More AI generated content customized for your audience.',
+          channel: 'Facebook',
+          post_type: 'Video',
+          scheduled_date: new Date(startOfNextWeek.setDate(startOfNextWeek.getDate() + 2)).toISOString(),
+          status: 'draft',
+          calendar_id: id,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
+        },
+        {
+          id: `generated-${Date.now()}-3`,
+          title: 'Generated Post 3',
+          content: 'Strategic content aligned with your marketing goals.',
+          channel: 'LinkedIn',
+          post_type: 'Article',
+          scheduled_date: new Date(startOfNextWeek.setDate(startOfNextWeek.getDate() + 2)).toISOString(),
+          status: 'draft',
+          calendar_id: id,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
         }
+      ];
+      
+      // Add new posts to state
+      setPosts(prevPosts => [...prevPosts, ...newPosts]);
+      setGenerateLoading(false);
+      toast.success('New week of content generated!');
+      
+      // Switch to the week containing the new content
+      setActiveWeek(2);
+    }, 2000);
+  };
+
+  // Handle suggestion action
+  const handleSuggestionAction = (suggestion) => {
+    console.log('Action triggered for suggestion:', suggestion);
+    
+    // Handle different suggestion actions
+    switch (suggestion.actionLabel) {
+      case 'Add Video Post':
+        router.push(`/post-editor/new?calendarId=${id}&type=video`);
         break;
-        
-      case 'Schedule posts':
-        // Navigate to new post creation
-        router.push(`/calendar/${id}/post/new`);
+      case 'Schedule Post':
+        router.push(`/post-editor/new?calendarId=${id}`);
         break;
-        
-      case 'Update strategy':
-        // Navigate to strategy page
-        if (calendar?.strategy_id) {
-          router.push(`/strategy/${calendar.strategy_id}`);
-        } else {
-          router.push('/marketing-plan');
-        }
+      case 'View Details':
+        toast.info('Viewing suggestion details (placeholder)');
         break;
-        
-      case 'Create outline':
-        // Navigate to content outline creation
-        if (calendar?.strategy_id) {
-          router.push(`/content/new?strategyId=${calendar.strategy_id}`);
-        } else {
-          router.push('/marketing-plan');
-        }
-        break;
-        
-      case 'View analytics':
-        // Navigate to analytics page (if it exists)
-        router.push(`/calendar/${id}/analytics`);
-        break;
-        
       default:
-        console.log('Unknown action:', action);
+        console.log('Unknown action:', suggestion.actionLabel);
     }
   };
 
-  // New function to create default posts when no content plan exists
-  const createDefaultPosts = async (calendarId, calendarData) => {
-    try {
-      console.log('Creating default posts for calendar:', calendarId);
-      
-      if (!calendarId || !calendarData) {
-        console.error('Missing required data for creating default posts');
-        return null;
-      }
-      
-      // Use calendar start date or default to current date
-      const startDate = calendarData.start_date ? new Date(calendarData.start_date) : new Date();
-      const defaultPosts = [];
-      
-      // Get target audience from strategy or default
-      const targetAudience = calendarData.strategy?.target_audience || 'General audience';
-      
-      // Create 8 default posts (2 per week for 4 weeks)
-      for (let week = 0; week < 4; week++) {
-        // Monday post
-        const mondayDate = new Date(startDate);
-        mondayDate.setDate(startDate.getDate() + (week * 7));
-        
-        // Thursday post
-        const thursdayDate = new Date(startDate);
-        thursdayDate.setDate(startDate.getDate() + (week * 7) + 3);
-        
-        // Create the posts
-        defaultPosts.push({
-          calendar_id: calendarId,
-          title: `Week ${week + 1} Primary Post`,
-          content: '',
-          channel: week % 2 === 0 ? 'linkedin' : 'instagram',
-          post_type: 'post',
-          status: 'draft',
-          scheduled_date: mondayDate.toISOString().split('T')[0],
-          target_audience: targetAudience,
-          strategy_id: calendarData.strategy_id || null,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          engagement: { likes: 0, comments: 0, shares: 0 }
-        });
-        
-        defaultPosts.push({
-          calendar_id: calendarId,
-          title: `Week ${week + 1} Secondary Post`,
-          content: '',
-          channel: week % 2 === 0 ? 'twitter' : 'facebook',
-          post_type: week % 2 === 0 ? 'image' : 'video',
-          status: 'draft',
-          scheduled_date: thursdayDate.toISOString().split('T')[0],
-          target_audience: targetAudience,
-          strategy_id: calendarData.strategy_id || null,
-          user_id: user.id,
-          created_at: new Date().toISOString(),
-          engagement: { likes: 0, comments: 0, shares: 0 }
-        });
-      }
-      
-      console.log(`Inserting ${defaultPosts.length} default posts`);
-      
-      // Insert all posts in a single batch operation
-      const { data: insertedPosts, error } = await supabase
-        .from('calendar_posts')
-        .insert(defaultPosts)
-        .select();
-        
-      if (error) {
-        console.error('Error creating default posts:', error);
-        toast.error('Failed to create default posts');
-        return null;
-      }
-      
-      console.log(`Successfully created ${insertedPosts.length} default posts`);
-      
-      // Update calendar progress
-      await updateCalendarProgress(calendarId, 0);
-      
-      // Set the posts in state
-      setPosts(insertedPosts);
-      
-      // Calculate metrics with the new posts
-      calculateMetrics(insertedPosts);
-      
-      // Generate suggestions
-      generateSuggestions(insertedPosts, calendarData);
-      
-      return insertedPosts;
-    } catch (error) {
-      console.error('Error in createDefaultPosts:', error);
-      toast.error('Failed to create default posts');
-      return null;
-    }
-  };
-  
-  const updatePostStatus = async (postId, newStatus) => {
-    try {
-      setIsLoading(true);
-      
-      if (!postId) {
-        toast.error('Post ID is required to update status');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log(`Updating post ${postId} status to ${newStatus}`);
-      
-      // Update the post status in the database
-      const { data, error } = await supabase
-        .from('calendar_posts')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', postId)
-        .select();
-        
-      if (error) {
-        console.error('Error updating post status:', error);
-        toast.error('Failed to update post status');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Successfully updated post status');
-      
-      // Update the post in the state
-      const updatedPosts = posts.map(post => 
-        post.id === postId ? { ...post, status: newStatus } : post
-      );
-      
-      setPosts(updatedPosts);
-      
-      // Update the calendar progress
-      await updateCalendarProgress(id);
-      
-      // Recalculate metrics with the updated posts
-      calculateMetrics(updatedPosts);
-      
-      toast.success(`Post status updated to ${newStatus}`);
-    } catch (error) {
-      console.error('Error in updatePostStatus:', error);
-      toast.error('Failed to update post status');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const updatePostEngagement = async (postId, engagementData) => {
-    try {
-      setIsLoading(true);
-      
-      if (!postId) {
-        toast.error('Post ID is required to update engagement');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log(`Updating engagement for post ${postId}`, engagementData);
-      
-      // Update the post engagement metrics in the database
-      const { data, error } = await supabase
-        .from('calendar_posts')
-        .update({
-          ...engagementData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', postId)
-        .select();
-        
-      if (error) {
-        console.error('Error updating post engagement:', error);
-        toast.error('Failed to update engagement metrics');
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log('Successfully updated post engagement');
-      
-      // Update the post in the state
-      const updatedPosts = posts.map(post => 
-        post.id === postId ? { ...post, ...engagementData } : post
-      );
-      
-      setPosts(updatedPosts);
-      
-      // Recalculate metrics with the updated posts
-      calculateMetrics(updatedPosts);
-      
-      toast.success('Engagement metrics updated');
-    } catch (error) {
-      console.error('Error in updatePostEngagement:', error);
-      toast.error('Failed to update engagement metrics');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const updateCalendarProgress = async (calendarId, postsData) => {
-    try {
-      // Calculate progress based on published posts
-      const totalPosts = postsData.length;
-      const publishedPosts = postsData.filter(post => post.status === 'published').length;
-      const progress = totalPosts > 0 ? Math.round((publishedPosts / totalPosts) * 100) : 0;
-      
-      // Update the calendar in the database
-      const { data, error } = await supabase
-        .from('calendars')
-        .update({ 
-          progress,
-          posts_scheduled: totalPosts,
-          posts_published: publishedPosts,
-          modified_at: new Date().toISOString()
-        })
-        .eq('id', calendarId)
-        .select();
-      
-      if (error) throw error;
-      
-      console.log('Updated calendar progress:', progress, '% complete');
-      // Update local state
-      setCalendar(prev => ({...prev, progress, posts_scheduled: totalPosts, posts_published: publishedPosts}));
-    } catch (error) {
-      console.error('Error updating calendar progress:', error);
-    }
-  };
-  
-  const addNewPost = async (newPostData) => {
-    try {
-      setIsLoading(true);
-      
-      // Ensure all required fields are present
-      const postToInsert = {
-        calendar_id: id,
-        user_id: user.id,
-        strategy_id: calendar?.strategy_id,
-        project_id: calendar?.project_id,
-        platform: newPostData.platform || 'Instagram',
-        content_type: newPostData.content_type || 'Post',
-        title: newPostData.title || `New post - ${new Date().toLocaleDateString()}`,
-        content: newPostData.content || '',
-        status: newPostData.status || 'draft',
-        scheduled_date: newPostData.scheduled_date || new Date().toISOString(),
-        target_audience: newPostData.target_audience || calendar?.strategy?.target_audience || 'General audience',
-        engagement: { likes: 0, comments: 0, shares: 0 },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      console.log('Adding new post:', postToInsert);
-      
-      const { data, error } = await supabase
-        .from('calendar_posts')
-        .insert([postToInsert])
-        .select();
-        
-      if (error) {
-        console.error('Error adding new post:', error);
-        toast.error('Failed to add new post');
-        throw error;
-      }
-      
-      console.log('New post added:', data);
-      
-      // Add the new post to the state
-      const newPost = data[0];
-      setPosts(prevPosts => [...prevPosts, newPost]);
-      
-      // Update calendar progress
-      await updateCalendarProgress(id, posts);
-      
-      toast.success('New post added successfully');
-      return newPost;
-    } catch (error) {
-      console.error('Error in addNewPost:', error);
-      toast.error('Failed to add new post');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Get icon component based on name
-  const getIconForSuggestion = (iconName) => {
-    switch (iconName) {
-      case 'pencil':
-        return <PencilIcon className={styles.suggestionIcon} />;
-      case 'calendar':
-        return <CalendarIcon className={styles.suggestionIcon} />;
-      case 'refresh':
-        return <ArrowPathIcon className={styles.suggestionIcon} />;
-      case 'document':
-        return <DocumentPlusIcon className={styles.suggestionIcon} />;
-      case 'chart':
-        return <ChartPieIcon className={styles.suggestionIcon} />;
-      default:
-        return <LightBulbIcon className={styles.suggestionIcon} />;
-    }
-  };
-  
-  // Get filtered posts based on active tab
-  const getFilteredPosts = () => {
+  // Create week tabs with day labels
+  const getWeekDates = (weekIndex) => {
     const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust when day is Sunday
+    const startOfWeek = new Date(now.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
     
-    switch (activeTab) {
-      case 'upcoming':
-        return posts
-          .filter(post => 
-            post.status === 'scheduled' && 
-            new Date(post.scheduled_date) > now
-          )
-          .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date))
-          .slice(0, 5);
-          
-      case 'needsContent':
-        return posts
-          .filter(post => 
-            post.status === 'scheduled' && 
-            new Date(post.scheduled_date) > now &&
-            (!post.content || post.content.trim() === '')
-          )
-          .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
-          
-      case 'published':
-        return posts
-          .filter(post => post.status === 'published')
-          .sort((a, b) => new Date(b.published_date || b.scheduled_date) - new Date(a.published_date || a.scheduled_date));
-          
-      case 'all':
-      default:
-        return posts
-          .sort((a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date));
+    // Adjust for the week index
+    const weekStart = new Date(startOfWeek);
+    weekStart.setDate(weekStart.getDate() + (weekIndex * 7));
+    
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart);
+      day.setDate(day.getDate() + i);
+      days.push(day);
     }
+    
+    return days;
   };
 
   // Format date to readable string
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    }
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
+
+  // Post placeholder for empty days
+  const EmptyDayPlaceholder = ({ date }) => (
+    <div className={styles.emptyDay}>
+      <p className={styles.emptyDayDate}>{formatDate(date)}</p>
+      <p className={styles.emptyDayText}>No posts scheduled</p>
+      <Link 
+        href={`/post-editor/new?calendarId=${id}&date=${date.toISOString().split('T')[0]}`} 
+        className={styles.addPostLink}
+      >
+        + Add Post
+      </Link>
+    </div>
+  );
 
   return (
     <div className={styles.dashboardContainer}>
@@ -742,217 +526,125 @@ export default function ContentDashboard() {
               </div>
               
               <div className={styles.dashboardActions}>
-                <Link href={`/calendar/${id}/post/new`} className={styles.primaryButton}>
-                  + Create New Post
+                <Link href={`/post-editor/new?calendarId=${id}`} className={styles.primaryButton}>
+                  + New Post
                 </Link>
               </div>
             </div>
             
-            {/* Dashboard layout with 3 main sections */}
-            <div className={styles.dashboardGrid}>
-              {/* Left column: Key metrics */}
-              <section className={styles.metricsSection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <ChartBarIcon className={styles.sectionIcon} />
-                    Performance Metrics
-                  </h2>
-                </div>
-                
-                <div className={styles.metricsGrid}>
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricValue}>{metrics.totalPosts}</div>
-                    <div className={styles.metricLabel}>Total Posts</div>
-                  </div>
-                  
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricValue}>{metrics.published}</div>
-                    <div className={styles.metricLabel}>Published</div>
-                  </div>
-                  
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricValue}>{metrics.scheduled}</div>
-                    <div className={styles.metricLabel}>Scheduled</div>
-                  </div>
-                  
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricValue}>{metrics.drafts}</div>
-                    <div className={styles.metricLabel}>Drafts</div>
-                  </div>
-                </div>
-                
-                <div className={styles.engagementMetrics}>
-                  <h3 className={styles.engagementTitle}>Engagement</h3>
-                  
-                  <div className={styles.engagementGrid}>
-                    <div className={styles.engagementMetric}>
-                      <div className={styles.engagementValue}>{metrics.engagement.likes}</div>
-                      <div className={styles.engagementLabel}>Likes</div>
-                    </div>
-                    
-                    <div className={styles.engagementMetric}>
-                      <div className={styles.engagementValue}>{metrics.engagement.comments}</div>
-                      <div className={styles.engagementLabel}>Comments</div>
-                    </div>
-                    
-                    <div className={styles.engagementMetric}>
-                      <div className={styles.engagementValue}>{metrics.engagement.shares}</div>
-                      <div className={styles.engagementLabel}>Shares</div>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.performanceScore}>
-                    <div className={styles.scoreLabel}>Performance Score</div>
-                    <div className={styles.scoreBar}>
-                      <div 
-                        className={styles.scoreValue}
-                        style={{ width: `${metrics.performanceScore}%` }}
-                      />
-                    </div>
-                    <div className={styles.scoreNumber}>{metrics.performanceScore}%</div>
-                  </div>
-                </div>
-              </section>
-              
-              {/* Center column: Upcoming content */}
-              <section className={styles.contentSection}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>
-                    <CalendarIcon className={styles.sectionIcon} />
-                    Upcoming Content
-                  </h2>
-                  
-                  <div className={styles.tabGroup}>
-                    <button
-                      className={`${styles.tabButton} ${activeTab === 'upcoming' ? styles.activeTab : ''}`}
-                      onClick={() => setActiveTab('upcoming')}
-                    >
-                      Next Up
-                    </button>
-                    <button
-                      className={`${styles.tabButton} ${activeTab === 'needsContent' ? styles.activeTab : ''}`}
-                      onClick={() => setActiveTab('needsContent')}
-                    >
-                      Needs Content
-                    </button>
-                    <button
-                      className={`${styles.tabButton} ${activeTab === 'published' ? styles.activeTab : ''}`}
-                      onClick={() => setActiveTab('published')}
-                    >
-                      Published
-                    </button>
-                    <button
-                      className={`${styles.tabButton} ${activeTab === 'all' ? styles.activeTab : ''}`}
-                      onClick={() => setActiveTab('all')}
-                    >
-                      View All
-                    </button>
-                  </div>
-                </div>
-                
-                <div className={styles.contentCards}>
-                  {getFilteredPosts().length > 0 ? (
-                    getFilteredPosts().map(post => (
-                      <div key={post.id} className={styles.contentCard}>
-                        <div className={styles.contentCardHeader}>
-                          <div className={styles.contentMeta}>
-                            <span className={styles.contentPlatform}>{post.channel || 'Instagram'}</span>
-                            <span className={styles.contentDate}>{formatDate(post.scheduled_date)}</span>
-                          </div>
-                          <div className={`${styles.contentStatus} ${styles[post.status]}`}>
-                            {post.status === 'published' && 'Published'}
-                            {post.status === 'scheduled' && 'Scheduled'}
-                            {post.status === 'draft' && 'Draft'}
-                          </div>
-                        </div>
-                        
-                        <h3 className={styles.contentTitle}>{post.title}</h3>
-                        
-                        <div className={styles.contentType}>{post.post_type || 'Post'}</div>
-                        
-                        {(!post.content || post.content.trim() === '') && post.status === 'scheduled' ? (
-                          <div className={styles.contentNeeded}>
-                            <span className={styles.contentNeededLabel}>Content needed</span>
-                            <Link href={`/calendar/${id}/post/${post.id}`} className={styles.contentNeededButton}>
-                              Create Now
-                            </Link>
-                          </div>
-                        ) : (
-                          <p className={styles.contentExcerpt}>
-                            {post.content ? (post.content.length > 80 ? post.content.substring(0, 80) + '...' : post.content) : 'No content yet'}
-                          </p>
-                        )}
-                        
-                        <div className={styles.contentCardFooter}>
-                          <Link href={`/calendar/${id}/post/${post.id}`} className={styles.contentViewButton}>
-                            {post.status === 'published' ? 'View Details' : 'Edit Post'}
-                          </Link>
-                          
-                          {post.status === 'published' && post.engagement && (
-                            <div className={styles.miniEngagement}>
-                              <span>{post.engagement.likes || 0} likes</span>
-                              <span>{post.engagement.comments || 0} comments</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className={styles.emptyContent}>
-                      <p>No {activeTab === 'upcoming' ? 'upcoming' : activeTab === 'needsContent' ? 'posts needing content' : activeTab === 'published' ? 'published posts' : 'posts'} found.</p>
-                      <Link href={`/calendar/${id}/post/new`} className={styles.emptyContentAction}>
-                        Create a new post
-                      </Link>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={styles.contentFooter}>
-                  <Link href={`/calendar/${id}/view`} className={styles.viewAllButton}>
-                    View Full Calendar
+            {/* Strategy Refresh Banner - shown if lastUpdatedWeeks > 9 */}
+            {showRefreshBanner && lastUpdatedWeeks > 9 && (
+              <div className={styles.strategyRefreshBanner}>
+                <div className={styles.bannerContent}>
+                  <ArrowPathIcon className={styles.bannerIcon} />
+                  <p>It's been {lastUpdatedWeeks} weeks since you updated your strategy. Time for a refresh?</p>
+                  <Link href={`/strategy/refresh?strategyId=${calendar?.strategy_id}`} className={styles.bannerButton}>
+                    Review Strategy
                   </Link>
                 </div>
-              </section>
-              
-              {/* Right column: Suggestions */}
-              <section className={styles.suggestionsSection}>
+                <button 
+                  className={styles.closeBannerButton}
+                  onClick={() => setShowRefreshBanner(false)}
+                >
+                  <XMarkIcon className={styles.closeIcon} />
+                </button>
+              </div>
+            )}
+            
+            {/* Main Dashboard Grid */}
+            <div className={styles.newDashboardGrid}>
+              {/* Left column: Calendar view */}
+              <section className={styles.calendarSection}>
                 <div className={styles.sectionHeader}>
                   <h2 className={styles.sectionTitle}>
-                    <LightBulbIcon className={styles.sectionIcon} />
-                    Suggestions & Next Steps
+                    3-Week Content Calendar
                   </h2>
+                  
+                  <div className={styles.weekTabs}>
+                    <button 
+                      className={`${styles.weekTab} ${activeWeek === 0 ? styles.activeWeekTab : ''}`}
+                      onClick={() => setActiveWeek(0)}
+                    >
+                      This Week
+                    </button>
+                    <button 
+                      className={`${styles.weekTab} ${activeWeek === 1 ? styles.activeWeekTab : ''}`}
+                      onClick={() => setActiveWeek(1)}
+                    >
+                      Next Week
+                    </button>
+                    <button 
+                      className={`${styles.weekTab} ${activeWeek === 2 ? styles.activeWeekTab : ''}`}
+                      onClick={() => setActiveWeek(2)}
+                    >
+                      Week After
+                    </button>
+                  </div>
                 </div>
                 
-                <div className={styles.suggestionsList}>
-                  {suggestions.length > 0 ? (
-                    suggestions.map((suggestion, index) => (
-                      <div 
-                        key={index} 
-                        className={`${styles.suggestionCard} ${styles[suggestion.priority]}`}
-                      >
-                        <div className={styles.suggestionIcon}>
-                          {getIconForSuggestion(suggestion.icon)}
-                        </div>
-                        
-                        <div className={styles.suggestionContent}>
-                          <h3 className={styles.suggestionTitle}>{suggestion.title}</h3>
-                          <p className={styles.suggestionDescription}>{suggestion.description}</p>
-                          
-                          <button 
-                            className={styles.suggestionButton}
-                            onClick={() => handleSuggestionAction(suggestion.action)}
-                          >
-                            {suggestion.action}
-                          </button>
-                        </div>
+                <div className={styles.weekCalendarView}>
+                  {/* Day headers */}
+                  <div className={styles.calendarDayHeaders}>
+                    {getWeekDates(activeWeek).map((date, index) => (
+                      <div key={index} className={styles.dayHeader}>
+                        {formatDate(date)}
                       </div>
-                    ))
-                  ) : (
-                    <div className={styles.emptySuggestions}>
-                      <p>No suggestions yet. Keep creating and publishing content!</p>
-                    </div>
-                  )}
+                    ))}
+                  </div>
+                  
+                  {/* Posts for each day */}
+                  <div className={styles.calendarDays}>
+                    {getWeekDates(activeWeek).map((date, dayIndex) => {
+                      const dayPosts = getPostsByWeek()[activeWeek].filter(post => {
+                        const postDate = new Date(post.scheduled_date);
+                        return postDate.getDate() === date.getDate() && 
+                               postDate.getMonth() === date.getMonth() && 
+                               postDate.getFullYear() === date.getFullYear();
+                      });
+                      
+                      return (
+                        <div key={dayIndex} className={styles.calendarDay}>
+                          {dayPosts.length > 0 ? (
+                            dayPosts.map(post => (
+                              <ContentCard key={post.id} post={post} calendarId={id} />
+                            ))
+                          ) : (
+                            <EmptyDayPlaceholder date={date} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+                
+                <div className={styles.generateButtonContainer}>
+                  <button 
+                    className={styles.generateButton}
+                    onClick={handleGenerateNewWeek}
+                    disabled={generateLoading}
+                  >
+                    {generateLoading ? (
+                      <>
+                        <div className={styles.smallSpinner}></div>
+                        Generating...
+                      </>
+                    ) : (
+                      <>Generate Next Week</>
+                    )}
+                  </button>
+                </div>
+              </section>
+              
+              {/* Right column: Metrics and Suggestions */}
+              <section className={styles.metricsAndSuggestionsSection}>
+                {/* Engagement Summary */}
+                <MetricsSummary metrics={metrics.engagement} calendarId={id} />
+                
+                {/* AI Suggestions Panel */}
+                <SuggestionsPanel 
+                  suggestions={suggestions} 
+                  onSuggestionAction={handleSuggestionAction}
+                />
               </section>
             </div>
           </>
