@@ -1,33 +1,41 @@
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.5rem 0;
-  font-size: 0.9rem;
+.breadcrumbNav {
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
 }
 
-.item {
+.breadcrumbList {
   display: flex;
   align-items: center;
-  color: #666;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.item a {
-  color: #2196f3;
+.breadcrumbItem {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumbLink {
+  color: #3454D1;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.item a:hover {
+.breadcrumbLink:hover {
+  color: #2a43a7;
   text-decoration: underline;
 }
 
-.separator {
+.breadcrumbSeparator {
+  width: 16px;
+  height: 16px;
   margin: 0 0.5rem;
-  color: #ccc;
-  font-size: 0.8rem;
+  color: #94a3b8;
 }
 
-.active {
+.breadcrumbCurrent {
+  color: #1e293b;
   font-weight: 500;
-  color: #333;
 } 
