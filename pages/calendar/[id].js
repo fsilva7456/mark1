@@ -86,6 +86,80 @@ export default function ContentDashboard() {
     }
   }, [id, user, loading, router]);
   
+  // Create default posts when a new calendar is created
+  const createDefaultPosts = async (calendarId, calendarData) => {
+    try {
+      console.log('Creating default posts for calendar:', calendarId);
+      
+      // Get the start of the current week (Monday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust when day is Sunday
+      const startOfWeek = new Date(now.setDate(diff));
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      // Create sample posts for the current week
+      const defaultPosts = [
+        {
+          title: 'Welcome Post',
+          content: 'Introducing our new content series. Stay tuned for more!',
+          channel: 'Instagram',
+          post_type: 'Image',
+          scheduled_date: new Date(startOfWeek).toISOString(),
+          status: 'draft',
+          calendar_id: calendarId,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
+        },
+        {
+          title: 'Product Feature',
+          content: 'Check out these amazing features of our product.',
+          channel: 'Facebook',
+          post_type: 'Article',
+          scheduled_date: new Date(startOfWeek.setDate(startOfWeek.getDate() + 2)).toISOString(),
+          status: 'draft',
+          calendar_id: calendarId,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
+        },
+        {
+          title: 'Customer Story',
+          content: 'How our solutions helped this customer achieve their goals.',
+          channel: 'LinkedIn',
+          post_type: 'Video',
+          scheduled_date: new Date(startOfWeek.setDate(startOfWeek.getDate() + 2)).toISOString(),
+          status: 'draft',
+          calendar_id: calendarId,
+          user_id: user.id,
+          engagement: { likes: 0, comments: 0, shares: 0 }
+        }
+      ];
+      
+      // Insert posts into database
+      const { data, error } = await supabase
+        .from('calendar_posts')
+        .insert(defaultPosts)
+        .select();
+      
+      if (error) {
+        console.error('Error creating default posts:', error);
+        toast.error('Failed to create default posts');
+        return;
+      }
+      
+      console.log('Created default posts:', data);
+      setPosts(data);
+      toast.success('Default posts created for your calendar');
+      
+      // Calculate metrics and generate suggestions
+      calculateMetrics(data);
+      generateSuggestions(data, calendarData);
+    } catch (error) {
+      console.error('Error in createDefaultPosts:', error);
+      toast.error('Failed to create default posts');
+    }
+  };
+  
   const fetchCalendarDetails = async () => {
     try {
       setIsLoading(true);
