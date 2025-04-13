@@ -1,4 +1,8 @@
-# Mark1 App
+# Mark1 Marketing Platform
+
+A comprehensive content marketing and social media management platform.
+
+Updated: November 14, 2023
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
