@@ -2,168 +2,100 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChartBarIcon } from '@heroicons/react/24/outline';
 import styles from '../styles/Calendar.module.css';
-import { supabase } from '../lib/supabase';
-import { subDays, parseISO } from 'date-fns';
 
-const MetricsSummary = ({ calendarId }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [metrics, setMetrics] = useState(null);
-
+const MetricsSummary = ({ calendarId, metrics = null }) => {
+  const [isLoading, setIsLoading] = useState(!metrics);
+  const [localMetrics, setLocalMetrics] = useState(metrics || {
+    engagement: {
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      reach: 0
+    },
+    engagementRate: 0,
+    performanceScore: 0
+  });
+  
+  // If no metrics are passed in props, we could fetch them here
   useEffect(() => {
-    if (calendarId) {
-      fetchEngagementMetrics();
-    }
-  }, [calendarId]);
-
-  const fetchEngagementMetrics = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Calculate date for 7 days ago
-      const sevenDaysAgo = subDays(new Date(), 7).toISOString();
-      
-      // Fetch published posts with engagement data from the last 7 days
-      const { data: postsData, error } = await supabase
-        .from('calendar_posts')
-        .select('*')
-        .eq('calendar_id', calendarId)
-        .eq('status', 'published')
-        .gte('scheduled_date', sevenDaysAgo)
-        .order('scheduled_date', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Calculate totals from posts with engagement data
-      let totalLikes = 0;
-      let totalComments = 0;
-      let totalShares = 0;
-      let totalReach = 0;
-      let postsWithData = 0;
-      
-      postsData.forEach(post => {
-        if (post.engagement) {
-          totalLikes += post.engagement.likes || 0;
-          totalComments += post.engagement.comments || 0;
-          totalShares += post.engagement.shares || 0;
-          totalReach += post.engagement.reach || 0;
-          if (post.engagement.likes || post.engagement.comments || post.engagement.shares) {
-            postsWithData++;
-          }
-        }
-      });
-      
-      // Calculate engagement rate
-      const totalEngagements = totalLikes + totalComments + totalShares;
-      const engagementRate = totalReach > 0 
-        ? ((totalEngagements / totalReach) * 100).toFixed(1) 
-        : 0;
-      
-      // Set metrics state
-      setMetrics({
-        period: '7 days',
-        likes: totalLikes,
-        comments: totalComments,
-        shares: totalShares,
-        totalReach: totalReach,
-        engagementRate: engagementRate,
-        hasData: postsWithData > 0
-      });
-    } catch (error) {
-      console.error('Error fetching engagement metrics:', error);
-      setMetrics(null);
-    } finally {
+    if (metrics) {
+      setLocalMetrics(metrics);
       setIsLoading(false);
     }
+  }, [metrics]);
+  
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    } else {
+      return num.toString();
+    }
   };
-
-  // If still loading or no metrics available
+  
   if (isLoading) {
     return (
       <div className={styles.metricsSummary}>
         <div className={styles.metricsHeader}>
           <h3 className={styles.metricsTitle}>
             <ChartBarIcon className={styles.metricsIcon} />
-            Engagement Summary
-          </h3>
-          <span className={styles.metricsPeriod}>Loading...</span>
-        </div>
-        <div className={`${styles.metricsLoadingState} ${styles.metricsGrid}`}>
-          <div className={styles.spinner}></div>
-        </div>
-      </div>
-    );
-  }
-
-  // No data state
-  if (!metrics || !metrics.hasData) {
-    return (
-      <div className={styles.metricsSummary}>
-        <div className={styles.metricsHeader}>
-          <h3 className={styles.metricsTitle}>
-            <ChartBarIcon className={styles.metricsIcon} />
-            Engagement Summary
+            Engagement Metrics
           </h3>
           <span className={styles.metricsPeriod}>Last 7 days</span>
         </div>
-        <div className={styles.metricsEmptyState}>
-          <p>No engagement data yet.</p>
-          <Link 
-            href={`/engagement?calendarId=${calendarId}`} 
-            className={styles.enterMetricsButton}
-          >
-            Enter Metrics
-          </Link>
+        <div className={styles.metricsLoadingState}>
+          <div className={styles.spinner}></div>
+          <p>Loading metrics...</p>
         </div>
       </div>
     );
   }
-
+  
+  const { engagement, engagementRate } = localMetrics;
+  
   return (
     <div className={styles.metricsSummary}>
       <div className={styles.metricsHeader}>
         <h3 className={styles.metricsTitle}>
           <ChartBarIcon className={styles.metricsIcon} />
-          Engagement Summary
+          Engagement Metrics
         </h3>
-        <span className={styles.metricsPeriod}>
-          Last {metrics.period}
-        </span>
+        <span className={styles.metricsPeriod}>Last 7 days</span>
       </div>
-
+      
       <div className={styles.metricsGrid}>
         <div className={styles.metricBox}>
-          <div className={styles.metricValue}>{metrics.likes}</div>
-          <div className={styles.metricLabel}>Likes</div>
+          <p className={styles.metricValue}>{formatNumber(engagement.likes)}</p>
+          <p className={styles.metricLabel}>Likes</p>
         </div>
         <div className={styles.metricBox}>
-          <div className={styles.metricValue}>{metrics.comments}</div>
-          <div className={styles.metricLabel}>Comments</div>
+          <p className={styles.metricValue}>{formatNumber(engagement.comments)}</p>
+          <p className={styles.metricLabel}>Comments</p>
         </div>
         <div className={styles.metricBox}>
-          <div className={styles.metricValue}>{metrics.shares}</div>
-          <div className={styles.metricLabel}>Shares</div>
+          <p className={styles.metricValue}>{formatNumber(engagement.shares)}</p>
+          <p className={styles.metricLabel}>Shares</p>
+        </div>
+        <div className={styles.metricBox}>
+          <p className={styles.metricValue}>{formatNumber(engagement.reach)}</p>
+          <p className={styles.metricLabel}>Reach</p>
         </div>
       </div>
-
+      
       <div className={styles.metricsSummaryFooter}>
-        <div className={styles.totalReach}>
-          <span className={styles.totalReachLabel}>Total Reach:</span>
-          <span className={styles.totalReachValue}>{metrics.totalReach}</span>
-        </div>
         <div className={styles.engagementRate}>
-          <span className={styles.engagementRateLabel}>Engagement Rate:</span>
-          <span className={styles.engagementRateValue}>{metrics.engagementRate}%</span>
+          <span className={styles.engagementRateLabel}>Engagement Rate</span>
+          <span className={styles.engagementRateValue}>{engagementRate.toFixed(2)}%</span>
         </div>
+        
+        <Link 
+          href={`/engagement?calendarId=${calendarId}`}
+          className={styles.enterMetricsButton}
+        >
+          Update Metrics
+        </Link>
       </div>
-
-      <Link 
-        href={`/engagement?calendarId=${calendarId}`} 
-        className={styles.enterMetricsButton}
-      >
-        Enter Metrics
-      </Link>
     </div>
   );
 };
