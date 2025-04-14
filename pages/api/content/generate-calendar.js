@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { supabase } from '../../lib/supabase'; // Import Supabase client
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,7 +7,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { contentOutline, strategy, calendarParams, modelConfig } = req.body;
+    const { contentOutline, strategy, calendarParams, modelConfig, calendarId, userId } = req.body;
     
     // Log request details for debugging
     console.log("Calendar generation request:", {
@@ -16,14 +17,18 @@ export default async function handler(req, res) {
       requestHeaders: {
         contentType: req.headers['content-type'],
         userAgent: req.headers['user-agent']
-      }
+      },
+      calendarId,
+      userIdProvided: !!userId
     });
     
-    if (!contentOutline || !strategy || !calendarParams) {
+    if (!contentOutline || !strategy || !calendarParams || !calendarId || !userId) {
       console.error("Missing required parameters:", {
         hasContentOutline: !!contentOutline,
         hasStrategy: !!strategy,
-        hasCalendarParams: !!calendarParams
+        hasCalendarParams: !!calendarParams,
+        hasCalendarId: !!calendarId,
+        hasUserId: !!userId
       });
       
       return res.status(400).json({ 
@@ -31,7 +36,9 @@ export default async function handler(req, res) {
         received: JSON.stringify({
           hasContentOutline: !!contentOutline,
           hasStrategy: !!strategy,
-          hasCalendarParams: !!calendarParams
+          hasCalendarParams: !!calendarParams,
+          hasCalendarId: !!calendarId,
+          hasUserId: !!userId
         })
       });
     }
@@ -391,7 +398,59 @@ export default async function handler(req, res) {
         new Date(a.scheduledDate) - new Date(b.scheduledDate)
       );
       
-      return res.status(200).json({ posts: sortedPosts });
+      // --- SAVE POSTS TO SUPABASE --- 
+      if (jsonData.posts && jsonData.posts.length > 0) {
+          console.log(`Attempting to save ${jsonData.posts.length} posts to Supabase...`);
+          
+          const postsToInsert = jsonData.posts.map(post => ({
+              calendar_id: calendarId, // Add calendar ID
+              user_id: userId, // Add user ID
+              title: post.title || 'Untitled Post', 
+              content: post.content || '', // Ensure content exists
+              post_type: post.type || 'Text', // Map type to post_type
+              target_audience: post.audience || '', // Map audience
+              scheduled_date: post.scheduledDate, // Use the generated date
+              channel: post.channel || channels[0], // Use generated channel or default
+              status: 'scheduled', // Default status for generated posts
+              engagement: { likes: 0, comments: 0, shares: 0, reach: 0 } // Default engagement
+          }));
+          
+          // Insert posts into calendar_posts table
+          const { data: insertedPosts, error: insertError } = await supabase
+              .from('calendar_posts')
+              .insert(postsToInsert)
+              .select(); // Select to confirm insertion
+              
+          if (insertError) {
+              console.error('Error inserting posts into Supabase:', insertError);
+              // Decide if we should still return success or throw an error
+              // For now, log the error and continue, but maybe return error to user
+              // throw new Error(`Failed to save generated posts: ${insertError.message}`);
+              console.warn("Failed to save posts to database, but returning success as generation completed.");
+          } else {
+              console.log(`Successfully saved ${insertedPosts?.length || 0} posts to calendar_posts table.`);
+              
+              // Optionally: Update the main calendar record with post count
+              try {
+                 await supabase
+                     .from('calendars')
+                     .update({ posts_scheduled: insertedPosts?.length || 0, status: 'active' })
+                     .eq('id', calendarId);
+                 console.log(`Updated calendar ${calendarId} with post count.`);
+              } catch (updateError) {
+                 console.error(`Failed to update calendar ${calendarId} metadata:`, updateError);
+              }
+          }
+      } else {
+          console.log("No valid posts generated or parsed, skipping database insert.");
+      }
+      // --- END SAVE POSTS --- 
+      
+      // Return success message instead of posts array
+      return res.status(200).json({ 
+          message: `Calendar generated successfully. ${jsonData.posts?.length || 0} posts created.`,
+          note: jsonData.note // Include note if fallback was used
+      });
     } catch (parseError) {
       console.error('Error processing calendar response:', parseError);
       
