@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { supabase } from '../../../lib/supabase'; // Corrected path
+import { supabase } from '../../../../lib/supabase'; // Updated path after file move
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
