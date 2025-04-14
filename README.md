@@ -6,6 +6,30 @@ Updated: November 14, 2023
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Structure
+
+The project is organized into feature-based modules:
+
+```
+mark1/
+├── app/
+│   └── (modules)/          # Core feature modules
+│       ├── strategy/       # Strategy creation module
+│       ├── content-outline/# Content outline generation
+│       ├── calendar/       # Calendar creation module
+│       └── content-mgmt/   # Content management module
+├── components/
+│   └── shared/             # Shared UI components
+├── lib/                    # Shared utilities
+├── pages/
+│   └── api/                # API routes organized by module
+│       ├── strategy/       # Strategy-related endpoints
+│       ├── content-outline/# Content outline endpoints
+│       ├── calendar/       # Calendar endpoints
+│       └── content-mgmt/   # Content management endpoints
+└── contexts/               # React contexts for state management
+```
+
 ## Getting Started
 
 First, run the development server:

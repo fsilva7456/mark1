@@ -1,0 +1,14 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Don't include these files in GitHub stats
+*.lock binary
+package-lock.json binary
+
+# Don't include these files in GitHub language stats
+*.css linguist-vendored=false
+*.scss linguist-vendored=false
+
+# Exclude directories from GitHub language stats
+coverage/* linguist-generated=true
+.next/* linguist-generated=true
