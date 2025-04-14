@@ -679,7 +679,7 @@ export default function NewContent() {
     }
 
     setIsSaving(true);
-    const toastId = toast.loading("Saving Outline and Posts...");
+    const toastId = toast.loading("Saving Outline..."); // Updated toast message
 
     try {
         // Always check for existing outline first to get the ID
@@ -697,14 +697,17 @@ export default function NewContent() {
         }
         
         let outlineId = existingOutline?.id || savedOutlineId;
+        let operationType = ''; // To track if we inserted or updated
         
         // Now we either update an existing outline or insert a new one
         if (outlineId) {
             // Update existing outline
+            operationType = 'update';
             console.log("Updating existing outline ID:", outlineId);
             const { error: updateError } = await supabase
                 .from('content_outlines')
                 .update({
+                    // Update only the outline and timestamp
                     outline: contentOutline.map(week => ({
                         week: week.week,
                         theme: week.theme,
@@ -733,6 +736,7 @@ export default function NewContent() {
             console.log("Successfully updated outline");
         } else {
             // Insert new outline
+            operationType = 'insert';
             console.log("Inserting new outline for strategy:", selectedStrategy.id);
             const { data: insertData, error: insertError } = await supabase
                 .from('content_outlines')
@@ -776,66 +780,23 @@ export default function NewContent() {
             console.log("Successfully inserted new outline with ID:", outlineId);
         }
 
-        // Now handle content posts - delete old ones first
+        // --- REMOVED POST HANDLING LOGIC --- 
+        // The code that deleted from and inserted into content_posts 
+        // based on outlineId has been removed from this function.
+        // This function now ONLY saves the content outline itself.
+
         if (outlineId) {
-            console.log(`Deleting existing posts for outline ID: ${outlineId}`);
-            const { error: deleteError } = await supabase
-                .from('content_posts')
-                .delete()
-                .eq('content_outline_id', outlineId);
-                
-            if (deleteError) {
-                console.error("Error deleting old posts:", deleteError);
-                throw deleteError;
-            }
-            console.log("Successfully deleted old posts");
-            
-            // Insert new posts
-            const postsToInsert = [];
-            contentOutline.forEach(week => {
-                (week.posts || []).forEach(post => {
-                    postsToInsert.push({
-                        content_outline_id: outlineId,
-                        project_id: currentProject.id,
-                        user_id: user.id,
-                        title: post.topic,
-                        description: null,
-                        post_type: post.type,
-                        target_audience: post.audience,
-                        call_to_action: post.cta,
-                        persuasion_principle: post.principle,
-                        principle_explanation: post.principleExplanation,
-                        visual_concept: post.visual,
-                        proposed_caption: post.proposedCaption,
-                        status: 'draft'
-                    });
-                });
-            });
-
-            if (postsToInsert.length > 0) {
-                console.log(`Inserting ${postsToInsert.length} posts...`);
-                const { error: insertError } = await supabase
-                    .from('content_posts')
-                    .insert(postsToInsert);
-
-                if (insertError) {
-                    console.error("Error inserting posts:", insertError);
-                    throw insertError;
-                }
-                console.log("Successfully inserted posts");
-            }
-
             toast.dismiss(toastId);
-            toast.success("Outline and Posts Saved Successfully!");
+            toast.success(`Outline ${operationType === 'update' ? 'Updated' : 'Saved'} Successfully!`);
             setIsOutlineSaved(true);
             setSavedOutlineId(outlineId); // Store ID for future use
 
-            // Navigate to marketing-plan page after successful save
-            router.push('/marketing-plan');
+            // Keep user on the same page after saving outline
+            // router.push('/marketing-plan'); // Removed navigation
         }
     } catch (error) {
         toast.dismiss(toastId);
-        console.error("Error saving outline and posts:", error);
+        console.error("Error saving outline:", error);
         toast.error(`Save failed: ${error.message}`);
     } finally {
         setIsSaving(false);
