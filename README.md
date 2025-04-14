@@ -394,3 +394,4 @@ Each of these processes leverages AI technology to automate complex marketing ta
 2. When saving calendar data, ensure you're using the correct field names that exist in the database schema
 
 <!-- Trigger rebuild -->
+<!-- Adding a comment to trigger Vercel rebuild -->
