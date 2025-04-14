@@ -170,10 +170,47 @@ export default function CalendarParams() {
     }
     
     setIsGenerating(true);
-    const toastId = toast.loading('Generating your content calendar...');
+    const toastId = toast.loading('Creating calendar and generating posts...');
     
+    let newCalendarId = null; // To store the ID of the created calendar
+
     try {
-      // Prepare calendar parameters
+      // --- Step 1: Create the Calendar Record FIRST --- 
+      console.log('Creating initial calendar record in Supabase...');
+      const calendarName = `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`;
+      const { data: createdCalendarData, error: createCalendarError } = await supabase
+        .from('calendars')
+        .insert([
+          {
+            name: calendarName,
+            user_id: user.id,
+            strategy_id: selectedStrategy.id,
+            // posts: [], // Initialize empty or omit if schema allows null
+            progress: 0,
+            posts_scheduled: 0, // Will be updated by the API
+            posts_published: 0,
+            status: 'generating', // Set initial status
+            project_id: currentProject.id
+          }
+        ])
+        .select('id') // Select only the ID
+        .single(); // Expecting a single record
+
+      if (createCalendarError) {
+        console.error('Supabase calendar insert error:', createCalendarError);
+        throw new Error(`Database error: ${createCalendarError.message || 'Failed to create calendar record'}`);
+      }
+
+      if (!createdCalendarData || !createdCalendarData.id) {
+        console.error('No calendar ID returned from Supabase after insert');
+        throw new Error('Database did not return an ID when creating the calendar');
+      }
+
+      newCalendarId = createdCalendarData.id;
+      console.log('Calendar record created successfully with ID:', newCalendarId);
+      toast.loading('Generating calendar posts... (Attempt 1/3)', { id: toastId });
+
+      // --- Step 2: Call API to Generate and Save Posts --- 
       const calendarParams = {
         startDate,
         postFrequency,
@@ -182,21 +219,19 @@ export default function CalendarParams() {
         channels: selectedChannels
       };
       
-      // Try up to 3 times to generate the calendar
       let attempts = 0;
       const maxAttempts = 3;
-      let success = false;
-      let calendarData;
-      let errorMessage;
+      let apiSuccess = false;
+      let apiResponseData;
       
-      while (attempts < maxAttempts && !success) {
+      while (attempts < maxAttempts && !apiSuccess) {
         try {
           attempts++;
           if (attempts > 1) {
-            toast.loading(`Retrying calendar generation (Attempt ${attempts}/${maxAttempts})...`, { id: toastId });
+            toast.loading(`Retrying post generation (Attempt ${attempts}/${maxAttempts})...`, { id: toastId });
           }
           
-          // Call the API to generate the content calendar
+          console.log(`Calling generate-calendar API (Attempt ${attempts}) for calendar ID: ${newCalendarId}`);
           const response = await fetch('/api/content/generate-calendar', {
             method: 'POST',
             headers: {
@@ -206,108 +241,63 @@ export default function CalendarParams() {
               contentOutline,
               strategy: selectedStrategy,
               calendarParams,
+              calendarId: newCalendarId, // Pass the created calendar ID
+              userId: user.id, // Pass the user ID
               modelConfig: {
-                model: "gemini-2.0-flash",  // Use Gemini 2.0 Flash
-                temperature: attempts > 1 ? 0.3 : 0.2, // Slightly increase temperature on retries
+                model: "gemini-2.0-flash",
+                temperature: attempts > 1 ? 0.3 : 0.2,
                 maxOutputTokens: 1000
               }
             }),
           });
           
-          // Handle non-200 responses
+          apiResponseData = await response.json(); // Always try to get JSON body
+
           if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Calendar API error:', errorData);
-            errorMessage = errorData.error || `API error: ${response.status}`;
-            
-            // Throw to trigger retry
-            throw new Error(errorMessage);
+            console.error(`Calendar API error (Attempt ${attempts}):`, apiResponseData);
+            throw new Error(apiResponseData.error || `API error: ${response.status}`);
           }
           
-          const data = await response.json();
-          
-          // Validate response format
-          if (!data || !data.posts || !Array.isArray(data.posts)) {
-            errorMessage = 'Invalid response format from calendar API';
-            throw new Error(errorMessage);
-          }
-          
-          // Save the calendar data to Supabase
-          console.log('Attempting to save calendar to Supabase with posts:', data.posts.length);
-          try {
-            const { data: savedCalendar, error: calendarError } = await supabase
-              .from('calendars')
-              .insert([
-                {
-                  name: `Content Calendar for ${selectedStrategy?.name || 'Strategy'}`,
-                  user_id: user.id,
-                  strategy_id: selectedStrategy.id,
-                  posts: data.posts,
-                  progress: 0,
-                  posts_scheduled: data.posts.length,
-                  posts_published: 0,
-                  status: 'active',
-                  project_id: currentProject.id
-                }
-              ])
-              .select();
-            
-            if (calendarError) {
-              console.error('Supabase calendar insert error:', calendarError);
-              throw new Error(`Database error: ${calendarError.message || 'Failed to save calendar'}`);
-            }
-            
-            if (!savedCalendar || savedCalendar.length === 0) {
-              console.error('No calendar data returned from Supabase');
-              throw new Error('Database returned empty response when saving calendar');
-            }
-            
-            console.log('Calendar saved successfully with ID:', savedCalendar[0].id);
-            calendarData = savedCalendar;
-            success = true;
-          } catch (dbError) {
-            console.error('Database operation failed:', dbError);
-            throw dbError;
-          }
-          
+          // API call succeeded
+          apiSuccess = true; 
+          console.log("generate-calendar API call successful:", apiResponseData);
+
         } catch (attemptError) {
           const errorDetails = attemptError.message || String(attemptError);
-          console.error(`Calendar generation attempt ${attempts} failed:`, attemptError);
-          console.error(`Error details:`, errorDetails);
-          
+          console.error(`Calendar generation API attempt ${attempts} failed:`, attemptError);
+                    
           if (attempts >= maxAttempts) {
-            throw new Error(`Failed after ${maxAttempts} attempts: ${errorDetails}`);
+             // If API fails finally, update calendar status to error or delete it?
+             try {
+               await supabase.from('calendars').update({ status: 'error' }).eq('id', newCalendarId);
+             } catch (updateErr) { console.error("Failed to update calendar status to error", updateErr); }
+             throw new Error(`Failed after ${maxAttempts} API attempts: ${errorDetails}`);
           }
           
-          // Wait a bit before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts)); // Wait longer on retries
         }
       }
       
+      // --- Step 3: Navigate on Success --- 
       toast.dismiss(toastId);
-      toast.success('Content calendar generated successfully!');
+      toast.success(apiResponseData?.message || 'Content calendar generated and posts saved!');
       
-      // Navigate to the calendar view page
-      router.push(`/content/calendar-view?id=${calendarData[0].id}`);
+      // Navigate to the correct calendar view page using the created ID
+      console.log(`Navigating to /calendar/${newCalendarId}`);
+      router.push(`/calendar/${newCalendarId}`); 
       
     } catch (error) {
-      console.error('Error generating calendar:', error);
-      console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error('Error in handleGenerateCalendar:', error);
       toast.dismiss(toastId);
-      
-      // Provide more specific error messages based on error type
-      if (error.message && error.message.includes('parse') || (error.message && error.message.includes('JSON'))) {
-        toast.error('Error: The API response format was invalid. Please try again.');
-      } else if (error.message && error.message.includes('API')) {
-        toast.error('Error: Failed to connect to the calendar generation service. Please try again later.');
-      } else if (error.message && error.message.includes('Database') || error.message && error.message.includes('404')) {
-        toast.error('Database error: Could not save calendar. Please try again or contact support.');
-      } else {
-        toast.error(`Failed to generate calendar: ${error.message || 'Unknown error'}`);
-      }
-      
+      toast.error(`Failed to generate calendar: ${error.message || 'Unknown error'}`);
       setIsGenerating(false);
+      // Optionally delete the created calendar record if API failed permanently
+      if (newCalendarId) {
+         console.log("Attempting to clean up failed calendar record:", newCalendarId);
+         // supabase.from('calendars').delete().eq('id', newCalendarId); // Be careful with auto-delete
+      }
     }
+    // Do not set isGenerating to false here if navigation is successful
   };
   
   // Save the strategy ID to localStorage when it's loaded
