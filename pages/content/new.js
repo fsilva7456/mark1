@@ -392,7 +392,7 @@ export default function NewContent() {
       console.log("Step 1: Generating weekly themes...");
       // ... (retry logic for themes API call) ...
       
-      const themesResponse = await fetch('/api/content/multi-stage/generate-themes', {
+      const themesResponse = await fetch('/api/content-outline/multi-stage/generate-themes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -460,7 +460,7 @@ export default function NewContent() {
         
         try {
           console.log(`Generating content for Week ${weekTheme.week}: ${weekTheme.theme}`);
-          const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+          const weekResponse = await fetch('/api/content-outline/multi-stage/generate-week-content', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -820,7 +820,7 @@ export default function NewContent() {
 
       const aesthetic = router.query.aesthetic || '';
 
-      const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+      const weekResponse = await fetch('/api/content-outline/multi-stage/generate-week-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -923,7 +923,7 @@ export default function NewContent() {
       const aesthetic = router.query.aesthetic || '';
       
       // Make API call to regenerate content with feedback
-      const weekResponse = await fetch('/api/content/multi-stage/generate-week-content', {
+      const weekResponse = await fetch('/api/content-outline/multi-stage/generate-week-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1281,7 +1281,7 @@ export default function NewContent() {
           <button 
             onClick={async () => {
               try {
-                const response = await fetch('/api/content/test-gemini');
+                const response = await fetch('/api/utils/test-gemini');
                 const data = await response.json();
                 console.log("Gemini API Test Result:", data);
                 alert(data.success ? "API Test Successful: " + data.response : "API Test Failed: " + data.error);
@@ -1305,7 +1305,7 @@ export default function NewContent() {
           <button 
             onClick={async () => {
               try {
-                const response = await fetch('/api/content/simple-test');
+                const response = await fetch('/api/utils/simple-test');
                 const data = await response.json();
                 console.log("Simple Test Result:", data);
                 alert("Simple API Test: " + JSON.stringify(data, null, 2));

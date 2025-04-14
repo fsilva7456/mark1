@@ -232,7 +232,7 @@ export default function CalendarParams() {
           }
           
           console.log(`Calling generate-calendar API (Attempt ${attempts}) for calendar ID: ${newCalendarId}`);
-          const response = await fetch('/api/content/generate-calendar', {
+          const response = await fetch('/api/calendar/generate-calendar', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

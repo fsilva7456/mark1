@@ -314,13 +314,13 @@ The content outline process creates a structured 3-week content plan based on th
    - The generation process uses a multi-stage approach for better results:
    
    a. **Weekly Themes Generation**:
-      - Initial API call to `/api/content/multi-stage/generate-themes`
+      - Initial API call to `/api/content-outline/multi-stage/generate-themes`
       - AI model creates 3 weekly themes based on strategy
       - Each theme includes a title, objective, target audience segment, and campaign phase
       - Has built-in retry logic (up to 3 attempts) with exponential backoff
    
    b. **Week-by-Week Content Generation**:
-      - For each weekly theme, makes a separate API call to `/api/content/multi-stage/generate-week-content`
+      - For each weekly theme, makes a separate API call to `/api/content-outline/multi-stage/generate-week-content`
       - Generates 3-5 post ideas for each week
       - Each post includes type, topic, audience, call-to-action, persuasion principle, and visual ideas
       - Posts are designed to build on each other throughout the week
@@ -348,7 +348,7 @@ The calendar generation process creates a scheduled content calendar from the co
      - Social media channels (Instagram, Facebook, etc.)
 
 2. **AI-Powered Distribution**:
-   - Content from the outline is sent to `/api/content/generate-calendar` along with parameters
+   - Content from the outline is sent to `/api/calendar/generate-calendar` along with parameters
    - The API uses Gemini AI to:
      - Distribute posts across selected posting days
      - Spread content evenly across weeks
