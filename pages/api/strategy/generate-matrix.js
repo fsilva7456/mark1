@@ -36,8 +36,8 @@ Format your response as a JSON object with this structure:
 Make each entry specific, actionable, and tailored to the user's fitness business. Ensure all 9 elements work together cohesively.
 `;
 
-    // Generate a response from Gemini
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    // Generate a response from Gemini using the faster model
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     
