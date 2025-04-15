@@ -8,27 +8,30 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Project Structure
 
-The project is organized into feature-based modules:
+The project is organized into feature-based modules with a hybrid architecture using both App Router and Pages Router:
 
 ```
 mark1/
 ├── app/
-│   └── (modules)/          # Core feature modules
+│   └── (modules)/          # Core feature modules (App Router)
 │       ├── strategy/       # Strategy creation module
 │       ├── content-outline/# Content outline generation
 │       ├── calendar/       # Calendar creation module
 │       └── content-mgmt/   # Content management module
 ├── components/
 │   └── shared/             # Shared UI components
-├── lib/                    # Shared utilities
-├── pages/
-│   └── api/                # API routes organized by module
-│       ├── strategy/       # Strategy-related endpoints
-│       ├── content-outline/# Content outline endpoints
-│       ├── calendar/       # Calendar endpoints
-│       └── content-mgmt/   # Content management endpoints
-└── contexts/               # React contexts for state management
+├── contexts/               # React contexts for state management
+├── lib/                    # Shared utilities and types
+└── pages/                  # Legacy pages and API routes (Pages Router)
+    ├── api/                # API routes organized by module
+    │   ├── strategy/       # Strategy-related endpoints
+    │   ├── content-outline/# Content outline endpoints
+    │   ├── calendar/       # Calendar endpoints
+    │   └── content-mgmt/   # Content management endpoints
+    └── [other-pages]       # Legacy page components
 ```
+
+For more detailed information on architecture, design patterns, and communication between modules, please refer to [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ## Getting Started
 
@@ -93,6 +96,7 @@ __tests__/
 ### Available Test Suites
 
 #### Utility Tests
+
 - **Logger Tests** (`__tests__/lib/logger.test.js`):
   - Tests the logging utility functions
   - Verifies log level functionality (debug, info, warn, error)
@@ -100,10 +104,11 @@ __tests__/
   - Ensures data objects are properly included in logs
 
 #### Component Tests
+
 - **Marketing Plan Dashboard** (`__tests__/pages/marketing-plan.test.js`):
   - Tests authentication redirection for unauthenticated users
   - Verifies loading and error states are displayed correctly
-  - Tests empty state rendering when no data is available 
+  - Tests empty state rendering when no data is available
   - Ensures proper rendering of strategies in workflow view
   - Tests the full workflow rendering with complete data
   - Verifies view toggle functionality between workflow and list views
@@ -170,19 +175,20 @@ This document outlines the database schema used in the Mark1 application. It inc
 
 Used to store marketing strategies created by users.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | Reference to the user who created the strategy |
-| name | text | Name of the strategy |
-| business_description | text | Description of the business this strategy is for |
-| target_audience | jsonb | JSON array of target audience descriptions |
-| objectives | jsonb | JSON array of marketing objectives |
-| key_messages | jsonb | JSON array of key messages for the strategy |
-| created_at | timestamp with time zone | Creation timestamp |
-| updated_at | timestamp with time zone | Last update timestamp |
+| Column               | Type                     | Description                                      |
+| -------------------- | ------------------------ | ------------------------------------------------ |
+| id                   | uuid                     | Primary key                                      |
+| user_id              | uuid                     | Reference to the user who created the strategy   |
+| name                 | text                     | Name of the strategy                             |
+| business_description | text                     | Description of the business this strategy is for |
+| target_audience      | jsonb                    | JSON array of target audience descriptions       |
+| objectives           | jsonb                    | JSON array of marketing objectives               |
+| key_messages         | jsonb                    | JSON array of key messages for the strategy      |
+| created_at           | timestamp with time zone | Creation timestamp                               |
+| updated_at           | timestamp with time zone | Last update timestamp                            |
 
 **Usage in Application:**
+
 - Created when users complete the strategy questionnaire
 - Referenced when generating content outlines
 - Used to organize content plans and calendars
@@ -191,16 +197,17 @@ Used to store marketing strategies created by users.
 
 Stores generated content outlines derived from strategies.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| strategy_id | uuid | Reference to the strategy this outline is based on |
-| user_id | uuid | Reference to the user who owns this outline |
-| outline | jsonb | JSON containing the entire content outline structure |
-| created_at | timestamp with time zone | Creation timestamp |
-| updated_at | timestamp with time zone | Last update timestamp |
+| Column      | Type                     | Description                                          |
+| ----------- | ------------------------ | ---------------------------------------------------- |
+| id          | uuid                     | Primary key                                          |
+| strategy_id | uuid                     | Reference to the strategy this outline is based on   |
+| user_id     | uuid                     | Reference to the user who owns this outline          |
+| outline     | jsonb                    | JSON containing the entire content outline structure |
+| created_at  | timestamp with time zone | Creation timestamp                                   |
+| updated_at  | timestamp with time zone | Last update timestamp                                |
 
 **Usage in Application:**
+
 - Created when a user generates a content outline from a strategy
 - Used as the basis for creating content calendars
 - Contains weekly themes, content topics, and post ideas
@@ -209,19 +216,20 @@ Stores generated content outlines derived from strategies.
 
 Stores comprehensive content plans that may include multiple calendars.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | Reference to the user who owns this plan |
-| name | text | Name of the content plan |
-| strategy_id | uuid | Reference to the strategy this plan is based on |
-| calendar_id | uuid | Reference to an associated calendar (if any) |
-| campaigns | jsonb | JSON containing campaign details |
-| daily_engagement | jsonb | JSON containing daily engagement content details |
-| created_at | timestamp with time zone | Creation timestamp |
-| updated_at | timestamp with time zone | Last update timestamp |
+| Column           | Type                     | Description                                      |
+| ---------------- | ------------------------ | ------------------------------------------------ |
+| id               | uuid                     | Primary key                                      |
+| user_id          | uuid                     | Reference to the user who owns this plan         |
+| name             | text                     | Name of the content plan                         |
+| strategy_id      | uuid                     | Reference to the strategy this plan is based on  |
+| calendar_id      | uuid                     | Reference to an associated calendar (if any)     |
+| campaigns        | jsonb                    | JSON containing campaign details                 |
+| daily_engagement | jsonb                    | JSON containing daily engagement content details |
+| created_at       | timestamp with time zone | Creation timestamp                               |
+| updated_at       | timestamp with time zone | Last update timestamp                            |
 
 **Usage in Application:**
+
 - Created when users save a content plan
 - Links strategies to calendars
 - Organizes content into campaigns and daily engagement activities
@@ -230,22 +238,23 @@ Stores comprehensive content plans that may include multiple calendars.
 
 Stores content calendars with scheduled posts.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| user_id | uuid | Reference to the user who owns this calendar |
-| name | text | Name of the calendar |
-| strategy_id | uuid | Reference to the strategy this calendar is based on |
-| posts | jsonb | JSON array containing all posts data |
-| status | text | Status of the calendar |
-| posts_scheduled | integer | Number of scheduled posts |
-| posts_published | integer | Number of published posts |
-| progress | integer | Overall progress percentage |
-| created_at | timestamp with time zone | Creation timestamp |
-| updated_at | timestamp with time zone | Last update timestamp |
-| modified_at | timestamp with time zone | Last modification timestamp |
+| Column          | Type                     | Description                                         |
+| --------------- | ------------------------ | --------------------------------------------------- |
+| id              | uuid                     | Primary key                                         |
+| user_id         | uuid                     | Reference to the user who owns this calendar        |
+| name            | text                     | Name of the calendar                                |
+| strategy_id     | uuid                     | Reference to the strategy this calendar is based on |
+| posts           | jsonb                    | JSON array containing all posts data                |
+| status          | text                     | Status of the calendar                              |
+| posts_scheduled | integer                  | Number of scheduled posts                           |
+| posts_published | integer                  | Number of published posts                           |
+| progress        | integer                  | Overall progress percentage                         |
+| created_at      | timestamp with time zone | Creation timestamp                                  |
+| updated_at      | timestamp with time zone | Last update timestamp                               |
+| modified_at     | timestamp with time zone | Last modification timestamp                         |
 
 **Usage in Application:**
+
 - Created when users generate a content calendar
 - Stores all posts with their scheduling details
 - Tracks publishing progress
@@ -254,23 +263,24 @@ Stores content calendars with scheduled posts.
 
 Stores individual posts that belong to calendars.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key |
-| calendar_id | uuid | Reference to the calendar this post belongs to |
-| title | text | Post title |
-| content | text | Post content |
-| post_type | text | Type of post (carousel, video, etc.) |
-| target_audience | text | Target audience for this specific post |
-| scheduled_date | timestamp with time zone | When the post is scheduled |
-| channel | text | Social media channel for the post |
-| status | text | Status of the post (scheduled, published, etc.) |
-| engagement | jsonb | Engagement statistics |
-| user_id | uuid | Reference to the user who owns this post |
-| created_at | timestamp with time zone | Creation timestamp |
-| updated_at | timestamp with time zone | Last update timestamp |
+| Column          | Type                     | Description                                     |
+| --------------- | ------------------------ | ----------------------------------------------- |
+| id              | uuid                     | Primary key                                     |
+| calendar_id     | uuid                     | Reference to the calendar this post belongs to  |
+| title           | text                     | Post title                                      |
+| content         | text                     | Post content                                    |
+| post_type       | text                     | Type of post (carousel, video, etc.)            |
+| target_audience | text                     | Target audience for this specific post          |
+| scheduled_date  | timestamp with time zone | When the post is scheduled                      |
+| channel         | text                     | Social media channel for the post               |
+| status          | text                     | Status of the post (scheduled, published, etc.) |
+| engagement      | jsonb                    | Engagement statistics                           |
+| user_id         | uuid                     | Reference to the user who owns this post        |
+| created_at      | timestamp with time zone | Creation timestamp                              |
+| updated_at      | timestamp with time zone | Last update timestamp                           |
 
 **Usage in Application:**
+
 - Stores individual posts that are part of a calendar
 - Tracks scheduling and publishing status for each post
 - Manages engagement metrics for individual posts
@@ -280,6 +290,7 @@ Stores individual posts that belong to calendars.
 ✅ All database tables are now correctly configured according to the application requirements. The following updates were applied:
 
 1. **calendars Table**:
+
    - Added missing fields: `name`, `posts`, `status`, `posts_scheduled`, `posts_published`, `progress`, and `modified_at`
 
 2. **calendar_posts Table**:
@@ -296,15 +307,18 @@ The Mark1 app follows these key process flows for generating marketing strategie
 The marketing strategy generation process creates a structured strategy matrix based on user input:
 
 1. **User Questionnaire**:
+
    - User answers a series of questions about their fitness business
    - Questions cover business type, target audience, marketing objectives, unique approach, content preferences, and competitors
 
 2. **AI Processing**:
+
    - User responses are collected and organized
    - Business description is extracted from responses
    - Data is sent to the Gemini AI model with a structured prompt
 
 3. **Matrix Generation**:
+
    - AI generates a 3x3 strategy matrix containing:
      - 3 target audience segments
      - 3 business objectives (one per audience segment)
@@ -312,11 +326,13 @@ The marketing strategy generation process creates a structured strategy matrix b
    - AI response is parsed to extract the JSON array
 
 4. **Strategy Review and Customization**:
+
    - User can review the generated strategy matrix
    - User can edit any element of the matrix to customize it
    - AI suggestions are provided to help with customization
 
 5. **Strategy Storage**:
+
    - When user saves the strategy, it's stored in the `strategies` table
    - Each element of the matrix (audience, objectives, key messages) is stored in a separate JSONB array
    - Strategy is linked to the user account via `user_id`
@@ -330,26 +346,31 @@ The marketing strategy generation process creates a structured strategy matrix b
 The content outline process creates a structured 3-week content plan based on the marketing strategy:
 
 1. **Strategy Retrieval**:
+
    - Content outline page loads the strategy ID from URL parameters or localStorage
    - Strategy data is fetched from the `strategies` table
    - The data includes business description, target audience, objectives, and key messages
 
 2. **Multi-Stage Generation**:
+
    - The generation process uses a multi-stage approach for better results:
-   
+
    a. **Weekly Themes Generation**:
-      - Initial API call to `/api/content-outline/multi-stage/generate-themes`
-      - AI model creates 3 weekly themes based on strategy
-      - Each theme includes a title, objective, target audience segment, and campaign phase
-      - Has built-in retry logic (up to 3 attempts) with exponential backoff
-   
+
+   - Initial API call to `/api/content-outline/multi-stage/generate-themes`
+   - AI model creates 3 weekly themes based on strategy
+   - Each theme includes a title, objective, target audience segment, and campaign phase
+   - Has built-in retry logic (up to 3 attempts) with exponential backoff
+
    b. **Week-by-Week Content Generation**:
-      - For each weekly theme, makes a separate API call to `/api/content-outline/multi-stage/generate-week-content`
-      - Generates 3-5 post ideas for each week
-      - Each post includes type, topic, audience, call-to-action, persuasion principle, and visual ideas
-      - Posts are designed to build on each other throughout the week
+
+   - For each weekly theme, makes a separate API call to `/api/content-outline/multi-stage/generate-week-content`
+   - Generates 3-5 post ideas for each week
+   - Each post includes type, topic, audience, call-to-action, persuasion principle, and visual ideas
+   - Posts are designed to build on each other throughout the week
 
 3. **User Feedback and Refinement**:
+
    - User can provide feedback on each week's content
    - Feedback can be used to regenerate specific weeks with refined instructions
    - Updates are applied immediately to the content outline display
@@ -364,6 +385,7 @@ The content outline process creates a structured 3-week content plan based on th
 The calendar generation process creates a scheduled content calendar from the content outline:
 
 1. **Parameter Setup**:
+
    - User sets up calendar parameters including:
      - Start date
      - Posting frequency (light, moderate, heavy, intensive)
@@ -372,6 +394,7 @@ The calendar generation process creates a scheduled content calendar from the co
      - Social media channels (Instagram, Facebook, etc.)
 
 2. **AI-Powered Distribution**:
+
    - Content from the outline is sent to `/api/calendar/generate-calendar` along with parameters
    - The API uses Gemini AI to:
      - Distribute posts across selected posting days
@@ -381,12 +404,14 @@ The calendar generation process creates a scheduled content calendar from the co
      - Maintain thematic consistency
 
 3. **Robust Error Handling**:
+
    - Has retry mechanism (up to 3 attempts)
    - Increases AI temperature slightly in each retry for variation
    - Includes fallback content generation if API fails
    - Validates response format before proceeding
 
 4. **Calendar Storage**:
+
    - Calendar is saved to the `calendars` table with:
      - Reference to the original strategy (`strategy_id`)
      - All posts stored in the `posts` JSONB array
@@ -412,6 +437,7 @@ Each of these processes leverages AI technology to automate complex marketing ta
 ## Important Implementation Notes
 
 1. The application currently uses both storage approaches for posts:
+
    - Embedded JSONB in the `posts` field of the `calendars` table
    - Separate records in the `calendar_posts` table
 

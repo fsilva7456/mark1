@@ -1,15 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  LightBulbIcon, 
+import {
+  LightBulbIcon,
   ArrowPathIcon,
   DocumentTextIcon,
   CalendarIcon,
   ChartBarIcon,
-  PencilIcon 
+  PencilIcon,
 } from '@heroicons/react/24/outline';
 import styles from '../styles/Calendar.module.css';
 
+/**
+ * SuggestionsPanel displays AI-generated recommendations for content improvement
+ * @param {Object} props - Component props
+ * @param {string} props.calendarId - ID of the calendar to provide suggestions for
+ * @param {Array|null} props.suggestions - Pre-loaded suggestions data (optional)
+ * @param {Object} props.suggestions[].id - Unique identifier for the suggestion
+ * @param {string} props.suggestions[].title - Suggestion title
+ * @param {string} props.suggestions[].description - Detailed suggestion description
+ * @param {string} props.suggestions[].iconType - Icon type (video, calendar, chart, document, refresh)
+ * @param {string} props.suggestions[].priority - Priority level (high, medium, low)
+ * @param {string} [props.suggestions[].actionLabel] - Label for the action button
+ * @param {string} [props.suggestions[].actionRoute] - Route to navigate to when action is clicked
+ * @param {Function} props.onSuggestionAction - Callback function when a suggestion action is clicked
+ * @returns {JSX.Element} Rendered suggestions panel
+ */
 const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }) => {
   const [isLoading, setIsLoading] = useState(!suggestions);
   const [localSuggestions, setLocalSuggestions] = useState(suggestions || []);
@@ -23,7 +38,7 @@ const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }
   }, [suggestions]);
 
   // Function to get the appropriate icon based on type
-  const getIconForType = (iconType) => {
+  const getIconForType = iconType => {
     switch (iconType) {
       case 'video':
         return <PencilIcon className={styles.suggestionIcon} />;
@@ -41,7 +56,7 @@ const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }
   };
 
   // Handle suggestion action clicks
-  const handleAction = (suggestion) => {
+  const handleAction = suggestion => {
     if (onSuggestionAction) {
       onSuggestionAction(suggestion);
     }
@@ -50,11 +65,9 @@ const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }
   return (
     <div className={styles.suggestionsPanel}>
       <div className={styles.suggestionsPanelHeader}>
-        <h3 className={styles.suggestionsPanelTitle}>
-          AI Suggestions
-        </h3>
+        <h3 className={styles.suggestionsPanelTitle}>AI Suggestions</h3>
       </div>
-      
+
       <div className={styles.suggestionsPanelContent}>
         {isLoading ? (
           <div className={styles.loadingContainer}>
@@ -76,37 +89,27 @@ const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }
         ) : (
           <div className={styles.suggestionsList}>
             {localSuggestions.map(suggestion => (
-              <div 
-                key={suggestion.id} 
+              <div
+                key={suggestion.id}
                 className={`${styles.suggestionItem} ${suggestion.priority ? styles[`priority${suggestion.priority.charAt(0).toUpperCase() + suggestion.priority.slice(1)}`] : ''}`}
               >
-                <div className={styles.suggestionIcon}>
-                  {getIconForType(suggestion.iconType)}
-                </div>
+                <div className={styles.suggestionIcon}>{getIconForType(suggestion.iconType)}</div>
                 <div className={styles.suggestionContent}>
-                  <h4 className={styles.suggestionTitle}>
-                    {suggestion.title}
-                  </h4>
-                  <p className={styles.suggestionDescription}>
-                    {suggestion.description}
-                  </p>
-                  {suggestion.actionLabel && (
-                    suggestion.actionRoute ? (
-                      <Link 
-                        href={suggestion.actionRoute} 
-                        className={styles.suggestionAction}
-                      >
+                  <h4 className={styles.suggestionTitle}>{suggestion.title}</h4>
+                  <p className={styles.suggestionDescription}>{suggestion.description}</p>
+                  {suggestion.actionLabel &&
+                    (suggestion.actionRoute ? (
+                      <Link href={suggestion.actionRoute} className={styles.suggestionAction}>
                         {suggestion.actionLabel}
                       </Link>
                     ) : (
-                      <button 
+                      <button
                         className={styles.suggestionAction}
                         onClick={() => handleAction(suggestion)}
                       >
                         {suggestion.actionLabel}
                       </button>
-                    )
-                  )}
+                    ))}
                 </div>
               </div>
             ))}
@@ -117,4 +120,4 @@ const SuggestionsPanel = ({ calendarId, suggestions = null, onSuggestionAction }
   );
 };
 
-export default SuggestionsPanel; 
+export default SuggestionsPanel;
