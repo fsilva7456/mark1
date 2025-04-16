@@ -56,17 +56,49 @@ const sum = numbers => numbers.reduce((total, num) => total + num, 0);
 
 // Helper function to get the week number of a date relative to current week
 const getWeekNumber = date => {
-  const now = new Date();
-  const currentWeekStart = new Date(now);
-  const dayOfWeek = now.getDay();
-  const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
-  currentWeekStart.setDate(diff);
-  currentWeekStart.setHours(0, 0, 0, 0);
+  try {
+    const now = new Date();
+    const currentWeekStart = new Date(now);
+    const dayOfWeek = now.getDay();
+    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
+    currentWeekStart.setDate(diff);
+    currentWeekStart.setHours(0, 0, 0, 0);
 
-  const inputDate = new Date(date);
-  const diffTime = inputDate.getTime() - currentWeekStart.getTime();
-  const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  return Math.floor(diffDays / 7);
+    const inputDate = new Date(date);
+    
+    // Debug date calculations
+    log.debug('Week number calculation', {
+      dateString: date,
+      parsedDate: inputDate.toISOString(),
+      today: now.toISOString(),
+      currentWeekStart: currentWeekStart.toISOString(),
+      dayOfWeek: dayOfWeek,
+      dateDiff: diff
+    });
+    
+    if (isNaN(inputDate.getTime())) {
+      log.error('Invalid date in getWeekNumber', { dateString: date });
+      return -100; // Return a very negative number to make the issue obvious
+    }
+
+    const diffTime = inputDate.getTime() - currentWeekStart.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    const weekNumber = Math.floor(diffDays / 7);
+    
+    log.debug('Week calculation result', {
+      diffTimeMs: diffTime,
+      diffDays: diffDays,
+      weekNumber: weekNumber
+    });
+    
+    return weekNumber;
+  } catch (error) {
+    log.error('Error in getWeekNumber', { 
+      error: error.message, 
+      dateString: date 
+    });
+    return -1; // Default to a past week if there's an error
+  }
 };
 
 export default function ContentDashboard() {
@@ -127,13 +159,32 @@ export default function ContentDashboard() {
     const weeks = [[], [], []];
 
     if (!postsData || postsData.length === 0) {
+      log.warn('No posts data provided to groupPostsByWeek');
       return weeks;
     }
+
+    log.debug('Grouping posts by week', { 
+      totalPostsCount: postsData.length,
+      postsBeforeFiltering: postsData.map(p => ({
+        id: p.id, 
+        status: p.status,
+        date: p.scheduled_date
+      }))
+    });
 
     // Filter to include only scheduled and published posts
     const relevantPosts = postsData.filter(
       post => post.status === 'scheduled' || post.status === 'published'
     );
+
+    log.debug('Filtered posts for grouping', { 
+      filteredPostsCount: relevantPosts.length,
+      postsAfterFiltering: relevantPosts.map(p => ({
+        id: p.id, 
+        status: p.status,
+        date: p.scheduled_date
+      }))
+    });
 
     // Sort posts by scheduled_date
     const sortedPosts = [...relevantPosts].sort(
@@ -143,11 +194,25 @@ export default function ContentDashboard() {
     // Group posts by week relative to current date
     sortedPosts.forEach(post => {
       const weekNumber = getWeekNumber(post.scheduled_date);
+      
+      // Debug each post's week calculation
+      log.debug(`Post week calculation for ID ${post.id}`, {
+        postId: post.id,
+        postDate: post.scheduled_date,
+        calculatedWeekNumber: weekNumber,
+        willBeIncluded: weekNumber >= 0 && weekNumber <= 2
+      });
 
       // Only include posts for current week (0), next week (1), and week after (2)
       if (weekNumber >= 0 && weekNumber <= 2) {
         weeks[weekNumber].push(post);
       }
+    });
+
+    log.debug('Final grouped posts result', {
+      week0Count: weeks[0].length,
+      week1Count: weeks[1].length,
+      week2Count: weeks[2].length
     });
 
     return weeks;
@@ -706,10 +771,39 @@ export default function ContentDashboard() {
   // Get posts for the current day
   const getPostsForDay = date => {
     const dateStr = date.toISOString().split('T')[0];
-    return groupedPosts[activeWeek].filter(post => {
-      const postDateStr = new Date(post.scheduled_date).toISOString().split('T')[0];
-      return postDateStr === dateStr;
+    
+    // Debug which posts we're trying to get for this day
+    const postsForWeek = groupedPosts[activeWeek] || [];
+    
+    log.debug(`Getting posts for day ${dateStr}`, { 
+      dateRequested: dateStr,
+      activeWeek,
+      totalPostsInActiveWeek: postsForWeek.length,
+      allPostsInWeek: postsForWeek.map(p => ({
+        id: p.id,
+        date: new Date(p.scheduled_date).toISOString().split('T')[0],
+        title: p.title
+      }))
     });
+    
+    const filteredPosts = postsForWeek.filter(post => {
+      const postDateStr = new Date(post.scheduled_date).toISOString().split('T')[0];
+      const matches = postDateStr === dateStr;
+      
+      // Debug each post's matching logic
+      log.debug(`Post date comparison for day ${dateStr}`, {
+        postId: post.id,
+        postDate: postDateStr,
+        requestedDate: dateStr,
+        matches
+      });
+      
+      return matches;
+    });
+    
+    log.debug(`Found ${filteredPosts.length} posts for day ${dateStr}`);
+    
+    return filteredPosts;
   };
 
   // Log posts in the debug panel for the current week
@@ -721,6 +815,30 @@ export default function ContentDashboard() {
       });
     }
   }, [activeWeek, groupedPosts]);
+  
+  // Add debugging for posts that might not be showing up
+  useEffect(() => {
+    if (posts.length > 0) {
+      log.info('Posts loaded but not displaying - debugging info', {
+        rawPosts: posts,
+        groupedPostsEmpty: groupedPosts.every(week => week.length === 0),
+        activePosts: groupedPosts[activeWeek],
+        firstPostScheduledDate: posts[0]?.scheduled_date,
+        dateComparison: {
+          postDate: new Date(posts[0]?.scheduled_date).toISOString(),
+          todayDate: new Date().toISOString(),
+          weekNumber: getWeekNumber(posts[0]?.scheduled_date)
+        },
+        weekDates: getWeekDates(activeWeek).map(date => date.toISOString().split('T')[0]),
+        postDates: posts.map(post => ({
+          id: post.id,
+          date: new Date(post.scheduled_date).toISOString().split('T')[0],
+          weekNumber: getWeekNumber(post.scheduled_date),
+          visible: getWeekNumber(post.scheduled_date) === activeWeek
+        }))
+      });
+    }
+  }, [posts, groupedPosts, activeWeek]);
 
   return (
     <div className={styles.dashboardContainer}>
