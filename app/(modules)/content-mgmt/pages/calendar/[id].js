@@ -872,6 +872,212 @@ export default function ContentDashboard() {
     }
   }, [posts, groupedPosts, activeWeek]);
 
+  // Add this just before the return statement
+  // Create hardcoded demo posts for testing rendering
+  useEffect(() => {
+    if (posts.length > 0 && groupedPosts.every(week => week.length === 0)) {
+      log.info('Using fallback demo posts since real posts are not displaying', {
+        originalPosts: posts.length
+      });
+      
+      // Create fallback demo posts
+      const today = new Date();
+      const demoPosts = [
+        {
+          id: 'demo-1',
+          title: 'Demo Post 1',
+          content: 'This is a demo post to test rendering',
+          channel: 'Instagram',
+          post_type: 'Image',
+          status: 'scheduled',
+          scheduled_date: today.toISOString(),
+          calendar_id: id,
+          user_id: user?.id,
+          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 }
+        },
+        {
+          id: 'demo-2',
+          title: 'Demo Post 2',
+          content: 'Another demo post to verify display issues',
+          channel: 'Facebook',
+          post_type: 'Video',
+          status: 'draft',
+          scheduled_date: today.toISOString(),
+          calendar_id: id,
+          user_id: user?.id,
+          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 }
+        }
+      ];
+      
+      // Force these demo posts into all week arrays
+      setGroupedPosts([demoPosts, demoPosts, demoPosts]);
+      
+      log.info('Demo posts created and forced into groupedPosts state');
+    }
+  }, [posts, groupedPosts, id, user]);
+  
+  // Add direct rendering test to check ContentCard component
+  const testPost = {
+    id: 'test-direct',
+    title: 'Direct Test Post',
+    content: 'This post bypasses all filtering logic',
+    channel: 'Test',
+    post_type: 'Test',
+    status: 'draft',
+    scheduled_date: new Date().toISOString(),
+  };
+
+  // Direct implementation to display posts
+  const renderPostDirectly = (post) => {
+    return (
+      <div key={post.id} style={{
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '6px',
+        padding: '12px',
+        marginBottom: '12px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '8px'
+        }}>
+          <div style={{ fontSize: '12px', color: '#64748b' }}>
+            {new Date(post.scheduled_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </div>
+          <div style={{
+            fontSize: '10px',
+            padding: '4px 8px',
+            borderRadius: '9999px',
+            fontWeight: '500',
+            backgroundColor: post.status === 'published' ? '#ecfdf5' : 
+                             post.status === 'scheduled' ? '#eff6ff' : '#f9fafb',
+            color: post.status === 'published' ? '#059669' : 
+                   post.status === 'scheduled' ? '#2563eb' : '#64748b'
+          }}>
+            {post.status === 'published' ? 'Published' : 
+             post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
+          </div>
+        </div>
+        
+        <h3 style={{
+          fontSize: '14px',
+          fontWeight: '600',
+          margin: '8px 0',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {post.title || 'Untitled Post'}
+        </h3>
+        
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'center',
+          marginBottom: '8px'
+        }}>
+          <span style={{
+            fontSize: '12px',
+            padding: '4px 8px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '9999px',
+            color: '#0f172a',
+            fontWeight: '500'
+          }}>
+            {post.channel || 'Instagram'}
+          </span>
+          <span style={{ fontSize: '12px', color: '#64748b' }}>
+            {post.post_type || 'Post'}
+          </span>
+        </div>
+        
+        <p style={{
+          fontSize: '12px',
+          color: '#64748b',
+          marginBottom: '12px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical'
+        }}>
+          {post.content
+            ? post.content.length > 60
+              ? post.content.substring(0, 60) + '...'
+              : post.content
+            : 'No content yet'}
+        </p>
+        
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <a href={`/post-editor/${post.id}?calendarId=${id}`} style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '4px 8px',
+            backgroundColor: '#f1f5f9',
+            color: '#0f172a',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            textDecoration: 'none'
+          }}>
+            <PencilIcon style={{ width: '12px', height: '12px' }} />
+            Edit
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  // Render alternative calendar days with direct rendering
+  const renderCalendarDaysDirectly = () => {
+    return (
+      <div className={styles.calendarDays}>
+        {getWeekDates(activeWeek).map((date, dayIndex) => (
+          <div key={dayIndex} className={styles.calendarDay} style={{ border: '1px solid #e5e7eb', padding: '10px' }}>
+            <div style={{ 
+              fontWeight: 'bold', 
+              marginBottom: '10px',
+              padding: '5px',
+              backgroundColor: '#f9fafb',
+              borderRadius: '4px' 
+            }}>
+              {formatDate(date)}
+            </div>
+            
+            {/* Directly display posts for this day without any filtering */}
+            {posts.length > 0 ? (
+              <div>
+                {dayIndex === 0 && posts.slice(0, 2).map(renderPostDirectly)}
+                {dayIndex === 1 && posts.slice(2, 4).map(renderPostDirectly)}
+                {dayIndex === 2 && posts.slice(4, 6).map(renderPostDirectly)}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: '#6b7280', padding: '20px 0' }}>
+                <p style={{ margin: '0 0 10px 0' }}>No posts scheduled</p>
+                <a 
+                  href={`/post-editor/new?calendarId=${id}&date=${date.toISOString().split('T')[0]}`}
+                  style={{
+                    display: 'inline-block',
+                    color: '#3b82f6',
+                    textDecoration: 'none',
+                    fontWeight: 'medium',
+                    fontSize: '14px'
+                  }}
+                >
+                  + Add Post
+                </a>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className={styles.dashboardContainer}>
       <Head>
@@ -919,9 +1125,26 @@ export default function ContentDashboard() {
                   fontSize: '14px'
                 }}>
                   <p style={{ margin: 0 }}>
-                    <strong>Note:</strong> Posts are temporarily displayed on Monday and Wednesday for testing. 
-                    We're fixing a date calculation issue.
+                    <strong>Debugging Mode:</strong> We're testing different display methods to resolve the post visibility issue.
+                    {posts.length > 0 ? ` (${posts.length} posts loaded)` : ''}
                   </p>
+                </div>
+                
+                {/* Direct test rendering - bypasses all date calculation */}
+                <div style={{ 
+                  marginTop: '10px', 
+                  padding: '10px',
+                  border: '2px dashed red', 
+                  borderRadius: '4px',
+                  background: '#f5f5f5'
+                }}>
+                  <h3>Test Card Direct Render:</h3>
+                  <div style={{ marginTop: '10px' }}>
+                    <ContentCard key="test-direct" post={testPost} calendarId={id} />
+                  </div>
+                  <pre style={{ fontSize: '12px', background: '#eee', padding: '8px', marginTop: '10px' }}>
+                    {JSON.stringify(testPost, null, 2)}
+                  </pre>
                 </div>
               </div>
 
@@ -930,6 +1153,29 @@ export default function ContentDashboard() {
                   + New Post
                 </Link>
               </div>
+            </div>
+
+            {/* Report loaded posts data in plain HTML to bypass any component issues */}
+            <div style={{ 
+              marginTop: '15px', 
+              marginBottom: '15px', 
+              padding: '10px',
+              background: '#f0f9ff', 
+              border: '1px solid #bae6fd',
+              borderRadius: '4px'
+            }}>
+              <h3>Raw Posts Data:</h3>
+              <p>Total posts loaded from database: {posts.length}</p>
+              <p>Posts in week view 0: {groupedPosts[0]?.length || 0}</p>
+              <p>Posts in week view 1: {groupedPosts[1]?.length || 0}</p>
+              <p>Posts in week view 2: {groupedPosts[2]?.length || 0}</p>
+              <p>Current active week: {activeWeek}</p>
+              <details>
+                <summary>First post data (if available)</summary>
+                <pre style={{ fontSize: '11px' }}>
+                  {posts.length > 0 ? JSON.stringify(posts[0], null, 2) : 'No posts'}
+                </pre>
+              </details>
             </div>
 
             {/* Strategy Refresh Banner - shown if lastUpdatedWeeks > 9 */}
@@ -997,23 +1243,7 @@ export default function ContentDashboard() {
                   </div>
 
                   {/* Posts for each day */}
-                  <div className={styles.calendarDays}>
-                    {getWeekDates(activeWeek).map((date, dayIndex) => {
-                      const dayPosts = getPostsForDay(date);
-
-                      return (
-                        <div key={dayIndex} className={styles.calendarDay}>
-                          {dayPosts.length > 0 ? (
-                            dayPosts.map(post => (
-                              <ContentCard key={post.id} post={post} calendarId={id} />
-                            ))
-                          ) : (
-                            <EmptyDayPlaceholder date={date} />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {renderCalendarDaysDirectly()}
                 </div>
 
                 <div className={styles.generateButtonContainer}>
