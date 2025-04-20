@@ -443,5 +443,26 @@ Each of these processes leverages AI technology to automate complex marketing ta
 
 2. When saving calendar data, ensure you're using the correct field names that exist in the database schema
 
+# Recent Updates
+
+## Content Management Improvements - April 2025
+
+The content management dashboard was refactored to improve data hydration from Supabase:
+
+- Fixed date calculation logic for proper post assignment to weekly views
+- Improved week number calculations with dedicated utility functions
+- Standardized post display using the ContentCard component
+- Removed temporary workarounds and debug elements
+
+The dashboard now properly displays posts from the `calendar_posts` table based on their scheduled dates, organized into current week, next week, and the week after views.
+
+## Utility Library
+
+A new date utilities library was added at `app/(modules)/content-mgmt/lib/dateUtils.js` that provides:
+
+- Week number calculations relative to current week
+- Post grouping by week
+- Date filtering for calendar views
+
 <!-- Trigger rebuild -->
 <!-- Adding a comment to trigger Vercel rebuild -->

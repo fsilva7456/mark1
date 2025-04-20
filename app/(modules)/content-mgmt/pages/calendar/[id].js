@@ -8,7 +8,7 @@ import BreadcrumbNavigation from '@components/shared/BreadcrumbNavigation';
 import { supabase } from '@lib/supabase';
 import logger from '@lib/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import styles from '@/styles/Calendar.module.css';
+import styles from '../../styles/Calendar.module.css';
 import { toast } from 'react-hot-toast';
 import {
   ChartBarIcon,
@@ -24,6 +24,12 @@ import {
 import ContentCard from '@modules/content-mgmt/components/ContentCard';
 import MetricsSummary from '@modules/content-mgmt/components/MetricsSummary';
 import SuggestionsPanel from '@modules/content-mgmt/components/SuggestionsPanel';
+import { 
+  getWeekNumber, 
+  groupPostsByWeek, 
+  getWeekDates, 
+  getPostsForDay 
+} from '@modules/content-mgmt/lib/dateUtils';
 
 // Create a logger instance for this component
 const log = logger.createLogger('ContentDashboard');
@@ -53,59 +59,6 @@ const isWithinLast7Days = dateString => {
 
 // Helper function to sum an array of numbers
 const sum = numbers => numbers.reduce((total, num) => total + num, 0);
-
-// Helper function to get the week number of a date relative to current week
-const getWeekNumber = date => {
-  try {
-    // Temporary fix: return week 0 for all posts to ensure they display
-    // This will make all posts appear in the current week view
-    return 0;
-    
-    /* Original calculation - commented out for now
-    const now = new Date();
-    const currentWeekStart = new Date(now);
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
-    currentWeekStart.setDate(diff);
-    currentWeekStart.setHours(0, 0, 0, 0);
-
-    const inputDate = new Date(date);
-    
-    // Debug date calculations
-    log.debug('Week number calculation', {
-      dateString: date,
-      parsedDate: inputDate.toISOString(),
-      today: now.toISOString(),
-      currentWeekStart: currentWeekStart.toISOString(),
-      dayOfWeek: dayOfWeek,
-      dateDiff: diff
-    });
-    
-    if (isNaN(inputDate.getTime())) {
-      log.error('Invalid date in getWeekNumber', { dateString: date });
-      return -100; // Return a very negative number to make the issue obvious
-    }
-
-    const diffTime = inputDate.getTime() - currentWeekStart.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-    const weekNumber = Math.floor(diffDays / 7);
-    
-    log.debug('Week calculation result', {
-      diffTimeMs: diffTime,
-      diffDays: diffDays,
-      weekNumber: weekNumber
-    });
-    
-    return weekNumber;
-    */
-  } catch (error) {
-    log.error('Error in getWeekNumber', { 
-      error: error.message, 
-      dateString: date 
-    });
-    return 0; // Force display in current week if there's an error
-  }
-};
 
 export default function ContentDashboard() {
   const router = useRouter();
@@ -159,69 +112,15 @@ export default function ContentDashboard() {
     }
   }, [id, user, loading, router]);
 
-  // Group posts by week (current, next, week after)
-  const groupPostsByWeek = useCallback(postsData => {
-    // Create an array to hold three weeks of posts
-    const weeks = [[], [], []];
-
-    if (!postsData || postsData.length === 0) {
-      log.warn('No posts data provided to groupPostsByWeek');
-      return weeks;
-    }
-
-    log.debug('Grouping posts by week', { 
-      totalPostsCount: postsData.length,
-      postsBeforeFiltering: postsData.map(p => ({
-        id: p.id, 
-        status: p.status,
-        date: p.scheduled_date
-      }))
-    });
-
+  // Hook to group posts by week using the utility function
+  const handleGroupPostsByWeek = useCallback(postsData => {
     // Filter to include only scheduled and published posts
     const relevantPosts = postsData.filter(
       post => post.status === 'scheduled' || post.status === 'published'
     );
-
-    log.debug('Filtered posts for grouping', { 
-      filteredPostsCount: relevantPosts.length,
-      postsAfterFiltering: relevantPosts.map(p => ({
-        id: p.id, 
-        status: p.status,
-        date: p.scheduled_date
-      }))
-    });
-
-    // Sort posts by scheduled_date
-    const sortedPosts = [...relevantPosts].sort(
-      (a, b) => new Date(a.scheduled_date) - new Date(b.scheduled_date)
-    );
-
-    // Group posts by week relative to current date
-    sortedPosts.forEach(post => {
-      const weekNumber = getWeekNumber(post.scheduled_date);
-      
-      // Debug each post's week calculation
-      log.debug(`Post week calculation for ID ${post.id}`, {
-        postId: post.id,
-        postDate: post.scheduled_date,
-        calculatedWeekNumber: weekNumber,
-        willBeIncluded: weekNumber >= 0 && weekNumber <= 2
-      });
-
-      // Only include posts for current week (0), next week (1), and week after (2)
-      if (weekNumber >= 0 && weekNumber <= 2) {
-        weeks[weekNumber].push(post);
-      }
-    });
-
-    log.debug('Final grouped posts result', {
-      week0Count: weeks[0].length,
-      week1Count: weeks[1].length,
-      week2Count: weeks[2].length
-    });
-
-    return weeks;
+    
+    // Use the utility function to group the posts
+    return groupPostsByWeek(relevantPosts);
   }, []);
 
   // Create default posts when a new calendar is created
@@ -286,7 +185,7 @@ export default function ContentDashboard() {
       setPosts(data);
 
       // Group posts by week
-      const grouped = groupPostsByWeek(data);
+      const grouped = handleGroupPostsByWeek(data);
       setGroupedPosts(grouped);
 
       toast.success('Default posts created for your calendar');
@@ -420,7 +319,7 @@ export default function ContentDashboard() {
         setPosts(postsData);
 
         // Group posts by week
-        const grouped = groupPostsByWeek(postsData);
+        const grouped = handleGroupPostsByWeek(postsData);
         log.debug('Posts grouped by week', { 
           week0Count: grouped[0].length, 
           week1Count: grouped[1].length, 
@@ -709,7 +608,7 @@ export default function ContentDashboard() {
 
       // Re-group posts including the new ones
       const allPosts = [...posts, ...data];
-      const grouped = groupPostsByWeek(allPosts);
+      const grouped = handleGroupPostsByWeek(allPosts);
       setGroupedPosts(grouped);
 
       toast.success('New week of content generated!');
@@ -729,28 +628,6 @@ export default function ContentDashboard() {
     if (suggestion.actionRoute) {
       router.push(suggestion.actionRoute);
     }
-  };
-
-  // Create week tabs with day labels
-  const getWeekDates = weekIndex => {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust when day is Sunday
-    const startOfWeek = new Date(now.setDate(diff));
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    // Adjust for the week index
-    const weekStart = new Date(startOfWeek);
-    weekStart.setDate(weekStart.getDate() + weekIndex * 7);
-
-    const days = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(weekStart);
-      day.setDate(day.getDate() + i);
-      days.push(day);
-    }
-
-    return days;
   };
 
   // Format date to readable string
@@ -774,68 +651,10 @@ export default function ContentDashboard() {
     );
   }
 
-  // Get posts for the current day
-  const getPostsForDay = date => {
-    const dateStr = date.toISOString().split('T')[0];
-    
-    // Debug which posts we're trying to get for this day
+  // Get posts for the current day using utility function
+  const handleGetPostsForDay = date => {
     const postsForWeek = groupedPosts[activeWeek] || [];
-    
-    // TEMPORARY FIX: For testing, distribute posts across days of the week
-    // This ensures we can see the posts on screen to verify they're loading correctly
-    const dayIndex = date.getDay(); // 0-6 for Sunday-Saturday
-    
-    // For testing: Just show posts on Monday and Wednesday to verify they appear
-    if (dayIndex === 1 || dayIndex === 3) {
-      // Show all posts for this week on these days 
-      log.info(`TEMPORARY FIX: Showing posts on ${dateStr}`, {
-        dayOfWeek: dayIndex,
-        postsShown: postsForWeek.length
-      });
-      
-      // For the first two posts on Monday, rest on Wednesday
-      if (dayIndex === 1) {
-        return postsForWeek.slice(0, 3); // First 3 posts on Monday
-      } else {
-        return postsForWeek.slice(3); // Remaining posts on Wednesday
-      }
-    }
-    
-    // Original filtering logic (commented out temporarily)
-    /* 
-    log.debug(`Getting posts for day ${dateStr}`, { 
-      dateRequested: dateStr,
-      activeWeek,
-      totalPostsInActiveWeek: postsForWeek.length,
-      allPostsInWeek: postsForWeek.map(p => ({
-        id: p.id,
-        date: new Date(p.scheduled_date).toISOString().split('T')[0],
-        title: p.title
-      }))
-    });
-    
-    const filteredPosts = postsForWeek.filter(post => {
-      const postDateStr = new Date(post.scheduled_date).toISOString().split('T')[0];
-      const matches = postDateStr === dateStr;
-      
-      // Debug each post's matching logic
-      log.debug(`Post date comparison for day ${dateStr}`, {
-        postId: post.id,
-        postDate: postDateStr,
-        requestedDate: dateStr,
-        matches
-      });
-      
-      return matches;
-    });
-    
-    log.debug(`Found ${filteredPosts.length} posts for day ${dateStr}`);
-    
-    return filteredPosts;
-    */
-    
-    // Return no posts for other days
-    return [];
+    return getPostsForDay(date, postsForWeek);
   };
 
   // Log posts in the debug panel for the current week
@@ -848,232 +667,38 @@ export default function ContentDashboard() {
     }
   }, [activeWeek, groupedPosts]);
   
-  // Add debugging for posts that might not be showing up
+  // Log posts in the debug panel for the current week
   useEffect(() => {
-    if (posts.length > 0) {
-      log.info('Posts loaded but not displaying - debugging info', {
-        rawPosts: posts,
-        groupedPostsEmpty: groupedPosts.every(week => week.length === 0),
-        activePosts: groupedPosts[activeWeek],
-        firstPostScheduledDate: posts[0]?.scheduled_date,
-        dateComparison: {
-          postDate: new Date(posts[0]?.scheduled_date).toISOString(),
-          todayDate: new Date().toISOString(),
-          weekNumber: getWeekNumber(posts[0]?.scheduled_date)
-        },
-        weekDates: getWeekDates(activeWeek).map(date => date.toISOString().split('T')[0]),
-        postDates: posts.map(post => ({
-          id: post.id,
-          date: new Date(post.scheduled_date).toISOString().split('T')[0],
-          weekNumber: getWeekNumber(post.scheduled_date),
-          visible: getWeekNumber(post.scheduled_date) === activeWeek
-        }))
-      });
+    if (groupedPosts[activeWeek]?.length > 0) {
+      log.debug(`Week ${activeWeek} posts count: ${groupedPosts[activeWeek].length}`);
     }
-  }, [posts, groupedPosts, activeWeek]);
-
-  // Add this just before the return statement
-  // Create hardcoded demo posts for testing rendering
-  useEffect(() => {
-    if (posts.length > 0 && groupedPosts.every(week => week.length === 0)) {
-      log.info('Using fallback demo posts since real posts are not displaying', {
-        originalPosts: posts.length
-      });
-      
-      // Create fallback demo posts
-      const today = new Date();
-      const demoPosts = [
-        {
-          id: 'demo-1',
-          title: 'Demo Post 1',
-          content: 'This is a demo post to test rendering',
-          channel: 'Instagram',
-          post_type: 'Image',
-          status: 'scheduled',
-          scheduled_date: today.toISOString(),
-          calendar_id: id,
-          user_id: user?.id,
-          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 }
-        },
-        {
-          id: 'demo-2',
-          title: 'Demo Post 2',
-          content: 'Another demo post to verify display issues',
-          channel: 'Facebook',
-          post_type: 'Video',
-          status: 'draft',
-          scheduled_date: today.toISOString(),
-          calendar_id: id,
-          user_id: user?.id,
-          engagement: { likes: 0, comments: 0, shares: 0, reach: 0 }
-        }
-      ];
-      
-      // Force these demo posts into all week arrays
-      setGroupedPosts([demoPosts, demoPosts, demoPosts]);
-      
-      log.info('Demo posts created and forced into groupedPosts state');
-    }
-  }, [posts, groupedPosts, id, user]);
-  
-  // Add direct rendering test to check ContentCard component
-  const testPost = {
-    id: 'test-direct',
-    title: 'Direct Test Post',
-    content: 'This post bypasses all filtering logic',
-    channel: 'Test',
-    post_type: 'Test',
-    status: 'draft',
-    scheduled_date: new Date().toISOString(),
-  };
-
-  // Direct implementation to display posts
-  const renderPostDirectly = (post) => {
-    return (
-      <div key={post.id} style={{
-        backgroundColor: 'white',
-        border: '1px solid #e2e8f0',
-        borderRadius: '6px',
-        padding: '12px',
-        marginBottom: '12px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '8px'
-        }}>
-          <div style={{ fontSize: '12px', color: '#64748b' }}>
-            {new Date(post.scheduled_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          </div>
-          <div style={{
-            fontSize: '10px',
-            padding: '4px 8px',
-            borderRadius: '9999px',
-            fontWeight: '500',
-            backgroundColor: post.status === 'published' ? '#ecfdf5' : 
-                             post.status === 'scheduled' ? '#eff6ff' : '#f9fafb',
-            color: post.status === 'published' ? '#059669' : 
-                   post.status === 'scheduled' ? '#2563eb' : '#64748b'
-          }}>
-            {post.status === 'published' ? 'Published' : 
-             post.status === 'scheduled' ? 'Scheduled' : 'Draft'}
-          </div>
-        </div>
-        
-        <h3 style={{
-          fontSize: '14px',
-          fontWeight: '600',
-          margin: '8px 0',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {post.title || 'Untitled Post'}
-        </h3>
-        
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          alignItems: 'center',
-          marginBottom: '8px'
-        }}>
-          <span style={{
-            fontSize: '12px',
-            padding: '4px 8px',
-            backgroundColor: '#f8fafc',
-            borderRadius: '9999px',
-            color: '#0f172a',
-            fontWeight: '500'
-          }}>
-            {post.channel || 'Instagram'}
-          </span>
-          <span style={{ fontSize: '12px', color: '#64748b' }}>
-            {post.post_type || 'Post'}
-          </span>
-        </div>
-        
-        <p style={{
-          fontSize: '12px',
-          color: '#64748b',
-          marginBottom: '12px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical'
-        }}>
-          {post.content
-            ? post.content.length > 60
-              ? post.content.substring(0, 60) + '...'
-              : post.content
-            : 'No content yet'}
-        </p>
-        
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <a href={`/post-editor/${post.id}?calendarId=${id}`} style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px 8px',
-            backgroundColor: '#f1f5f9',
-            color: '#0f172a',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: '500',
-            textDecoration: 'none'
-          }}>
-            <PencilIcon style={{ width: '12px', height: '12px' }} />
-            Edit
-          </a>
-        </div>
-      </div>
-    );
-  };
-
-  // Render alternative calendar days with direct rendering
-  const renderCalendarDaysDirectly = () => {
+  }, [activeWeek, groupedPosts]);
+  // Render calendar days with proper post filtering
+  const renderCalendarDays = () => {
     return (
       <div className={styles.calendarDays}>
-        {getWeekDates(activeWeek).map((date, dayIndex) => (
-          <div key={dayIndex} className={styles.calendarDay} style={{ border: '1px solid #e5e7eb', padding: '10px' }}>
-            <div style={{ 
-              fontWeight: 'bold', 
-              marginBottom: '10px',
-              padding: '5px',
-              backgroundColor: '#f9fafb',
-              borderRadius: '4px' 
-            }}>
-              {formatDate(date)}
+        {getWeekDates(activeWeek).map((date, dayIndex) => {
+          // Get posts for this specific day
+          const postsForDay = handleGetPostsForDay(date);
+          
+          return (
+            <div key={dayIndex} className={styles.calendarDay}>
+              <div className={styles.dayNumber}>
+                {date.getDate()}
+              </div>
+              
+              <div className={styles.dayEvents}>
+                {postsForDay.length > 0 ? (
+                  postsForDay.map(post => (
+                    <ContentCard key={post.id} post={post} calendarId={id} />
+                  ))
+                ) : (
+                  <EmptyDayPlaceholder date={date} />
+                )}
+              </div>
             </div>
-            
-            {/* Directly display posts for this day without any filtering */}
-            {posts.length > 0 ? (
-              <div>
-                {dayIndex === 0 && posts.slice(0, 2).map(renderPostDirectly)}
-                {dayIndex === 1 && posts.slice(2, 4).map(renderPostDirectly)}
-                {dayIndex === 2 && posts.slice(4, 6).map(renderPostDirectly)}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', color: '#6b7280', padding: '20px 0' }}>
-                <p style={{ margin: '0 0 10px 0' }}>No posts scheduled</p>
-                <a 
-                  href={`/post-editor/new?calendarId=${id}&date=${date.toISOString().split('T')[0]}`}
-                  style={{
-                    display: 'inline-block',
-                    color: '#3b82f6',
-                    textDecoration: 'none',
-                    fontWeight: 'medium',
-                    fontSize: '14px'
-                  }}
-                >
-                  + Add Post
-                </a>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -1114,38 +739,6 @@ export default function ContentDashboard() {
                 <p className={styles.dashboardSubtitle}>
                   {calendar?.name || 'Your content calendar'}
                 </p>
-                
-                {/* Temporary info message about the fix */}
-                <div style={{ 
-                  backgroundColor: '#ffedd5', 
-                  padding: '8px 12px', 
-                  borderRadius: '4px', 
-                  marginTop: '8px',
-                  border: '1px solid #fdba74',
-                  fontSize: '14px'
-                }}>
-                  <p style={{ margin: 0 }}>
-                    <strong>Debugging Mode:</strong> We're testing different display methods to resolve the post visibility issue.
-                    {posts.length > 0 ? ` (${posts.length} posts loaded)` : ''}
-                  </p>
-                </div>
-                
-                {/* Direct test rendering - bypasses all date calculation */}
-                <div style={{ 
-                  marginTop: '10px', 
-                  padding: '10px',
-                  border: '2px dashed red', 
-                  borderRadius: '4px',
-                  background: '#f5f5f5'
-                }}>
-                  <h3>Test Card Direct Render:</h3>
-                  <div style={{ marginTop: '10px' }}>
-                    <ContentCard key="test-direct" post={testPost} calendarId={id} />
-                  </div>
-                  <pre style={{ fontSize: '12px', background: '#eee', padding: '8px', marginTop: '10px' }}>
-                    {JSON.stringify(testPost, null, 2)}
-                  </pre>
-                </div>
               </div>
 
               <div className={styles.dashboardActions}>
@@ -1153,29 +746,6 @@ export default function ContentDashboard() {
                   + New Post
                 </Link>
               </div>
-            </div>
-
-            {/* Report loaded posts data in plain HTML to bypass any component issues */}
-            <div style={{ 
-              marginTop: '15px', 
-              marginBottom: '15px', 
-              padding: '10px',
-              background: '#f0f9ff', 
-              border: '1px solid #bae6fd',
-              borderRadius: '4px'
-            }}>
-              <h3>Raw Posts Data:</h3>
-              <p>Total posts loaded from database: {posts.length}</p>
-              <p>Posts in week view 0: {groupedPosts[0]?.length || 0}</p>
-              <p>Posts in week view 1: {groupedPosts[1]?.length || 0}</p>
-              <p>Posts in week view 2: {groupedPosts[2]?.length || 0}</p>
-              <p>Current active week: {activeWeek}</p>
-              <details>
-                <summary>First post data (if available)</summary>
-                <pre style={{ fontSize: '11px' }}>
-                  {posts.length > 0 ? JSON.stringify(posts[0], null, 2) : 'No posts'}
-                </pre>
-              </details>
             </div>
 
             {/* Strategy Refresh Banner - shown if lastUpdatedWeeks > 9 */}
@@ -1243,7 +813,7 @@ export default function ContentDashboard() {
                   </div>
 
                   {/* Posts for each day */}
-                  {renderCalendarDaysDirectly()}
+                  {renderCalendarDays()}
                 </div>
 
                 <div className={styles.generateButtonContainer}>
