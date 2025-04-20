@@ -35,16 +35,28 @@ export default async function handler(req, res) {
     }
 
     // Fetch the strategy associated with this calendar
-    const { data: strategy, error: strategyError } = await supabase
+    const { data: strategies, error: strategyError } = await supabase
       .from('strategies')
       .select('*')
-      .eq('id', calendar.strategy_id)
-      .single();
+      .eq('id', calendar.strategy_id);
 
     if (strategyError) {
       log.error('Error fetching strategy', { error: strategyError });
       return res.status(500).json({ error: `Failed to fetch strategy: ${strategyError.message}` });
     }
+
+    // Handle case with no strategies or multiple strategies
+    if (!strategies || strategies.length === 0) {
+      log.error('No strategy found for calendar', { calendar_id: calendarId, strategy_id: calendar.strategy_id });
+      return res.status(500).json({ error: 'No strategy found for this calendar' });
+    }
+
+    // Use the most recently updated strategy if there are multiple
+    const strategy = strategies.length > 1 
+      ? strategies.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] 
+      : strategies[0];
+      
+    log.info('Using strategy', { strategy_id: strategy.id, multiple_found: strategies.length > 1 });
 
     // Fetch the content outline if it exists
     const { data: contentOutlines, error: contentOutlineError } = await supabase
