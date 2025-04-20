@@ -74,6 +74,7 @@ export default function ContentDashboard() {
   const [showRefreshBanner, setShowRefreshBanner] = useState(true);
   const [strategy, setStrategy] = useState(null);
   const [lastUpdatedWeeks, setLastUpdatedWeeks] = useState(0);
+  const [generatePostLoading, setGeneratePostLoading] = useState(false);
 
   // States for metrics
   const [metrics, setMetrics] = useState({
@@ -629,6 +630,59 @@ export default function ContentDashboard() {
       router.push(suggestion.actionRoute);
     }
   };
+  
+  // Generate a new post for today
+  const handleGeneratePostForToday = async () => {
+    try {
+      setGeneratePostLoading(true);
+      
+      // Default to Instagram if no other preference
+      const preferredChannel = "Instagram";
+      
+      // Call the API to generate a post
+      const response = await fetch('/api/content-mgmt/generate-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          calendarId: id,
+          userId: user.id,
+          channel: preferredChannel,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate post');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success && data.post) {
+        // Add the new post to the posts state
+        setPosts(prevPosts => [data.post, ...prevPosts]);
+        
+        // Regroup posts to refresh the calendar view
+        const updatedPosts = [data.post, ...posts];
+        const grouped = handleGroupPostsByWeek(updatedPosts);
+        setGroupedPosts(grouped);
+        
+        // Show success message
+        toast.success('New post generated for today!');
+        
+        // Update metrics
+        calculateMetrics(updatedPosts);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      log.error('Error generating post for today', { error: error.message });
+      toast.error(`Failed to generate post: ${error.message}`);
+    } finally {
+      setGeneratePostLoading(false);
+    }
+  };
 
   // Format date to readable string
   const formatDate = date => {
@@ -745,6 +799,20 @@ export default function ContentDashboard() {
                 <Link href={`/post-editor/new?calendarId=${id}`} className={styles.primaryButton}>
                   + New Post
                 </Link>
+                <button
+                  onClick={handleGeneratePostForToday}
+                  className={styles.secondaryButton}
+                  disabled={generatePostLoading}
+                >
+                  {generatePostLoading ? (
+                    <>
+                      <div className={styles.smallSpinner}></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>Generate Post for Today</>
+                  )}
+                </button>
               </div>
             </div>
 
