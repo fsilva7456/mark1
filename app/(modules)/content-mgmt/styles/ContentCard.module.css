@@ -1,0 +1,107 @@
+/* Content Card Styles */
+.contentCard {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.contentCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.contentCardDate {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.statusBadge {
+  font-size: 0.625rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.published {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.scheduled {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.draft {
+  background-color: #f9fafb;
+  color: #64748b;
+}
+
+.contentCardTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contentCardPlatform {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.platformBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #f8fafc;
+  border-radius: 9999px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.contentType {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.contentCardPreview {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.contentCardActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.buttonIcon {
+  width: 12px;
+  height: 12px;
+} 

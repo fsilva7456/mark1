@@ -1,0 +1,150 @@
+/* Suggestions Panel Styles */
+.suggestionsPanel {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.suggestionsPanelHeader {
+  margin-bottom: 1rem;
+}
+
+.suggestionsPanelTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.suggestionsPanelIcon {
+  width: 20px;
+  height: 20px;
+  color: #8b5cf6;
+}
+
+.suggestionsPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.suggestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.suggestionItem {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  border-left: 4px solid #64748b;
+}
+
+.priorityHigh {
+  border-left-color: #ef4444;
+}
+
+.priorityMedium {
+  border-left-color: #f59e0b;
+}
+
+.priorityLow {
+  border-left-color: #10b981;
+}
+
+.suggestionIcon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: #64748b;
+}
+
+.suggestionContent {
+  flex: 1;
+}
+
+.suggestionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: #0f172a;
+}
+
+.suggestionDescription {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+
+.suggestionAction {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  color: #0f172a;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.noSuggestions {
+  text-align: center;
+  padding: 1.5rem;
+  color: #64748b;
+}
+
+.noSuggestionsIcon {
+  width: 32px;
+  height: 32px;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.noSuggestionsSubtext {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+/* Loading and error states */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border-left-color: #8b5cf6;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.suggestionsError {
+  text-align: center;
+  padding: 1.5rem;
+  color: #ef4444;
+} 
