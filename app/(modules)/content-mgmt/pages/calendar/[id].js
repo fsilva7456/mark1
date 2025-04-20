@@ -796,12 +796,40 @@ export default function ContentDashboard() {
               </div>
 
               <div className={styles.dashboardActions}>
-                <Link href={`/post-editor/new?calendarId=${id}`} className={styles.primaryButton}>
+                <Link 
+                  href={`/post-editor/new?calendarId=${id}`}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    backgroundColor: '#3454d1',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
                   + New Post
                 </Link>
                 <button
                   onClick={handleGeneratePostForToday}
-                  className={styles.secondaryButton}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    backgroundColor: 'white',
+                    color: '#3454d1',
+                    border: '1px solid #3454d1',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
                   disabled={generatePostLoading}
                 >
                   {generatePostLoading ? (
