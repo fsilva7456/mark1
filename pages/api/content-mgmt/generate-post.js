@@ -66,17 +66,37 @@ export default async function handler(req, res) {
       // Generate a new UUID for the strategy
       const newStrategyId = generateUUID();
       
-      // Create a basic default strategy with a new ID
+      // Create a comprehensive default strategy with all required fields
       const defaultStrategy = {
-        id: newStrategyId, // Use a completely new ID
+        id: newStrategyId, 
         user_id: userId,
+        project_id: null, // Optional field
+        name: `Auto-generated Strategy for ${calendar.name || 'Calendar'}`,
         business_name: calendar.name || 'Fitness Business',
         business_description: 'A fitness business focusing on helping clients achieve their health and fitness goals',
-        target_audience: ['Fitness enthusiasts', 'Health-conscious individuals'],
-        key_messages: ['Achieve your fitness goals', 'Live a healthier lifestyle', 'Transform your body and mind'],
-        objectives: ['Increase client engagement', 'Build brand awareness', 'Generate leads'],
+        target_audience: ['Fitness enthusiasts', 'Health-conscious individuals', 'People looking to improve their physical fitness'],
+        objectives: ['Increase client engagement', 'Build brand awareness', 'Generate leads for fitness programs'],
+        key_messages: ['Achieve sustainable fitness results', 'Expert guidance for your fitness journey', 'Personalized approach to health and wellness'],
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        aesthetic: 'professional',
+        completed: true,
+        enhancedStrategy: {
+          audiences: [
+            {
+              segment: "Fitness enthusiasts",
+              objectives: [
+                {
+                  objective: "Increase engagement with workout content",
+                  successMetrics: "Higher engagement rates on fitness routine posts",
+                  contentTypes: ["Video", "Carousel", "How-to Guide"]
+                }
+              ],
+              keyMessages: ["Expert fitness guidance tailored to your goals"],
+              channels: ["Instagram", "YouTube"]
+            }
+          ]
+        }
       };
       
       try {
