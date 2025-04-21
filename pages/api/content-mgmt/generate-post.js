@@ -1,8 +1,19 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@lib/supabase';
 import logger from '@lib/logger';
+// The crypto library usage was causing issues, so we'll implement a simpler UUID function
+// import crypto from 'crypto';
 
 const log = logger.createLogger('GeneratePost');
+
+// Simple UUID generation function
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, 
+        v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -50,11 +61,14 @@ export default async function handler(req, res) {
 
     // Handle case with no strategies or multiple strategies
     if (!strategies || strategies.length === 0) {
-      log.warn('No strategy found for calendar, creating a default one', { calendar_id: calendarId, strategy_id: calendar.strategy_id });
+      log.warn('No strategy found for calendar, creating a new one', { calendar_id: calendarId, strategy_id: calendar.strategy_id });
       
-      // Create a basic default strategy
+      // Generate a new UUID for the strategy
+      const newStrategyId = generateUUID();
+      
+      // Create a basic default strategy with a new ID
       const defaultStrategy = {
-        id: calendar.strategy_id, // Use the same ID that the calendar is expecting
+        id: newStrategyId, // Use a completely new ID
         user_id: userId,
         business_name: calendar.name || 'Fitness Business',
         business_description: 'A fitness business focusing on helping clients achieve their health and fitness goals',
@@ -74,10 +88,23 @@ export default async function handler(req, res) {
           
         if (insertError) {
           log.error('Error creating default strategy', { error: insertError });
-          return res.status(500).json({ error: 'Failed to create default strategy' });
+          return res.status(500).json({ error: 'Failed to create default strategy: ' + insertError.message });
         }
         
-        log.info('Created default strategy', { strategy_id: newStrategy[0].id });
+        // Now update the calendar to point to this new strategy
+        const { error: updateError } = await supabase
+          .from('calendars')
+          .update({ strategy_id: newStrategyId })
+          .eq('id', calendarId);
+          
+        if (updateError) {
+          log.error('Error updating calendar with new strategy ID', { error: updateError });
+          // Continue anyway, we can still use the strategy even if we couldn't update the calendar
+        } else {
+          log.info('Updated calendar with new strategy ID', { calendar_id: calendarId, new_strategy_id: newStrategyId });
+        }
+        
+        log.info('Created default strategy', { strategy_id: newStrategyId });
         strategy = newStrategy[0];
       } catch (error) {
         log.error('Error in default strategy creation', { error });
