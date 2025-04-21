@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '@lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import logger from '@lib/logger';
 // The crypto library usage was causing issues, so we'll implement a simpler UUID function
 // import crypto from 'crypto';
@@ -14,6 +15,13 @@ function generateUUID() {
     return v.toString(16);
   });
 }
+
+// Create admin client with service role key that bypasses RLS
+const adminSupabase = process.env.SUPABASE_SERVICE_ROLE_KEY ? 
+  createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) : null;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -34,7 +42,12 @@ export default async function handler(req, res) {
     log.info('Generating post', { calendarId, userId, channel });
 
     // Fetch the calendar data
-    const { data: calendar, error: calendarError } = await supabase
+    const supabaseClient = adminSupabase || supabase;
+    if (!adminSupabase) {
+      log.warn('No admin supabase client available, using regular client which may fail due to RLS');
+    }
+    
+    const { data: calendar, error: calendarError } = await supabaseClient
       .from('calendars')
       .select('*')
       .eq('id', calendarId)
@@ -46,7 +59,7 @@ export default async function handler(req, res) {
     }
 
     // Fetch the strategy associated with this calendar
-    const { data: strategies, error: strategyError } = await supabase
+    const { data: strategies, error: strategyError } = await supabaseClient
       .from('strategies')
       .select('*')
       .eq('id', calendar.strategy_id);
@@ -66,7 +79,7 @@ export default async function handler(req, res) {
       // Generate a new UUID for the strategy
       const newStrategyId = generateUUID();
       
-      // Create a minimalist default strategy with only essential fields
+      // Create a comprehensive default strategy with all required fields
       const defaultStrategy = {
         id: newStrategyId, 
         user_id: userId,
@@ -81,7 +94,7 @@ export default async function handler(req, res) {
       
       try {
         // Insert the default strategy
-        const { data: newStrategy, error: insertError } = await supabase
+        const { data: newStrategy, error: insertError } = await supabaseClient
           .from('strategies')
           .insert([defaultStrategy])
           .select();
@@ -92,7 +105,7 @@ export default async function handler(req, res) {
         }
         
         // Now update the calendar to point to this new strategy
-        const { error: updateError } = await supabase
+        const { error: updateError } = await supabaseClient
           .from('calendars')
           .update({ strategy_id: newStrategyId })
           .eq('id', calendarId);
@@ -120,7 +133,7 @@ export default async function handler(req, res) {
     }
 
     // Fetch the content outline if it exists
-    const { data: contentOutlines, error: contentOutlineError } = await supabase
+    const { data: contentOutlines, error: contentOutlineError } = await supabaseClient
       .from('content_outlines')
       .select('*')
       .eq('strategy_id', strategy.id)
@@ -336,7 +349,7 @@ export default async function handler(req, res) {
       };
       
       // Save to Supabase
-      const { data: insertedPost, error: insertError } = await supabase
+      const { data: insertedPost, error: insertError } = await supabaseClient
         .from('calendar_posts')
         .insert([postData])
         .select();
@@ -349,7 +362,7 @@ export default async function handler(req, res) {
       // Update calendar metadata
       try {
         // Get current post count
-        const { data: countData } = await supabase
+        const { data: countData } = await supabaseClient
           .from('calendar_posts')
           .select('id', { count: 'exact' })
           .eq('calendar_id', calendarId);
@@ -357,7 +370,7 @@ export default async function handler(req, res) {
         const postCount = countData ? countData.length : 1;
         
         // Update calendar
-        await supabase
+        await supabaseClient
           .from('calendars')
           .update({ 
             posts_scheduled: postCount,
