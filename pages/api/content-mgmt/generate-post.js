@@ -45,18 +45,52 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: `Failed to fetch strategy: ${strategyError.message}` });
     }
 
+    // Initialize strategy variable
+    let strategy;
+
     // Handle case with no strategies or multiple strategies
     if (!strategies || strategies.length === 0) {
-      log.error('No strategy found for calendar', { calendar_id: calendarId, strategy_id: calendar.strategy_id });
-      return res.status(500).json({ error: 'No strategy found for this calendar' });
-    }
-
-    // Use the most recently updated strategy if there are multiple
-    const strategy = strategies.length > 1 
-      ? strategies.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] 
-      : strategies[0];
+      log.warn('No strategy found for calendar, creating a default one', { calendar_id: calendarId, strategy_id: calendar.strategy_id });
       
-    log.info('Using strategy', { strategy_id: strategy.id, multiple_found: strategies.length > 1 });
+      // Create a basic default strategy
+      const defaultStrategy = {
+        id: calendar.strategy_id, // Use the same ID that the calendar is expecting
+        user_id: userId,
+        business_name: calendar.name || 'Fitness Business',
+        business_description: 'A fitness business focusing on helping clients achieve their health and fitness goals',
+        target_audience: ['Fitness enthusiasts', 'Health-conscious individuals'],
+        key_messages: ['Achieve your fitness goals', 'Live a healthier lifestyle', 'Transform your body and mind'],
+        objectives: ['Increase client engagement', 'Build brand awareness', 'Generate leads'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      try {
+        // Insert the default strategy
+        const { data: newStrategy, error: insertError } = await supabase
+          .from('strategies')
+          .insert([defaultStrategy])
+          .select();
+          
+        if (insertError) {
+          log.error('Error creating default strategy', { error: insertError });
+          return res.status(500).json({ error: 'Failed to create default strategy' });
+        }
+        
+        log.info('Created default strategy', { strategy_id: newStrategy[0].id });
+        strategy = newStrategy[0];
+      } catch (error) {
+        log.error('Error in default strategy creation', { error });
+        return res.status(500).json({ error: 'Failed to create default strategy: ' + error.message });
+      }
+    } else {
+      // Use the most recently updated strategy if there are multiple
+      strategy = strategies.length > 1 
+        ? strategies.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] 
+        : strategies[0];
+        
+      log.info('Using strategy', { strategy_id: strategy.id, multiple_found: strategies.length > 1 });
+    }
 
     // Fetch the content outline if it exists
     const { data: contentOutlines, error: contentOutlineError } = await supabase
